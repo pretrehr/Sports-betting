@@ -8,13 +8,10 @@ from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
-import os
-import sys
-if "D:/Raphaël/Mes documents/Paris" not in sys.path:
-    sys.path.append("D:/Raphaël/Mes documents/Paris")
 from bs4 import BeautifulSoup
-os.chdir("D:/Raphaël/Mes documents/Paris")
-from paris_sportifs import (gain, gain2, mises2, cotes_combine, cotes_freebet,
+import os
+os.chdir(os.path.dirname(os.path.realpath('__file__')))
+from bet_functions import (gain, gain2, mises2, cotes_combine, cotes_freebet,
                             pari_rembourse_si_perdant, mises_freebet)
 import numpy as np
 
@@ -31,7 +28,7 @@ NBA = PREFIX+"comparateur/basketball/Etats-Unis-NBA-ed353"
 TOP14 = PREFIX+"comparateur/rugby/France-Top-14-ed341"
 OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
 SPORTS = ["football", "basketball", "tennis", "hockey_sur_glace", "volleyball", "boxe", "rugby", "handball"]
-# soup = BeautifulSoup(urlopen("file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"))
+# soup = BeautifulSoup(urlopen("file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"), features="lxml")
 
 def parse(url, *particular_sites, is_1N2 = True):
     """
@@ -43,10 +40,10 @@ def parse(url, *particular_sites, is_1N2 = True):
     else:
         n=2
     try:
-        soup = BeautifulSoup(urlopen(url))
+        soup = BeautifulSoup(urlopen(url), features="lxml")
     except UnicodeEncodeError:
         url = url.replace('é', 'e').replace('è', 'e')
-        soup = BeautifulSoup(urlopen(url))
+        soup = BeautifulSoup(urlopen(url), features="lxml")
     match_odds_hash = {}
     count_teams = 0
     count_odds = 0
@@ -116,7 +113,7 @@ def parse_nba(*particular_sites):
     Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
     returns a hashmap of the NBA matches and the odds of the bookmakers
     """
-    soup = BeautifulSoup(urlopen(NBA))
+    soup = BeautifulSoup(urlopen(NBA), features="lxml")
     match_odds_hash = {}
     count_teams = 0
     count_odds = 0
@@ -182,7 +179,7 @@ def parse_sport(sport, *particular_sites):
     if sport=="basketball":
         return parse_nba(*particular_sites)
     competitions = []
-    soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport))
+    soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport), features="lxml")
     for line in soup.find_all(['a', 'td', 'img']):
         if (line.name == 'a' and 'href' in line.attrs):
             if sport in line['href'] and "ed" in line['href']:
@@ -219,7 +216,7 @@ def parse_tennis(*particular_sites):
     returns a hashmap of the tennis matches and the odds of the bookmakers
     """
     competitions = []
-    soup = BeautifulSoup(urlopen(TENNIS))
+    soup = BeautifulSoup(urlopen(TENNIS), features="lxml")
     for line in soup.find_all(['a', 'td', 'img']):
         if (line.name == 'a' and 'href' in line.attrs):
             if "tennis" in line['href'] and "ed" in line['href']:
@@ -229,10 +226,10 @@ def parse_tennis(*particular_sites):
     surebet_matches = []
     for url in competitions:
         try:
-            soup = BeautifulSoup(urlopen(url))
+            soup = BeautifulSoup(urlopen(url), features="lxml")
         except UnicodeEncodeError:
             url = url.replace('é', 'e').replace('è', 'e')
-            soup = BeautifulSoup(urlopen(url))
+            soup = BeautifulSoup(urlopen(url), features="lxml")
         count_teams = 0
         count_odds = 0
         odds = []
@@ -305,8 +302,8 @@ def merge_dicts(dict_args):
 
 def best_matches_freebet_tennis(site, nb_matches=5):
     """
-    Given a bookmaker, return on which matches you should share your freebet to
-    maximize your gain
+    Given a bookmaker, return on which tennis matches you should share your
+    freebet to maximize your gain
     """
 #     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
 #     all_odds = merge_dicts([parse(url, site) for url in championships])
@@ -661,7 +658,6 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
                                 hour_min, minute_min)
     else:
         datetime_min = None
-    del all_odds["Jo-Wilfried Tsonga - Rafael Nadal"]
     for match in all_odds:
         if (site in all_odds[match]['odds']
                 and (not date_max or all_odds[match]['date'] <= datetime_max)

@@ -7,7 +7,6 @@ Assistant de paris sportifs
 from itertools import combinations, product
 from math import log, exp
 import numpy as np
-import pandas as pd
 
 def prod(data):
     """
