@@ -106,6 +106,7 @@ def parse(url, *particular_sites, is_1N2 = True):
     if surebet:
         print("*************************** SUREBET ***************************")
         print(surebet_matches)
+    print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
     return match_odds_hash
 
 def parse_nba(*particular_sites):
