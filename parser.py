@@ -107,6 +107,7 @@ def parse(url, *particular_sites, is_1N2 = True):
         print("*************************** SUREBET ***************************")
         print(surebet_matches)
     print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
+    print("")
     return match_odds_hash
 
 def parse_nba(*particular_sites):
@@ -872,3 +873,6 @@ def best_bets_match(match, site, bet):
             best_overall_odds = odds_to_check
             sites = best_sites[:i]+[site]+best_sites[i+1:]
     print(best_profit, sites, best_overall_odds, sep='\n')
+
+best_match_under_conditions_basket_tennis("pmu2", "tennis", 1.3, 10)
+    

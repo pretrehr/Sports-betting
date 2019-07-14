@@ -81,7 +81,7 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
                                  for i in range(len(mis))]))
         print("gain max =", max([troncature(mis[i]*cotes[i])
                                  for i in range(len(mis))]))
-        print("perte max =",
+        print("plus-value max =",
               round(min([troncature(mis[i]*cotes[i])
                          for i in range(len(mis))])-sum(mis), 2))
     return mis
@@ -180,8 +180,43 @@ def promo_zebet(cotes):
     print("gain=", gains)
     return mis
 
-def gains_nets_boostes(cotes, taux_boost, gain_max, freebet=True, output=False):
-    mise = gain_max/(max(cotes)-1)/taux_boost
-    new_cotes = list(map(lambda x:x+(x-1)*taux_boost*(1-0.23*freebet), cotes))
-    argmax = np.argmax(new_cotes)
-    return mises2(new_cotes, mise, argmax, output = output)
+def cote_boostee(cote):
+    """
+    Calcul de cote boostee pour promotion Betclic
+    """
+    if cote < 2:
+        return cote
+    elif cote < 2.51:
+        return cote+(cote-1)*0.25*0.77
+    elif cote < 3.51:
+        return cote+(cote-1)*0.5*0.77
+    return cote+(cote-1)*0.77
+
+def taux_boost(cote):
+    """
+    Calcul du taux de boost pour promotion Betclic
+    """
+    if cote < 2:
+        return 0
+    elif cote < 2.51:
+        return 0.25
+    elif cote < 3.51:
+        return 0.5
+    return 1
+
+def gains_nets_boostes(cotes, gain_max, output=False):
+    """
+    Optimisation de gain pour promotion Betclic de type "Cotes boostees"
+    """
+    new_cotes = list(map(cote_boostee, cotes))
+    for i in range(len(cotes)):
+        try:
+            mise = gain_max/(cotes[i]*taux_boost(cotes[i])-1)
+            b = mises2(new_cotes, mise, i)
+            for j, mis in enumerate(b):
+                if mis*(cotes[j]*taux_boost(cotes[j])-1)>gain_max+0.1:
+                    break
+            else:
+                return mises2(new_cotes, mise, i, output)
+        except ZeroDivisionError:
+            break
