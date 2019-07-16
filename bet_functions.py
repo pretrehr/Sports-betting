@@ -6,7 +6,6 @@ Assistant de paris sportifs
 
 from itertools import combinations, product
 from math import log, exp
-import numpy as np
 
 def prod(data):
     """
@@ -90,7 +89,7 @@ def cotes_freebet(cotes):
     """
     Calcule les cotes d'un match joue avec des paris gratuits
     """
-    return list(map(lambda x: (x-1 if x>1 else 0.01), cotes))
+    return list(map(lambda x: (x-1 if x > 1 else 0.01), cotes))
 
 def mises_freebets(cotes, mise):
     """
@@ -186,9 +185,9 @@ def cote_boostee(cote):
     """
     if cote < 2:
         return cote
-    elif cote < 2.51:
+    if cote < 2.51:
         return cote+(cote-1)*0.25*0.77
-    elif cote < 3.51:
+    if cote < 3.51:
         return cote+(cote-1)*0.5*0.77
     return cote+(cote-1)*0.77
 
@@ -198,9 +197,9 @@ def taux_boost(cote):
     """
     if cote < 2:
         return 0
-    elif cote < 2.51:
+    if cote < 2.51:
         return 0.25
-    elif cote < 3.51:
+    if cote < 3.51:
         return 0.5
     return 1
 
@@ -209,12 +208,12 @@ def gains_nets_boostes(cotes, gain_max, output=False):
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(cote_boostee, cotes))
-    for i in range(len(cotes)):
+    for i, cote in enumerate(cotes):
         try:
-            mise = gain_max/(cotes[i]*taux_boost(cotes[i])-1)
-            b = mises2(new_cotes, mise, i)
-            for j, mis in enumerate(b):
-                if mis*(cotes[j]*taux_boost(cotes[j])-1)>gain_max+0.1:
+            mise = gain_max/(cotes[i]*taux_boost(cote)-1)
+            mises_possibles = mises2(new_cotes, mise, i)
+            for j, mis in enumerate(mises_possibles):
+                if mis*(cotes[j]*taux_boost(cotes[j])-1) > gain_max+0.1:
                     break
             else:
                 return mises2(new_cotes, mise, i, output)

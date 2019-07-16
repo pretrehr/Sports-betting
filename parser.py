@@ -3,17 +3,19 @@
 functions for parsing odds on http://www.comparateur-de-cotes.fr
 """
 
+
 from urllib.request import urlopen
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
-from bs4 import BeautifulSoup
 import os
+from bs4 import BeautifulSoup
+import numpy as np
 os.chdir(os.path.dirname(os.path.realpath('__file__')))
 from bet_functions import (gain, gain2, mises2, cotes_combine, cotes_freebet,
-                            pari_rembourse_si_perdant, mises_freebet)
-import numpy as np
+                           pari_rembourse_si_perdant, mises_freebet)
+
 
 PREFIX = "http://www.comparateur-de-cotes.fr/"
 LIGUE1 = PREFIX+"comparateur/football/France-Ligue-1-ed3"
@@ -27,18 +29,20 @@ TENNIS = PREFIX+"comparateur/tennis"
 NBA = PREFIX+"comparateur/basketball/Etats-Unis-NBA-ed353"
 TOP14 = PREFIX+"comparateur/rugby/France-Top-14-ed341"
 OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
-SPORTS = ["football", "basketball", "tennis", "hockey_sur_glace", "volleyball", "boxe", "rugby", "handball"]
-# soup = BeautifulSoup(urlopen("file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"), features="lxml")
+SPORTS = ["football", "basketball", "tennis", "hockey_sur_glace", "volleyball",
+          "boxe", "rugby", "handball"]
+# soup = BeautifulSoup(urlopen("file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"),
+#                              features="lxml")
 
-def parse(url, *particular_sites, is_1N2 = True):
+def parse(url, *particular_sites, is_1N2=True):
     """
     Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
     return a hashmap of the matches and the odds of the bookmakers
     """
     if is_1N2:
-        n=3
+        n = 3
     else:
-        n=2
+        n = 2
     try:
         soup = BeautifulSoup(urlopen(url), features="lxml")
     except UnicodeEncodeError:
@@ -177,8 +181,11 @@ def parse_nba(*particular_sites):
     return match_odds_hash
 
 def parse_sport(sport, *particular_sites):
+    """
+    Return the odds of all the matches of a given sport
+    """
     _1N2 = sport not in ["volleyball", "tennis"]
-    if sport=="basketball":
+    if sport == "basketball":
         return parse_nba(*particular_sites)
     competitions = []
     soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport), features="lxml")
@@ -187,14 +194,15 @@ def parse_sport(sport, *particular_sites):
             if sport in line['href'] and "ed" in line['href']:
                 competitions.append(PREFIX+line['href'])
     match_odds_hash = {}
-    surebet = False
-    surebet_matches = []
     for url in competitions:
         print(url.split(PREFIX+"comparateur/")[1])
-        match_odds_hash.update(parse(url, *particular_sites, is_1N2 = _1N2))
+        match_odds_hash.update(parse(url, *particular_sites, is_1N2=_1N2))
     return match_odds_hash
 
 def parse_all_1N2(*particular_sites):
+    """
+    Return the odds of all the matches where tie is possible
+    """
     match_odds_hash = {}
     for sport in SPORTS:
         if sport not in ["tennis", "volleyball", "basketball"]:
@@ -202,12 +210,18 @@ def parse_all_1N2(*particular_sites):
     return match_odds_hash
 
 def parse_all_12(*particular_sites):
+    """
+    Return the odds of all the matches where tie is not possible
+    """
     match_odds_hash = {}
     for sport in ["tennis", "volleyball", "basketball"]:
         match_odds_hash.update(parse_sport(sport, *particular_sites))
     return match_odds_hash
 
 def parse_all(*particular_sites):
+    """
+    Return the odds of all the matches
+    """
     match_odds_hash = parse_all_1N2(*particular_sites)
     match_odds_hash.update(parse_all_12(*particular_sites))
     return match_odds_hash
@@ -307,8 +321,6 @@ def best_matches_freebet_tennis(site, nb_matches=5):
     Given a bookmaker, return on which tennis matches you should share your
     freebet to maximize your gain
     """
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
-#     all_odds = merge_dicts([parse(url, site) for url in championships])
     all_odds = parse_tennis(site)
     best_rate = 0
     for combine in combinations(all_odds.items(), nb_matches):
@@ -330,8 +342,6 @@ def best_matches_freebet(site, nb_matches=2):
     Given a bookmaker, return on which matches you should share your freebet to
     maximize your gain
     """
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
-#     all_odds = merge_dicts([parse(url, site) for url in championships])
     all_odds = parse_sport("football", site)
     best_rate = 0
     for combine in combinations(all_odds.items(), nb_matches):
@@ -353,10 +363,7 @@ def best_matches_freebet2(main_site, second_site, nb_matches=2):
     Given two bookmakers, return on which matches you should share your freebets
     to maximize your gain, knowing you bet only once on second_site
     """
-    championships = ["http://www.comparateur-de-cotes.fr/comparateur/football/Ligue-des-Nations-ed2195","http://www.comparateur-de-cotes.fr/comparateur/football/Qualifs.-Euro-2020-ed251","http://www.comparateur-de-cotes.fr/comparateur/football/Coupe-du-Monde-2019-(F)-ed1322","http://www.comparateur-de-cotes.fr/comparateur/football/Coupe-d'Afrique-des-Nations-ed983","http://www.comparateur-de-cotes.fr/comparateur/football/Euro-2019-(-21)-ed1039","http://www.comparateur-de-cotes.fr/comparateur/football/Copa-America-ed1933","http://www.comparateur-de-cotes.fr/comparateur/football/Matchs-Amicaux-ed243","http://www.comparateur-de-cotes.fr/comparateur/football/UEFA-SuperCoupe-ed1210"]
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
-    all_odds = merge_dicts([parse(url, main_site, second_site)
-                              for url in championships])
+    all_odds = parse_all_1N2(main_site, second_site)
     best_rate = 0
     n = 3**nb_matches
     for combine in combinations(all_odds.items(), nb_matches):
@@ -384,7 +391,8 @@ def best_matches_freebet3(main_site, second_site, nb_freebet_second_site,
     to maximize your gain, knowing you bet nb_freebet_second_site times on
     second_site
     """
-    championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
+    championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
+                     EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
     all_odds = merge_dicts([parse(url, main_site, second_site)
                             for url in championships])
     best_rate = 0
@@ -413,15 +421,10 @@ def best_matches_freebet3(main_site, second_site, nb_freebet_second_site,
     return best_matches
 
 def best_matches_freebet4(main_site, *second_sites, freebets):
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
-#     all_odds = merge_dicts([parse(url, main_site, *second_sites)
-#                             for url in championships])
-#     all_odds = parse(OFFLINE, main_site, *second_sites)
-#     all_odds = parse_all_1N2(main_site, *second_sites)
-    championships = ["http://www.comparateur-de-cotes.fr/comparateur/football/Ligue-des-Nations-ed2195","http://www.comparateur-de-cotes.fr/comparateur/football/Qualifs.-Euro-2020-ed251","http://www.comparateur-de-cotes.fr/comparateur/football/Coupe-du-Monde-2019-(F)-ed1322","http://www.comparateur-de-cotes.fr/comparateur/football/Coupe-d'Afrique-des-Nations-ed983","http://www.comparateur-de-cotes.fr/comparateur/football/Euro-2019-(-21)-ed1039","http://www.comparateur-de-cotes.fr/comparateur/football/Copa-America-ed1933","http://www.comparateur-de-cotes.fr/comparateur/football/Matchs-Amicaux-ed243","http://www.comparateur-de-cotes.fr/comparateur/football/UEFA-SuperCoupe-ed1210"]
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A, EUROPA_LEAGUE, CHAMPIONS_LEAGUE]
-    all_odds = merge_dicts([parse(url, main_site, *second_sites)
-                              for url in championships])
+    """
+    Compute of best way to bet freebets
+    """
+    all_odds = parse_all_1N2(main_site, *second_sites)
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
@@ -520,9 +523,6 @@ def best_match_freebet_football(site, freebet=None):
     Given a bookmaker and a sport (nba or tennis), return on which match you
     should bet your freebet to maximize your gain.
     """
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
-#                      CHAMPIONS_LEAGUE, EUROPA_LEAGUE]
-#     all_odds = merge_dicts([parse(url) for url in championships])
     all_odds = parse_sport("football")
     best_profit = 0
     for match in all_odds:
@@ -561,9 +561,6 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """
-    championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
-                     CHAMPIONS_LEAGUE, EUROPA_LEAGUE]
-    #all_odds = merge_dicts([parse(url) for url in championships])
 #     all_odds = parse_all_1N2()
     all_odds = parse_sport("football")
     del all_odds["Liverpool - Chelsea"]
@@ -676,8 +673,6 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
                 odds_to_check = best_odds[:i]+[odds_site[i]]+best_odds[i+1:]
                 if odds_to_check[i] >= minimum_odd:
                     profit = gain2(odds_to_check, i, bet)
-#+(mises2(odds_to_check, bet, i)[not i]*0.077 if odds_to_check[not i]>=1.5
-#                                             else 0)
                     if profit > best_profit:
                         best_rank = i
                         best_profit = profit
@@ -712,10 +707,7 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
     Given several conditions, return the best match to bet on to maximize
     the gain with a cashback-like promotion
     """
-#     championships = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
-#                      CHAMPIONS_LEAGUE, EUROPA_LEAGUE, TOP14]
-#     all_odds = merge_dicts([parse(url) for url in championships])
-    all_odds = parse_all_1N2() 
+    all_odds = parse_all_1N2()
     best_profit = 0
     best_rank = 0
     hour, minute = 0, 0
@@ -833,6 +825,10 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
         print("No match found")
 
 def odds_basket():
+    """
+    Estimate the odds of 12 when having 1N2 on NBA matches
+    """
+    #TODO
     file = open("D:/Raphaël/Mes documents/Paris/basket_odds_betclic.csv")
     lines = file.readlines()
     file.close()
@@ -844,6 +840,9 @@ def odds_basket():
     return odds
 
 def odds_match(match):
+    """
+    Return the different odds of a given match
+    """
     all_odds = parse_all()
     opponents = match.split('-')
     match_name = ""
@@ -855,6 +854,10 @@ def odds_match(match):
     return all_odds[match_name]
 
 def best_bets_match(match, site, bet):
+    """
+    Given a match, a bookmaker and a sum to bet, return the best odds on which
+    bet among different bookmakers
+    """
     all_odds = odds_match(match)
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
@@ -873,6 +876,3 @@ def best_bets_match(match, site, bet):
             best_overall_odds = odds_to_check
             sites = best_sites[:i]+[site]+best_sites[i+1:]
     print(best_profit, sites, best_overall_odds, sep='\n')
-
-best_match_under_conditions_basket_tennis("pmu2", "tennis", 1.3, 10)
-    
