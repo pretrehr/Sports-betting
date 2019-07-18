@@ -9,6 +9,7 @@ from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
+import time
 import os
 from bs4 import BeautifulSoup
 import numpy as np
@@ -28,91 +29,89 @@ TENNIS = PREFIX+"comparateur/tennis"
 NBA = PREFIX+"comparateur/basketball/Etats-Unis-NBA-ed353"
 TOP14 = PREFIX+"comparateur/rugby/France-Top-14-ed341"
 OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
-SPORTS = ["football", "basketball", "tennis", "hockey_sur_glace", "volleyball",
-          "boxe", "rugby", "handball"]
+SPORTS = ["football", "basketball", "tennis", "hockey", "volleyball", "boxe",
+          "rugby", "handball"]
 
 def parse(url, *particular_sites, is_1N2=True):
     """
     Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
     return a hashmap of the matches and the odds of the bookmakers
     """
+    if is_1N2:
+        n = 3
+    else:
+        n = 2
     try:
-        if is_1N2:
-            n = 3
-        else:
-            n = 2
-        try:
-            soup = BeautifulSoup(urlopen(url), features="lxml")
-        except UnicodeEncodeError:
-            url = url.replace('é', 'e').replace('è', 'e')
-            soup = BeautifulSoup(urlopen(url), features="lxml")
-        match_odds_hash = {}
-        count_teams = 0
-        count_odds = 0
-        odds = []
-        match = ""
-        date = None
-        surebet = False
-        surebet_matches = []
-        for line in soup.find_all(['a', 'td', 'img']):
-            if (line.name == 'a' and 'class' in line.attrs):
-                if count_teams == 0:
-                    sites_in_dict = True
-                    if match:
-                        for site in particular_sites:
-                            if site not in match_odds_hash[match]['odds']:
-                                sites_in_dict = False
-                                break
-                        if (not match_odds_hash[match] or not sites_in_dict):
-                            del match_odds_hash[match]
-                    match = ""
-                match += line.text
-                if count_teams == 0:
-                    match += ' - '
-                    count_teams += 1
+        soup = BeautifulSoup(urlopen(url), features="lxml")
+    except UnicodeEncodeError:
+        url = url.replace('é', 'e').replace('è', 'e')
+        soup = BeautifulSoup(urlopen(url), features="lxml")
+    print(url.split("-ed")[0].split(PREFIX+"comparateur/")[1].replace("-", " ").split("/")[1])
+    print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
+    print("")
+    match_odds_hash = {}
+    count_teams = 0
+    count_odds = 0
+    odds = []
+    match = ""
+    date = None
+    surebet = False
+    surebet_matches = []
+    for line in soup.find_all(['a', 'td', 'img']):
+        if (line.name == 'a' and 'class' in line.attrs):
+            if count_teams == 0:
+                sites_in_dict = True
+                if match:
+                    for site in particular_sites:
+                        if site not in match_odds_hash[match]['odds']:
+                            sites_in_dict = False
+                            break
+                    if (not match_odds_hash[match] or not sites_in_dict):
+                        del match_odds_hash[match]
+                match = ""
+            match += line.text
+            if count_teams == 0:
+                match += ' - '
+                count_teams += 1
+            else:
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {}
+                match_odds_hash[match]['date'] = date
+                count_teams = 0
+                if "surebetbox" in line.findParent().findParent()['class']:
+                    surebet = True
+                    surebet_matches.append(match)
+        elif 'src' in line.attrs:
+            if 'logop' in line['src']:
+                site = line['src'].split('-')[1].split('.')[0]
+        elif (line.name == 'td'
+              and 'class' in line.find_parent().find_parent().attrs
+              and "bettable" in line.find_parent().find_parent()['class']
+              and 'à' in line.text):
+            date = convert_date(list(line.stripped_strings)[3].split('à'))
+        elif 'class' in line.attrs and 'bet' in line['class']:
+            if ((not particular_sites) or site in particular_sites):
+                odds.append(float(line.text))
+                if count_odds < n-1:
+                    count_odds += 1
                 else:
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {}
-                    match_odds_hash[match]['date'] = date
-                    count_teams = 0
-                    if "surebetbox" in line.findParent().findParent()['class']:
-                        surebet = True
-                        surebet_matches.append(match)
-            elif 'src' in line.attrs:
-                if 'logop' in line['src']:
-                    site = line['src'].split('-')[1].split('.')[0]
-            elif (line.name == 'td'
-                and 'class' in line.find_parent().find_parent().attrs
-                and "bettable" in line.find_parent().find_parent()['class']
-                and 'à' in line.text):
-                date = convert_date(list(line.stripped_strings)[3].split('à'))
-            elif 'class' in line.attrs and 'bet' in line['class']:
-                if ((not particular_sites) or site in particular_sites):
-                    odds.append(float(line.text))
-                    if count_odds < n-1:
-                        count_odds += 1
-                    else:
-                        match_odds_hash[match]['odds'][site] = odds
-                        count_odds = 0
-                        odds = []
-        sites_in_dict = True
-        for site in particular_sites:
-            try:
-                if site not in match_odds_hash[match]['odds']:
-                    sites_in_dict = False
-                    break
-            except KeyError:
-                pass
-        if (match and not match_odds_hash[match]['odds']) or not sites_in_dict:
-            del match_odds_hash[match]
-        if surebet:
-            print("*************************** SUREBET ***************************")
-            print(surebet_matches)
-        print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
-        print("")
-        return match_odds_hash
-    except KeyboardInterrupt:
-        pass
+                    match_odds_hash[match]['odds'][site] = odds
+                    count_odds = 0
+                    odds = []
+    sites_in_dict = True
+    for site in particular_sites:
+        try:
+            if site not in match_odds_hash[match]['odds']:
+                sites_in_dict = False
+                break
+        except KeyError:
+            pass
+    if (match and not match_odds_hash[match]['odds']) or not sites_in_dict:
+        del match_odds_hash[match]
+    if surebet:
+        print("*************************** SUREBET ***************************")
+        print(surebet_matches)
+    return match_odds_hash
 
 def parse_nba(*particular_sites):
     """
@@ -184,32 +183,46 @@ def parse_sport(sport, *particular_sites):
     """
     Return the odds of all the matches of a given sport
     """
-    _1N2 = sport not in ["volleyball", "tennis"]
-    if sport == "basketball":
-        return parse_nba(*particular_sites)
-    competitions = []
-    soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport), features="lxml")
-    for line in soup.find_all(['a', 'td', 'img']):
-        if (line.name == 'a' and 'href' in line.attrs):
-            if sport in line['href'] and "ed" in line['href']:
-                competitions.append(PREFIX+line['href'])
     match_odds_hash = {}
-    for url in competitions:
-        print(url.split(PREFIX+"comparateur/")[1])
-        parsing = parse(url, *particular_sites, is_1N2=_1N2)
-        if not parsing:
-            break
-        match_odds_hash.update(parsing)
+    try:
+        _1N2 = sport not in ["volleyball", "tennis"]
+        if sport == "basketball":
+            return parse_nba(*particular_sites)
+        competitions = []
+        soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport), features="lxml")
+        for line in soup.find_all(['a', 'td', 'img']):
+            if (line.name == 'a' and 'href' in line.attrs):
+                if sport in line['href'] and "ed" in line['href']:
+                    competitions.append(PREFIX+line['href'])
+        for url in competitions:
+            parsing = parse(url, *particular_sites, is_1N2=_1N2)
+            if not parsing:
+                break
+            match_odds_hash.update(parsing)
+    except KeyboardInterrupt:
+        try:
+            print("Sport skipped, repress to end process")
+            instant = time.time()
+            while time.time()-instant < 1:
+                pass
+        except KeyboardInterrupt:
+            match_odds_hash["KeyboardInterrupt"] = True
     return match_odds_hash
 
 def parse_all_1N2(*particular_sites):
     """
-    Return the odds of all the matches where tie is possible
+    Return the odds of all the matches where draw is possible
     """
     match_odds_hash = {}
     for sport in SPORTS:
         if sport not in ["tennis", "volleyball", "basketball"]:
-            match_odds_hash.update(parse_sport(sport, *particular_sites))
+            print(sport)
+            parsing = parse_sport(sport, *particular_sites)
+            if "KeyboardInterrupt" in parsing:
+                del parsing["KeyboardInterrupt"]
+                match_odds_hash.update(parsing)
+                break
+            match_odds_hash.update(parsing)
     return match_odds_hash
 
 def parse_all_12(*particular_sites):
@@ -218,7 +231,14 @@ def parse_all_12(*particular_sites):
     """
     match_odds_hash = {}
     for sport in ["tennis", "volleyball", "basketball"]:
-        match_odds_hash.update(parse_sport(sport, *particular_sites))
+        print(sport)
+        parsing = parse_sport(sport, *particular_sites)
+        if "KeyboardInterrupt" in parsing:
+            print(sport)
+            del parsing["KeyboardInterrupt"]
+            match_odds_hash.update(parsing)
+            break
+        match_odds_hash.update(parsing)
     return match_odds_hash
 
 def parse_all(*particular_sites):
