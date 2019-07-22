@@ -189,7 +189,8 @@ def parse_sport(sport, *particular_sites):
         if sport == "basketball":
             return parse_nba(*particular_sites)
         competitions = []
-        soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport), features="lxml")
+        soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
+                             features="lxml")
         for line in soup.find_all(['a', 'td', 'img']):
             if (line.name == 'a' and 'href' in line.attrs):
                 if sport in line['href'] and "ed" in line['href']:
@@ -625,9 +626,9 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
                         best_odds[i] = odds[1][i]
                         best_sites[i] = odds[0]
             for i in range(3):
-                odds_to_check = (best_odds[:i]+[odds_site[i]*0.9
-                                                if live
-                                                else odds_site[i]]+best_odds[i+1:])
+                odds_to_check = (best_odds[:i]
+                                 +[odds_site[i]*0.9 if live else odds_site[i]]
+                                 +best_odds[i+1:])
                 if odds_to_check[i] >= minimum_odd:
                     profit = gain2(odds_to_check, i, bet)
                     if profit > best_profit:
@@ -664,8 +665,8 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max,
-                                hour_max, minute_max)
+        datetime_max = datetime(year_max, month_max, day_max, hour_max,
+                                minute_max)
     else:
         datetime_max = None
     if time_min:
@@ -724,26 +725,43 @@ def convert_date(date):
                     int(hour_array[0]), int(hour_array[1]))
 
 def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
-                        combi_odd=1, rate_cashback=1, limit_date=None, limit_hour=None):
+                        combi_odd=1, rate_cashback=1, date_max=None,
+                        time_max=None, date_min=None, time_min=None):
     """
     Given several conditions, return the best match to bet on to maximize
     the gain with a cashback-like promotion
     """
     all_odds = parse_all_1N2()
-    best_profit = 0
+    best_profit = -bet
     best_rank = 0
-    hour, minute = 0, 0
-    if limit_hour:
-        hour, minute = (int(_) for _ in limit_hour.split('h'))
-    if limit_date:
-        day, month, year = (int(_) for _ in limit_date.split('/'))
-        limit_datetime = datetime(year, month, day, hour, minute)
+    hour_max, minute_max = 0, 0
+    hour_min, minute_min = 0, 0
+    if time_max:
+        if time_max[-1] == 'h':
+            hour_max = int(time_max[:-1])
+        else:
+            hour_max, minute_max = (int(_) for _ in time_max.split('h'))
+    if date_max:
+        day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
+        datetime_max = datetime(year_max, month_max, day_max,
+                                hour_max, minute_max)
     else:
-        limit_datetime = None
+        datetime_max = None
+    if time_min:
+        if time_min[-1] == 'h':
+            hour_min = int(time_min[:-1])
+        else:
+            hour_min, minute_min = (int(_) for _ in time_min.split('h'))
+    if date_min:
+        day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
+        datetime_min = datetime(year_min, month_min, day_min,
+                                hour_min, minute_min)
+    else:
+        datetime_min = None
     for match in all_odds:
         if (site in all_odds[match]['odds']
-                and (not limit_date
-                     or all_odds[match]['date'] <= limit_datetime)):
+                and (not date_max or all_odds[match]['date'] <= datetime_max)
+                and (not date_min or all_odds[match]['date'] >= datetime_min)):
             odds_site = all_odds[match]['odds'][site]
             best_odds = deepcopy(odds_site)
             best_sites = [site, site, site]
@@ -796,8 +814,8 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max,
-                                hour_max, minute_max)
+        datetime_max = datetime(year_max, month_max, day_max, hour_max,
+                                minute_max)
     else:
         datetime_max = None
     if time_min:
@@ -829,8 +847,8 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
                                    *(1+combi_max)-combi_max]
                                  +best_odds[i+1:])
                 if odds_to_check[i]*combi_odd >= minimum_odd:
-                    profit = pari_rembourse_si_perdant(odds_to_check,
-                                                       bet, i, freebet, rate_cashback)
+                    profit = pari_rembourse_si_perdant(odds_to_check, bet, i,
+                                                       freebet, rate_cashback)
                     if profit > best_profit:
                         best_rank = i
                         best_profit = profit
