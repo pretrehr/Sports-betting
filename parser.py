@@ -9,6 +9,7 @@ from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
+import urllib
 import time
 import os
 from bs4 import BeautifulSoup
@@ -46,6 +47,9 @@ def parse(url, *particular_sites, is_1N2=True):
     except UnicodeEncodeError:
         url = url.replace('é', 'e').replace('è', 'e')
         soup = BeautifulSoup(urlopen(url), features="lxml")
+    except urllib.error.URLError:
+        print("No Internet connection")
+        return {}
     print(url.split("-ed")[0].split(PREFIX+"comparateur/")[1].replace("-", " ").split("/")[1])
     print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
     print("")
@@ -118,7 +122,11 @@ def parse_nba(*particular_sites):
     Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
     returns a hashmap of the NBA matches and the odds of the bookmakers
     """
-    soup = BeautifulSoup(urlopen(NBA), features="lxml")
+    try:
+        soup = BeautifulSoup(urlopen(NBA), features="lxml")
+    except urllib.error.URLError:
+        print("No Internet connection")
+        return {}
     match_odds_hash = {}
     count_teams = 0
     count_odds = 0
@@ -189,8 +197,12 @@ def parse_sport(sport, *particular_sites):
         if sport == "basketball":
             return parse_nba(*particular_sites)
         competitions = []
-        soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
-                             features="lxml")
+        try:
+            soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
+                                features="lxml")
+        except urllib.error.URLError:
+            print("No Internet connection")
+            return match_odds_hash
         for line in soup.find_all(['a', 'td', 'img']):
             if (line.name == 'a' and 'href' in line.attrs):
                 if sport in line['href'] and "ed" in line['href']:
@@ -256,7 +268,11 @@ def parse_tennis(*particular_sites):
     returns a hashmap of the tennis matches and the odds of the bookmakers
     """
     competitions = []
-    soup = BeautifulSoup(urlopen(TENNIS), features="lxml")
+    try:
+        soup = BeautifulSoup(urlopen(TENNIS), features="lxml")
+    except urllib.error.URLError:
+        print("No Internet connection")
+        return {}
     for line in soup.find_all(['a', 'td', 'img']):
         if (line.name == 'a' and 'href' in line.attrs):
             if "tennis" in line['href'] and "ed" in line['href']:
@@ -270,6 +286,9 @@ def parse_tennis(*particular_sites):
         except UnicodeEncodeError:
             url = url.replace('é', 'e').replace('è', 'e')
             soup = BeautifulSoup(urlopen(url), features="lxml")
+        except urllib.error.URLError:
+            print("No Internet connection")
+            return match_odds_hash
         count_teams = 0
         count_odds = 0
         odds = []
@@ -573,9 +592,12 @@ def best_match_freebet_football(site, freebet=None):
                     best_match = match
                     best_overall_odds = odds_to_check
                     sites = best_sites[:i]+[site]+best_sites[i+1:]
-    print(best_match, best_profit, sites, best_overall_odds, sep='\n')
-    if freebet:
-        print(mises_freebet(best_overall_odds, freebet, best_rank, True))
+    try:
+        print(best_match, best_profit, sites, best_overall_odds, sep='\n')
+        if freebet:
+            print(mises_freebet(best_overall_odds, freebet, best_rank, True))
+    except UnboundLocalError:
+        print("No match found")
 
 def best_match_under_conditions(site, minimum_odd, bet, live=False,
                                 date_max=None, time_max=None,
@@ -653,7 +675,8 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """
-    all_odds = parse_nba() if sport == 'nba' else parse_sport("tennis")
+#     all_odds = parse_nba() if sport == 'nba' else parse_sport("tennis")
+    all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/tennis/Hambourg-(500-Series)-ed837", is_1N2=False)
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
