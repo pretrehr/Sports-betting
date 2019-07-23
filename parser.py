@@ -262,91 +262,6 @@ def parse_all(*particular_sites):
     match_odds_hash.update(parse_all_12(*particular_sites))
     return match_odds_hash
 
-def parse_tennis(*particular_sites):
-    """
-    Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
-    returns a hashmap of the tennis matches and the odds of the bookmakers
-    """
-    competitions = []
-    try:
-        soup = BeautifulSoup(urlopen(TENNIS), features="lxml")
-    except urllib.error.URLError:
-        print("No Internet connection")
-        return {}
-    for line in soup.find_all(['a', 'td', 'img']):
-        if (line.name == 'a' and 'href' in line.attrs):
-            if "tennis" in line['href'] and "ed" in line['href']:
-                competitions.append(PREFIX+line['href'])
-    match_odds_hash = {}
-    surebet = False
-    surebet_matches = []
-    for url in competitions:
-        try:
-            soup = BeautifulSoup(urlopen(url), features="lxml")
-        except UnicodeEncodeError:
-            url = url.replace('é', 'e').replace('è', 'e')
-            soup = BeautifulSoup(urlopen(url), features="lxml")
-        except urllib.error.URLError:
-            print("No Internet connection")
-            return match_odds_hash
-        count_teams = 0
-        count_odds = 0
-        odds = []
-        match = ""
-        date = None
-        for line in soup.find_all(['a', 'td', 'img']):
-            if (line.name == 'a' and 'class' in line.attrs):
-                if count_teams == 0:
-                    sites_in_dict = True
-                    if match:
-                        for site in particular_sites:
-                            if site not in match_odds_hash[match]['odds']:
-                                sites_in_dict = False
-                                break
-                        if (not match_odds_hash[match] or not sites_in_dict):
-                            del match_odds_hash[match]
-                    match = ""
-                match += line.text
-                if count_teams == 0:
-                    match += ' - '
-                    count_teams += 1
-                else:
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['date'] = date
-                    match_odds_hash[match]['odds'] = {}
-                    count_teams = 0
-                    if "surebetbox" in line.findParent().findParent()['class']:
-                        surebet = True
-                        surebet_matches.append(match)
-            elif 'src' in line.attrs:
-                if 'logop' in line['src']:
-                    site = line['src'].split('-')[1].split('.')[0]
-            elif (line.name == 'td'
-                  and 'class' in line.find_parent().find_parent().attrs
-                  and "bettable" in line.find_parent().find_parent()['class']
-                  and 'à' in line.text):
-                date = convert_date(list(line
-                                         .stripped_strings)[3].split('à'))
-            elif 'class' in line.attrs and 'bet' in line['class']:
-                if ((not particular_sites) or site in particular_sites):
-                    odds.append(float(line.text))
-                    if count_odds < 1:
-                        count_odds += 1
-                    else:
-                        match_odds_hash[match]['odds'][site] = odds
-                        count_odds = 0
-                        odds = []
-        sites_in_dict = True
-        for site in particular_sites:
-            if site not in match_odds_hash[match]['odds']:
-                sites_in_dict = False
-                break
-        if (match and not match_odds_hash[match]['odds']):
-            del match_odds_hash[match]
-    if surebet:
-        print("*************************** SUREBET ***************************")
-        print(surebet_matches)
-    return match_odds_hash
 
 def merge_dicts(dict_args):
     """
@@ -364,7 +279,7 @@ def best_matches_freebet_tennis(site, nb_matches=5):
     Given a bookmaker, return on which tennis matches you should share your
     freebet to maximize your gain
     """
-    all_odds = parse_tennis(site)
+    all_odds = parse_sport("tennis", site)
     best_rate = 0
     for combine in combinations(all_odds.items(), nb_matches):
         odds = cotes_combine([combine[x][1]['odds'][site]
