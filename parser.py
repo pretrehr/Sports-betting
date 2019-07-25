@@ -95,10 +95,17 @@ def parse(url, *particular_sites, is_1N2=True):
             date = convert_date(list(line.stripped_strings)[3].split('à'))
         elif 'class' in line.attrs and 'bet' in line['class']:
             if ((not particular_sites) or site in particular_sites):
-                odds.append(float(line.text))
+                if "-" not in line.text:
+                    odds.append(float(line.text))
+                else:
+                    odds.append("-")
                 if count_odds < n-1:
                     count_odds += 1
                 else:
+                    if "-" not in odds:
+                        odds[0] /= 1.1
+                        odds[2] /= 1.1
+                    del odds[1]
                     match_odds_hash[match]['odds'][site] = odds
                     count_odds = 0
                     odds = []
@@ -117,75 +124,6 @@ def parse(url, *particular_sites, is_1N2=True):
         print(surebet_matches)
     return match_odds_hash
 
-def parse_nba(*particular_sites):
-    """
-    Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
-    returns a hashmap of the NBA matches and the odds of the bookmakers
-    """
-    try:
-        soup = BeautifulSoup(urlopen(NBA), features="lxml")
-    except urllib.error.URLError:
-        print("No Internet connection")
-        return {}
-    match_odds_hash = {}
-    count_teams = 0
-    count_odds = 0
-    odds = []
-    match = ""
-    date = None
-    for line in soup.find_all(['a', 'td', 'img']):
-        if (line.name == 'a' and 'class' in line.attrs):
-            if count_teams == 0:
-                sites_in_dict = True
-                if match:
-                    for site in particular_sites:
-                        if site not in match_odds_hash[match]['odds']:
-                            sites_in_dict = False
-                            break
-                    if (not match_odds_hash[match] or not sites_in_dict):
-                        del match_odds_hash[match]
-                match = ""
-            match += line.text
-            if count_teams == 0:
-                match += ' - '
-                count_teams += 1
-            else:
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {}
-                match_odds_hash[match]['date'] = date
-                count_teams = 0
-        elif 'src' in line.attrs:
-            if 'logop' in line['src']:
-                site = line['src'].split('-')[1].split('.')[0]
-        elif (line.name == 'td'
-              and 'class' in line.find_parent().find_parent().attrs
-              and "bettable" in line.find_parent().find_parent()['class']
-              and 'à' in line.text):
-            date = convert_date(list(line.stripped_strings)[3].split('à'))
-        elif 'class' in line.attrs and 'bet' in line['class']:
-            if ((not particular_sites) or site in particular_sites):
-                if "-" not in line.text:
-                    odds.append(float(line.text))
-                else:
-                    odds.append("-")
-                if count_odds < 2:
-                    count_odds += 1
-                else:
-                    if "-" not in odds:
-                        odds[0] /= 1.1
-                        odds[2] /= 1.1
-                    del odds[1]
-                    match_odds_hash[match]['odds'][site] = odds
-                    count_odds = 0
-                    odds = []
-    sites_in_dict = True
-    for site in particular_sites:
-        if site not in match_odds_hash[match]['odds']:
-            sites_in_dict = False
-            break
-    if (match and not match_odds_hash[match]['odds']) or not sites_in_dict:
-        del match_odds_hash[match]
-    return match_odds_hash
 
 def parse_sport(sport, *particular_sites):
     """
@@ -195,7 +133,7 @@ def parse_sport(sport, *particular_sites):
     try:
         _1N2 = sport not in ["volleyball", "tennis"]
         if sport == "basketball":
-            return parse_nba(*particular_sites)
+            return parse(NBA)
         competitions = []
         try:
             soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
@@ -442,7 +380,7 @@ def best_match_freebet_tennis_nba(site, sport='tennis', freebet=None):
     Given a bookmaker and a sport (nba or tennis), return on which match you
     should bet your freebet to maximize your gain.
     """
-    all_odds = parse_nba() if sport == 'nba' else parse_sport("tennis")
+    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
     best_profit = 0
     for match in all_odds.keys():
         if site in all_odds[match]['odds']:
@@ -590,7 +528,7 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """
-#     all_odds = parse_nba() if sport == 'nba' else parse_sport("tennis")
+#     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
     all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/tennis/Hambourg-(500-Series)-ed837", is_1N2=False)
     best_profit = -bet
     best_rank = 0
@@ -740,7 +678,7 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
     Given several conditions, return the best match to bet on to maximize
     the gain with a cashback-like promotion
     """
-    all_odds = parse_nba() if sport == 'nba' else parse_sport("tennis")
+    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
     best_profit = 0
     best_rank = 0
     hour_max, minute_max = 0, 0
