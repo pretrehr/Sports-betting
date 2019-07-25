@@ -33,7 +33,7 @@ OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
 SPORTS = ["football", "basketball", "tennis", "hockey", "volleyball", "boxe",
           "rugby", "handball"]
 
-def parse(url, *particular_sites, is_1N2=True):
+def parse(url, *particular_sites, is_1N2=True, is_basketball=False):
     """
     Given a url from 'comparateur-de-cotes.fr' and some bookmakers,
     return a hashmap of the matches and the odds of the bookmakers
@@ -102,10 +102,11 @@ def parse(url, *particular_sites, is_1N2=True):
                 if count_odds < n-1:
                     count_odds += 1
                 else:
-                    if "-" not in odds:
-                        odds[0] /= 1.1
-                        odds[2] /= 1.1
-                    del odds[1]
+                    if is_basketball:
+                        if "-" not in odds and is_basketball:
+                            odds[0] /= 1.1
+                            odds[2] /= 1.1
+                        del odds[1]
                     match_odds_hash[match]['odds'][site] = odds
                     count_odds = 0
                     odds = []
@@ -133,7 +134,7 @@ def parse_sport(sport, *particular_sites):
     try:
         _1N2 = sport not in ["volleyball", "tennis"]
         if sport == "basketball":
-            return parse(NBA)
+            return parse(NBA, is_basketball=True)
         competitions = []
         try:
             soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
@@ -147,8 +148,8 @@ def parse_sport(sport, *particular_sites):
                     competitions.append(PREFIX+line['href'])
         for url in competitions:
             parsing = parse(url, *particular_sites, is_1N2=_1N2)
-            if not parsing:
-                break
+#             if not parsing:
+#                 break
             match_odds_hash.update(parsing)
     except KeyboardInterrupt:
         try:
@@ -171,6 +172,7 @@ def parse_all_1N2(*particular_sites):
             parsing = parse_sport(sport, *particular_sites)
             if "KeyboardInterrupt" in parsing:
                 del parsing["KeyboardInterrupt"]
+                print("Process ended\n")
                 match_odds_hash.update(parsing)
                 break
             match_odds_hash.update(parsing)
