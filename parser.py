@@ -50,9 +50,8 @@ def parse(url, *particular_sites, is_1N2=True, is_basketball=False):
     except urllib.error.URLError:
         print("No Internet connection")
         return {}
-    print(url.split("-ed")[0].split(PREFIX+"comparateur/")[1].replace("-", " ").split("/")[1])
-    print("last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
-    print("")
+    compet_name = url.split("-ed")[0].split(PREFIX+"comparateur/")[1].replace("-", " ").split("/")[1]
+    print(compet_name, (47-len(compet_name))*" ", "last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
     match_odds_hash = {}
     count_teams = 0
     count_odds = 0
@@ -464,6 +463,7 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     """
 #     all_odds = parse_all_1N2()
     all_odds = parse_sport("football")
+#     all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/football/France-Ligue-2-ed9")
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -530,8 +530,7 @@ def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """
-#     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
-    all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/tennis/Hambourg-(500-Series)-ed837", is_1N2=False)
+    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
