@@ -317,16 +317,20 @@ def best_matches_freebet3(main_site, second_site, nb_freebet_second_site,
     print(best_odds)
     return best_matches
 
-def best_matches_freebet4(main_site, *second_sites, freebets):
+def best_matches_freebet4(main_site, freebets):
     """
-    Compute of best way to bet freebets
+    Compute of best way to bet freebets following the model 
+    [[bet, bookmaker], ...]
     """
+    second_sites = set([freebet[1] for freebet in freebets])
     all_odds = parse_all_1N2(main_site, *second_sites)
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
     nb_freebets = len(freebets)
-    for combine in combinations(all_odds.items(), nb_matches):
+    combis = list(combinations(all_odds.items(), nb_matches))
+    print("appr. time to wait:", len(combis)/54, "s")
+    for combine in combis:
         main_odds = cotes_freebet(
             cotes_combine([combine[x][1]['odds'][main_site]
                            for x in range(nb_matches)]))
@@ -337,14 +341,18 @@ def best_matches_freebet4(main_site, *second_sites, freebets):
         for perm in permutations(range(n), nb_freebets):
             defined_second_sites = [[perm[i], freebet[0], freebet[1]]
                                     for i, freebet in enumerate(freebets)]
+            copy_second_sites = deepcopy(defined_second_sites)
             defined_bets_temp = defined_bets(dict_combine_odds,
                                              main_site, defined_second_sites)
             if defined_bets_temp[0]/np.sum(defined_bets_temp[1]) > best_rate:
                 best_rate = defined_bets_temp[0]/np.sum(defined_bets_temp[1])
                 best_combine = combine
                 best_bets = defined_bets_temp
+                best_defined_second_sites = copy_second_sites
+                best_dict_combine_odds = dict_combine_odds
     pprint((best_rate, best_combine[0][0], best_combine[1][0], best_bets))
-    pprint(dict_combine_odds)
+    pprint(best_dict_combine_odds)
+    pprint(best_defined_second_sites)
     return best_bets[1]
 
 def defined_bets(odds, main_site, second_sites):
@@ -352,7 +360,7 @@ def defined_bets(odds, main_site, second_sites):
     second_sites type : [[rank, bet, site],...]
     """
     if second_sites:
-        odds_adapted = odds[main_site]
+        odds_adapted = deepcopy(odds[main_site])
         sites = [main_site for _ in odds[main_site]]
         for bet in second_sites:
             odds_adapted[bet[0]] = odds[bet[2]][bet[0]]
@@ -376,12 +384,12 @@ def defined_bets(odds, main_site, second_sites):
         return [gain_freebets+res[0], [bets]+res[1], [sites]+res[2]]
     return [0, [], []]
 
-def best_match_freebet_tennis_nba(site, sport='tennis', freebet=None):
+def best_match_freebet_tennis_basket(site, sport='tennis', freebet=None):
     """
     Given a bookmaker and a sport (nba or tennis), return on which match you
     should bet your freebet to maximize your gain.
     """
-    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
+    all_odds = parse_sport("tennis") if sport == 'tennis' else parse_sport("basketball")
     best_profit = 0
     for match in all_odds.keys():
         if site in all_odds[match]['odds']:
@@ -417,8 +425,8 @@ def best_match_freebet_tennis_nba(site, sport='tennis', freebet=None):
 
 def best_match_freebet_football(site, freebet=None):
     """
-    Given a bookmaker and a sport (nba or tennis), return on which match you
-    should bet your freebet to maximize your gain.
+    Given a bookmaker, return on which match you should bet your freebet to
+    maximize your gain.
     """
     all_odds = parse_sport("football")
     best_profit = 0
@@ -522,7 +530,7 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     except UnboundLocalError:
         print("No match found")
 
-def best_match_under_conditions_basket_tennis(site, sport, minimum_odd, bet,
+def best_match_under_conditions_tennis_basket(site, sport, minimum_odd, bet,
                                               date_max=None, time_max=None,
                                               date_min=None, time_min=None):
     """
