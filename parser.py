@@ -4,7 +4,6 @@ functions for parsing odds on http://www.comparateur-de-cotes.fr
 """
 
 
-from urllib.request import urlopen
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
@@ -32,6 +31,8 @@ TOP14 = PREFIX+"comparateur/rugby/France-Top-14-ed341"
 OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
 SPORTS = ["football", "basketball", "tennis", "hockey", "volleyball", "boxe",
           "rugby", "handball"]
+MAIN_CHAMPIONSHIPS = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
+                      CHAMPIONS_LEAGUE, EUROPA_LEAGUE]
 
 def parse(url, *particular_sites, is_1N2=True, is_basketball=False):
     """
@@ -43,15 +44,17 @@ def parse(url, *particular_sites, is_1N2=True, is_basketball=False):
     else:
         n = 2
     try:
-        soup = BeautifulSoup(urlopen(url), features="lxml")
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     except UnicodeEncodeError:
         url = url.replace('é', 'e').replace('è', 'e')
-        soup = BeautifulSoup(urlopen(url), features="lxml")
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     except urllib.error.URLError:
         print("No Internet connection")
         return {}
-    compet_name = url.split("-ed")[0].split(PREFIX+"comparateur/")[1].replace("-", " ").split("/")[1]
-    print(compet_name, (47-len(compet_name))*" ", "last update:", str(soup).split("créée le  ")[1].split("</div>")[0])
+    compet_name = (url.split("-ed")[0].split(PREFIX+"comparateur/")[1]
+                   .replace("-", " ").split("/")[1])
+    print(compet_name, (47-len(compet_name))*" ", "last update:",
+          str(soup).split("créée le  ")[1].split("</div>")[0])
     match_odds_hash = {}
     count_teams = 0
     count_odds = 0
@@ -136,8 +139,8 @@ def parse_sport(sport, *particular_sites):
             return parse(NBA, is_basketball=True)
         competitions = []
         try:
-            soup = BeautifulSoup(urlopen(PREFIX+"comparateur/"+sport),
-                                features="lxml")
+            soup = BeautifulSoup(urllib.request.urlopen(PREFIX+"comparateur/"+sport),
+                                 features="lxml")
         except urllib.error.URLError:
             print("No Internet connection")
             return match_odds_hash
@@ -319,18 +322,26 @@ def best_matches_freebet3(main_site, second_site, nb_freebet_second_site,
 
 def best_matches_freebet4(main_site, freebets):
     """
-    Compute of best way to bet freebets following the model 
+    Compute of best way to bet freebets following the model
     [[bet, bookmaker], ...]
     """
-    second_sites = set([freebet[1] for freebet in freebets])
-    all_odds = parse_all_1N2(main_site, *second_sites)
+    second_sites = {freebet[1] for freebet in freebets}
+    all_odds = merge_dicts([parse(url, main_site, *second_sites)
+                            for url in MAIN_CHAMPIONSHIPS])
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
     nb_freebets = len(freebets)
     combis = list(combinations(all_odds.items(), nb_matches))
-    print("appr. time to wait:", len(combis)/54, "s")
-    for combine in combis:
+    nb_combis = len(combis)
+    progress = 10
+    start = time.time()
+    for i, combine in enumerate(combis):
+        if i == 20:
+            print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
+        if i/nb_combis*100 > progress:
+            print(str(progress)+"%")
+            progress += 10
         main_odds = cotes_freebet(
             cotes_combine([combine[x][1]['odds'][main_site]
                            for x in range(nb_matches)]))
@@ -353,6 +364,7 @@ def best_matches_freebet4(main_site, freebets):
     pprint((best_rate, best_combine[0][0], best_combine[1][0], best_bets))
     pprint(best_dict_combine_odds)
     pprint(best_defined_second_sites)
+    print(time.time()-start)
     return best_bets[1]
 
 def defined_bets(odds, main_site, second_sites):
