@@ -3,12 +3,13 @@
 functions for parsing odds on http://www.comparateur-de-cotes.fr
 """
 
-
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
 import urllib
+import urllib.error
+import urllib.request
 import time
 import os
 from bs4 import BeautifulSoup
@@ -150,8 +151,6 @@ def parse_sport(sport, *particular_sites):
                     competitions.append(PREFIX+line['href'])
         for url in competitions:
             parsing = parse(url, *particular_sites, is_1N2=_1N2)
-#             if not parsing:
-#                 break
             match_odds_hash.update(parsing)
     except KeyboardInterrupt:
         try:
@@ -480,10 +479,8 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     Given a bookmaker, return on which match you should bet to maximize your
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
-    """
-#     all_odds = parse_all_1N2()
+    """ 
     all_odds = parse_sport("football")
-#     all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/football/France-Ligue-2-ed9")
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -628,7 +625,8 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
     Given several conditions, return the best match to bet on to maximize
     the gain with a cashback-like promotion
     """
-    all_odds = parse_all_1N2()
+#     all_odds = parse_all_1N2()
+    all_odds = parse(LIGUE1)
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
