@@ -12,6 +12,8 @@ import urllib.error
 import urllib.request
 import time
 import os
+import sys
+import winsound
 from bs4 import BeautifulSoup
 import numpy as np
 os.chdir(os.path.dirname(os.path.realpath('__file__')))
@@ -33,7 +35,7 @@ OFFLINE = "file:///D:/Rapha%C3%ABl/Mes%20documents/Paris/surebet.html"
 SPORTS = ["football", "basketball", "tennis", "hockey", "volleyball", "boxe",
           "rugby", "handball"]
 MAIN_CHAMPIONSHIPS = [LIGUE1, PREMIER_LEAGUE, LIGA, BUNDESLIGA, SERIE_A,
-                      CHAMPIONS_LEAGUE, EUROPA_LEAGUE]
+                      CHAMPIONS_LEAGUE, EUROPA_LEAGUE, "http://www.comparateur-de-cotes.fr/comparateur/football/Qualifs.-Euro-2020-ed251"]
 
 def parse(url, *particular_sites, is_1N2=True, is_basketball=False):
     """
@@ -136,8 +138,8 @@ def parse_sport(sport, *particular_sites):
     match_odds_hash = {}
     try:
         _1N2 = sport not in ["volleyball", "tennis"]
-        if sport == "basketball":
-            return parse(NBA, is_basketball=True)
+#         if sport == "basketball":
+#             return parse(NBA, is_basketball=True)
         competitions = []
         try:
             soup = BeautifulSoup(urllib.request.urlopen(PREFIX+"comparateur/"+sport),
@@ -150,7 +152,10 @@ def parse_sport(sport, *particular_sites):
                 if sport in line['href'] and "ed" in line['href']:
                     competitions.append(PREFIX+line['href'])
         for url in competitions:
-            parsing = parse(url, *particular_sites, is_1N2=_1N2)
+            if sport == "basketball":
+                parsing = parse(url, *particular_sites, is_basketball=True)
+            else:
+                parsing = parse(url, *particular_sites, is_1N2=_1N2)
             match_odds_hash.update(parsing)
     except KeyboardInterrupt:
         try:
@@ -169,7 +174,7 @@ def parse_all_1N2(*particular_sites):
     match_odds_hash = {}
     for sport in SPORTS:
         if sport not in ["tennis", "volleyball", "basketball"]:
-            print(sport)
+            print("\n"+sport.capitalize())
             parsing = parse_sport(sport, *particular_sites)
             if "KeyboardInterrupt" in parsing:
                 del parsing["KeyboardInterrupt"]
@@ -241,7 +246,6 @@ def best_matches_freebet(site, nb_matches=2):
     Given a bookmaker, return on which matches you should share your freebet to
     maximize your gain
     """
-    all_odds = parse_sport("football", site)
     best_rate = 0
     for combine in combinations(all_odds.items(), nb_matches):
         odds = cotes_combine([combine[x][1]['odds'][site]
@@ -262,7 +266,8 @@ def best_matches_freebet2(main_site, second_site, nb_matches=2):
     Given two bookmakers, return on which matches you should share your freebets
     to maximize your gain, knowing you bet only once on second_site
     """
-    all_odds = parse_all_1N2(main_site, second_site)
+#     all_odds = parse_all_1N2(main_site, second_site)
+    all_odds = parse_sport("rugby", main_site, second_site)
     best_rate = 0
     n = 3**nb_matches
     for combine in combinations(all_odds.items(), nb_matches):
@@ -366,6 +371,64 @@ def best_matches_freebet4(main_site, freebets):
     print(time.time()-start)
     return best_bets[1]
 
+def best_matches_freebet5(main_sites, freebets):
+    """
+    Compute of best way to bet freebets following the model
+    [[bet, bookmaker], ...]
+    """
+    second_sites = {freebet[1] for freebet in freebets}
+    all_odds = merge_dicts([parse(url, *main_sites, *second_sites)
+                            for url in MAIN_CHAMPIONSHIPS])
+#     all_odds = parse(LIGUE1, *main_sites, *second_sites)
+    best_rate = 0
+    nb_matches = 1
+    n = 3**nb_matches
+    nb_freebets = len(freebets)
+    combis = list(combinations(all_odds.items(), nb_matches))
+    nb_combis = len(combis)
+    progress = 10
+    start = time.time()
+    for i, combine in enumerate(combis):
+        if i == 20:
+            print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
+        if i/nb_combis*100 > progress:
+            print(str(progress)+"%")
+            progress += 10
+        main_sites_distribution = [main_sites[0] for _ in range(n)]
+        main_odds = cotes_freebet(
+            cotes_combine([combine[x][1]['odds'][main_sites[0]]
+                           for x in range(nb_matches)]))
+        for main in main_sites[1:]:
+            potential_odds = cotes_freebet(
+                cotes_combine([combine[x][1]['odds'][main]
+                               for x in range(nb_matches)]))
+            for j, odd in enumerate(potential_odds):
+                if odd>main_odds[j]:
+                    main_odds[j] = odd
+                    main_sites_distribution[j] = main
+        second_odds = {second_site:cotes_freebet(cotes_combine(
+            combine[x][1]['odds'][second_site] for x in range(nb_matches)))
+                       for second_site in second_sites}
+        dict_combine_odds = merge_dicts([{}, second_odds])
+        for perm in permutations(range(n), nb_freebets):
+            defined_second_sites = [[perm[i], freebet[0], freebet[1]]
+                                    for i, freebet in enumerate(freebets)]
+            copy_second_sites = deepcopy(defined_second_sites)
+            defined_bets_temp = defined_bets2(main_odds, dict_combine_odds,
+                                              main_sites_distribution,
+                                              defined_second_sites)
+            if defined_bets_temp[0]/np.sum(defined_bets_temp[1]) > best_rate:
+                best_rate = defined_bets_temp[0]/np.sum(defined_bets_temp[1])
+                best_combine = combine
+                best_bets = defined_bets_temp
+                best_defined_second_sites = copy_second_sites
+                best_dict_combine_odds = dict_combine_odds
+    pprint((best_rate, best_combine[0][0], best_combine[1][0], best_bets))
+    pprint(best_dict_combine_odds)
+    pprint(best_defined_second_sites)
+    print(time.time()-start)
+    return best_bets[1]
+
 def defined_bets(odds, main_site, second_sites):
     """
     second_sites type : [[rank, bet, site],...]
@@ -395,12 +458,44 @@ def defined_bets(odds, main_site, second_sites):
         return [gain_freebets+res[0], [bets]+res[1], [sites]+res[2]]
     return [0, [], []]
 
+def defined_bets2(odds_main, odds_second, main_sites, second_sites):
+    """
+    second_sites type : [[rank, bet, site],...]
+    """
+    if second_sites:
+        sites = deepcopy(main_sites)
+#         print(odds)
+        odds_adapted = deepcopy(odds_main)
+        for bet in second_sites:
+            odds_adapted[bet[0]] = odds_second[bet[2]][bet[0]]
+            sites[bet[0]] = bet[2]
+        for bet in second_sites:
+            valid = True
+            bets = mises2(odds_adapted, bet[1], bet[0])
+            gain_freebets = bets[0]*odds_adapted[0]
+            for bet2 in second_sites:
+                if bets[bet2[0]] > bet2[1]:
+                    valid = False
+                    break
+            if valid:
+                break
+        for i, elem in enumerate(second_sites):
+            second_sites[i][1] -= bets[elem[0]]
+            if elem[1] < 1e-6:
+                i_0 = i
+        del second_sites[i_0]
+        res = defined_bets2(odds_main, odds_second, main_sites, second_sites)
+        return [gain_freebets+res[0], [bets]+res[1], [sites]+res[2]]
+    return [0, [], []]
+
+
 def best_match_freebet_tennis_basket(site, sport='tennis', freebet=None):
     """
     Given a bookmaker and a sport (nba or tennis), return on which match you
     should bet your freebet to maximize your gain.
     """
     all_odds = parse_sport("tennis") if sport == 'tennis' else parse_sport("basketball")
+    del all_odds["Matteo Berrettini - Rafael Nadal"]
     best_profit = 0
     for match in all_odds.keys():
         if site in all_odds[match]['odds']:
@@ -626,7 +721,7 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
     the gain with a cashback-like promotion
     """
 #     all_odds = parse_all_1N2()
-    all_odds = parse(LIGUE1)
+    all_odds = merge_dicts([parse(url) for url in MAIN_CHAMPIONSHIPS])
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -683,8 +778,8 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
         print(best_match)
         print(all_odds[best_match]['date'])
         print(best_overall_odds, sites)
-        pari_rembourse_si_perdant(best_overall_odds, bet, best_rank, freebet,
-                                  rate_cashback, True)
+        return pari_rembourse_si_perdant(best_overall_odds, bet, best_rank, freebet,
+                                         rate_cashback, True)
     except UnboundLocalError:
         print("No match found")
 
@@ -698,6 +793,7 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
     the gain with a cashback-like promotion
     """
     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
+#     all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/basketball/Coupe-du-Monde-FIBA-(H)-ed1487", is_basketball=1)
     best_profit = 0
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -725,6 +821,8 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
     else:
         datetime_min = None
     for match in all_odds:
+#         players = ["Paire", "Tsonga", "Gasquet", "Simon", "Monfils", "Pouille"]
+#         if any(player in match for player in players):
         if (site in all_odds[match]['odds']
                 and (not date_max or all_odds[match]['date'] <= datetime_max)
                 and (not date_min or all_odds[match]['date'] >= datetime_min)):
@@ -738,12 +836,12 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
                         best_sites[i] = odds[0]
             for i in range(2):
                 odds_to_check = (best_odds[:i]
-                                 +[combi_odd*odds_site[i]
-                                   *(1+combi_max)-combi_max]
-                                 +best_odds[i+1:])
+                                +[combi_odd*odds_site[i]
+                                *(1+combi_max)-combi_max]
+                                +best_odds[i+1:])
                 if odds_to_check[i]*combi_odd >= minimum_odd:
                     profit = pari_rembourse_si_perdant(odds_to_check, bet, i,
-                                                       freebet, rate_cashback)
+                                                    freebet, rate_cashback)
                     if profit > best_profit:
                         best_rank = i
                         best_profit = profit
@@ -754,7 +852,7 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
         print(best_match)
         print(all_odds[best_match]['date'])
         print(best_overall_odds, sites)
-        pari_rembourse_si_perdant(best_overall_odds, bet, best_rank, freebet,
+        return pari_rembourse_si_perdant(best_overall_odds, bet, best_rank, freebet,
                                   rate_cashback, True)
     except UnboundLocalError:
         print("No match found")
@@ -810,4 +908,27 @@ def best_bets_match(match, site, bet):
             best_profit = profit
             best_overall_odds = odds_to_check
             sites = best_sites[:i]+[site]+best_sites[i+1:]
-    print(best_profit, sites, best_overall_odds, sep='\n')
+            bets = mises2(odds_to_check, bet, i)
+    print(best_profit, sites, best_overall_odds, bets, sep='\n')
+
+def repeat_research():
+    while True:        
+        saved_stdout = sys.stdout
+        sys.stdout = open(os.devnull, "w")
+        res_football = best_match_cashback("winamax", 1.1, 100, rate_cashback=0.9)
+        res_tennis = best_match_cashback_tennis_basket("winamax", "tennis", 1.1, 100, rate_cashback=0.9)
+        sys.stdout = saved_stdout
+        print(res_football, res_tennis)
+        winsound.Beep(262, 1000)
+        winsound.Beep(330, 1000)
+        winsound.Beep(392, 1000)
+        sys.stdout = open(os.devnull, "w")
+        while (res_football<50 and res_tennis<50):
+            res_football = best_match_cashback("winamax", 1.1, 100, rate_cashback=0.9)
+            res_tennis = best_match_cashback_tennis_basket("winamax", "tennis", 1.1, 100, rate_cashback=0.9)
+            if res_football is None:
+                break
+        if res_football is None:
+            sys.stdout = saved_stdout
+            break
+        

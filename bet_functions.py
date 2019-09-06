@@ -208,14 +208,15 @@ def gains_nets_boostes(cotes, gain_max, output=False):
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(cote_boostee, cotes))
+    print(new_cotes)
     for i, cote in enumerate(cotes):
         try:
             mise = gain_max/(cotes[i]*taux_boost(cote)-1)
             mises_possibles = mises2(new_cotes, mise, i)
             for j, mis in enumerate(mises_possibles):
-                if mis*(cotes[j]*taux_boost(cotes[j])-1) > gain_max+0.1:
+                if mis*(cotes[j]*taux_boost(cotes[j])-1) > gain_max+0.1 or mis<0:
                     break
             else:
                 return mises2(new_cotes, mise, i, output)
         except ZeroDivisionError:
-            break
+            pass
