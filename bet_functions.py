@@ -3,6 +3,8 @@
 Assistant de paris sportifs
 """
 
+#Salzburg: 46.18
+#N:109.2
 
 from itertools import combinations, product
 from math import log, exp
@@ -179,10 +181,12 @@ def promo_zebet(cotes):
     print("gain=", gains)
     return mis
 
-def cote_boostee(cote):
+def cote_boostee(cote, boost_selon_cote = True):
     """
     Calcul de cote boostee pour promotion Betclic
     """
+    if not boost_selon_cote:
+        return cote+(cote-1)*0.77
     if cote < 2:
         return cote
     if cote < 2.51:
@@ -191,10 +195,12 @@ def cote_boostee(cote):
         return cote+(cote-1)*0.5*0.77
     return cote+(cote-1)*0.77
 
-def taux_boost(cote):
+def taux_boost(cote, boost_selon_cote = True):
     """
     Calcul du taux de boost pour promotion Betclic
     """
+    if not boost_selon_cote:
+        return 1
     if cote < 2:
         return 0
     if cote < 2.51:
@@ -203,20 +209,44 @@ def taux_boost(cote):
         return 0.5
     return 1
 
-def gains_nets_boostes(cotes, gain_max, output=False):
+def gains_nets_boostes(cotes, gain_max, boost_selon_cote = True, output=False):
     """
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
-    new_cotes = list(map(cote_boostee, cotes))
+    new_cotes = list(map(lambda x:cote_boostee(x, boost_selon_cote), cotes))
     print(new_cotes)
     for i, cote in enumerate(cotes):
         try:
-            mise = gain_max/(cotes[i]*taux_boost(cote)-1)
+            mise = gain_max/(cotes[i]*taux_boost(cote, boost_selon_cote)-1)
             mises_possibles = mises2(new_cotes, mise, i)
             for j, mis in enumerate(mises_possibles):
-                if mis*(cotes[j]*taux_boost(cotes[j])-1) > gain_max+0.1 or mis<0:
+                if mis*(cotes[j]*taux_boost(cotes[j], boost_selon_cote)-1) > gain_max+0.1 or mis<0:
                     break
             else:
                 return mises2(new_cotes, mise, i, output)
         except ZeroDivisionError:
             pass
+
+
+def pari_rembourse_si_perdant2(cotes, remboursement_max, freebet, taux_remboursement):
+    rg_max = np.argmax(cotes)
+    n = len(cotes)
+    facteur = (1-0.23*freebet)*taux_remboursement
+    systeme = []
+    for i, cote in enumerate(cotes):
+        line = [facteur for _ in range(n+1)]
+        line[-1] = -1
+        line[i] = cote
+        systeme.append(line)
+    line = [taux_remboursement for _ in range(n+1)]
+    line[rg_max] = 0
+    line[-1] = 0
+    systeme.append(line)
+    a = np.array(systeme)
+    values = [0 for _ in range(n+1)]
+    values[-1] = remboursement_max
+    b = np.array(values)
+    x = np.linalg.solve(a, b)
+    print("Bénéfice net:", x[-1]-sum(x[:-1]))
+    print(x[:-1])
+    

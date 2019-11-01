@@ -3,10 +3,11 @@
 functions for parsing odds on http://www.comparateur-de-cotes.fr
 """
 
+
 from copy import deepcopy
-from datetime import datetime
 from pprint import pprint
 from itertools import combinations, permutations
+import datetime
 import urllib
 import urllib.error
 import urllib.request
@@ -14,6 +15,7 @@ import time
 import os
 import sys
 import winsound
+import copy
 from bs4 import BeautifulSoup
 import numpy as np
 os.chdir(os.path.dirname(os.path.realpath('__file__')))
@@ -246,9 +248,11 @@ def best_matches_freebet(site, nb_matches=2):
     Given a bookmaker, return on which matches you should share your freebet to
     maximize your gain
     """
+#     all_odds = parse_sport("football")
+    all_odds = main_odds
     best_rate = 0
     for combine in combinations(all_odds.items(), nb_matches):
-        odds = cotes_combine([combine[x][1]['odds'][site]
+        odds = cotes_combine([combine[x][1]['odds'][site] if site in combine[x][1]['odds'] else [0]
                               for x in range(nb_matches)])
         freebet_odds = cotes_freebet(odds)
         rate = gain(freebet_odds)
@@ -267,7 +271,12 @@ def best_matches_freebet2(main_site, second_site, nb_matches=2):
     to maximize your gain, knowing you bet only once on second_site
     """
 #     all_odds = parse_all_1N2(main_site, second_site)
-    all_odds = parse_sport("rugby", main_site, second_site)
+#     all_odds = parse_sport("rugby", main_site, second_site)
+    new_odds = copy.deepcopy(c)
+    all_odds = {}
+    for match in new_odds:
+        if main_site in new_odds[match]["odds"].keys() and second_site in new_odds[match]["odds"].keys():
+            all_odds[match] = new_odds[match]
     best_rate = 0
     n = 3**nb_matches
     for combine in combinations(all_odds.items(), nb_matches):
@@ -330,8 +339,15 @@ def best_matches_freebet4(main_site, freebets):
     [[bet, bookmaker], ...]
     """
     second_sites = {freebet[1] for freebet in freebets}
-    all_odds = merge_dicts([parse(url, main_site, *second_sites)
-                            for url in MAIN_CHAMPIONSHIPS])
+#     all_odds = merge_dicts([parse(url, main_site, *second_sites)
+#                             for url in MAIN_CHAMPIONSHIPS])
+    print(second_sites)
+    new_odds = copy.deepcopy(c)
+    all_odds = {}
+    for match in new_odds:
+        if not(any([site not in new_odds[match]["odds"].keys() for site in list(second_sites)+[main_site]])):
+            if match == 'Nîmes - Amiens' or match == 'Metz - Nantes':
+                all_odds[match] = new_odds[match]
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
@@ -377,11 +393,17 @@ def best_matches_freebet5(main_sites, freebets):
     [[bet, bookmaker], ...]
     """
     second_sites = {freebet[1] for freebet in freebets}
-    all_odds = merge_dicts([parse(url, *main_sites, *second_sites)
-                            for url in MAIN_CHAMPIONSHIPS])
+#     all_odds = merge_dicts([parse(url, *main_sites, *second_sites)
+#                             for url in MAIN_CHAMPIONSHIPS])
 #     all_odds = parse(LIGUE1, *main_sites, *second_sites)
+    new_odds = copy.deepcopy(c)
+    all_odds = {}
+    for match in new_odds:
+        if not(any([site not in new_odds[match]["odds"].keys() for site in main_sites]) or any([site not in new_odds[match]["odds"].keys() for site in second_sites])):
+            if new_odds[match]["odds"]:
+                all_odds[match] = new_odds[match]
     best_rate = 0
-    nb_matches = 1
+    nb_matches = 2
     n = 3**nb_matches
     nb_freebets = len(freebets)
     combis = list(combinations(all_odds.items(), nb_matches))
@@ -494,8 +516,9 @@ def best_match_freebet_tennis_basket(site, sport='tennis', freebet=None):
     Given a bookmaker and a sport (nba or tennis), return on which match you
     should bet your freebet to maximize your gain.
     """
-    all_odds = parse_sport("tennis") if sport == 'tennis' else parse_sport("basketball")
-    del all_odds["Matteo Berrettini - Rafael Nadal"]
+#     all_odds = parse_sport("tennis") if sport == 'tennis' else parse_sport("basketball")
+#     all_odds = nba_odds
+    all_odds = odds_tennis if sport == 'tennis' else odds_nba
     best_profit = 0
     for match in all_odds.keys():
         if site in all_odds[match]['odds']:
@@ -534,7 +557,10 @@ def best_match_freebet_football(site, freebet=None):
     Given a bookmaker, return on which match you should bet your freebet to
     maximize your gain.
     """
-    all_odds = parse_sport("football")
+#     all_odds = merge_dicts([parse_sport("rugby"), parse_sport("football")])
+#     del all_odds['Namibie - Canada']
+#     del all_odds['Australie - Uruguay']
+    all_odds = main_odds
     best_profit = 0
     for match in all_odds:
         if site in all_odds[match]['odds']:
@@ -576,6 +602,7 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     date
     """ 
     all_odds = parse_sport("football")
+#     all_odds = parse(LIGUE1)
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -587,7 +614,7 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max,
+        datetime_max = datetime.datetime(year_max, month_max, day_max,
                                 hour_max, minute_max)
     else:
         datetime_max = None
@@ -598,7 +625,7 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
             hour_min, minute_min = (int(_) for _ in time_min.split('h'))
     if date_min:
         day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
-        datetime_min = datetime(year_min, month_min, day_min,
+        datetime_min = datetime.datetime(year_min, month_min, day_min,
                                 hour_min, minute_min)
     else:
         datetime_min = None
@@ -642,7 +669,8 @@ def best_match_under_conditions_tennis_basket(site, sport, minimum_odd, bet,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """
-    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
+#     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
+    all_odds = odds_tennis
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -654,7 +682,7 @@ def best_match_under_conditions_tennis_basket(site, sport, minimum_odd, bet,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max, hour_max,
+        datetime_max = datetime.datetime(year_max, month_max, day_max, hour_max,
                                 minute_max)
     else:
         datetime_max = None
@@ -665,7 +693,7 @@ def best_match_under_conditions_tennis_basket(site, sport, minimum_odd, bet,
             hour_min, minute_min = (int(_) for _ in time_min.split('h'))
     if date_min:
         day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
-        datetime_min = datetime(year_min, month_min, day_min,
+        datetime_min = datetime.datetime(year_min, month_min, day_min,
                                 hour_min, minute_min)
     else:
         datetime_min = None
@@ -710,7 +738,7 @@ def convert_date(date):
     del date_array[0]
     date_array[1] = months.index(date_array[1])+1
     hour_array = date[1].split('h')
-    return datetime(int(date_array[2]), date_array[1], int(date_array[0]),
+    return datetime.datetime(int(date_array[2]), date_array[1], int(date_array[0]),
                     int(hour_array[0]), int(hour_array[1]))
 
 def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
@@ -721,7 +749,10 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
     the gain with a cashback-like promotion
     """
 #     all_odds = parse_all_1N2()
-    all_odds = merge_dicts([parse(url) for url in MAIN_CHAMPIONSHIPS])
+#     all_odds = parse(LIGUE1)
+#     all_odds = parse_sport("rugby")
+#     all_odds = merge_dicts([parse(url) for url in MAIN_CHAMPIONSHIPS])
+    all_odds = main_odds
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -733,7 +764,7 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max,
+        datetime_max = datetime.datetime(year_max, month_max, day_max,
                                 hour_max, minute_max)
     else:
         datetime_max = None
@@ -744,7 +775,7 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
             hour_min, minute_min = (int(_) for _ in time_min.split('h'))
     if date_min:
         day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
-        datetime_min = datetime(year_min, month_min, day_min,
+        datetime_min = datetime.datetime(year_min, month_min, day_min,
                                 hour_min, minute_min)
     else:
         datetime_min = None
@@ -805,7 +836,7 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
             hour_max, minute_max = (int(_) for _ in time_max.split('h'))
     if date_max:
         day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime(year_max, month_max, day_max, hour_max,
+        datetime_max = datetime.datetime(year_max, month_max, day_max, hour_max,
                                 minute_max)
     else:
         datetime_max = None
@@ -816,13 +847,11 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
             hour_min, minute_min = (int(_) for _ in time_min.split('h'))
     if date_min:
         day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
-        datetime_min = datetime(year_min, month_min, day_min,
+        datetime_min = datetime.datetime(year_min, month_min, day_min,
                                 hour_min, minute_min)
     else:
         datetime_min = None
     for match in all_odds:
-#         players = ["Paire", "Tsonga", "Gasquet", "Simon", "Monfils", "Pouille"]
-#         if any(player in match for player in players):
         if (site in all_odds[match]['odds']
                 and (not date_max or all_odds[match]['date'] <= datetime_max)
                 and (not date_min or all_odds[match]['date'] >= datetime_min)):
@@ -876,7 +905,8 @@ def odds_match(match):
     """
     Return the different odds of a given match
     """
-    all_odds = parse_all()
+#     all_odds = parse_all()
+    all_odds = main_odds
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
