@@ -3,7 +3,6 @@
 functions for parsing odds on http://www.comparateur-de-cotes.fr
 """
 
-
 from copy import deepcopy
 from pprint import pprint
 from itertools import combinations, permutations
@@ -20,7 +19,8 @@ from bs4 import BeautifulSoup
 import numpy as np
 os.chdir(os.path.dirname(os.path.realpath('__file__')))
 from bet_functions import (gain, gain2, mises2, cotes_combine, cotes_freebet,
-                           pari_rembourse_si_perdant, mises_freebet)
+                           pari_rembourse_si_perdant, mises_freebet,
+                           merge_dicts)
 
 PREFIX = "http://www.comparateur-de-cotes.fr/"
 LIGUE1 = PREFIX+"comparateur/football/France-Ligue-1-ed3"
@@ -211,17 +211,6 @@ def parse_all(*particular_sites):
     return match_odds_hash
 
 
-def merge_dicts(dict_args):
-    """
-    Given any number of dicts, shallow copy and merge into a new dict,
-    precedence goes to key value pairs in latter dicts.
-    """
-    result = {}
-    for dictionary in dict_args:
-        result.update(dictionary)
-    return result
-
-
 def best_matches_freebet_tennis(site, nb_matches=5):
     """
     Given a bookmaker, return on which tennis matches you should share your
@@ -333,6 +322,7 @@ def best_matches_freebet3(main_site, second_site, nb_freebet_second_site,
     print(best_odds)
     return best_matches
 
+
 def best_matches_freebet4(main_site, freebets):
     """
     Compute of best way to bet freebets following the model
@@ -342,12 +332,12 @@ def best_matches_freebet4(main_site, freebets):
 #     all_odds = merge_dicts([parse(url, main_site, *second_sites)
 #                             for url in MAIN_CHAMPIONSHIPS])
     print(second_sites)
-    new_odds = copy.deepcopy(c)
+    new_odds = copy.deepcopy(main_odds)
     all_odds = {}
     for match in new_odds:
         if not(any([site not in new_odds[match]["odds"].keys() for site in list(second_sites)+[main_site]])):
-            if match == 'Nîmes - Amiens' or match == 'Metz - Nantes':
-                all_odds[match] = new_odds[match]
+#             if match == 'Nîmes - Amiens' or match == 'Metz - Nantes':
+            all_odds[match] = new_odds[match]
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
@@ -362,13 +352,13 @@ def best_matches_freebet4(main_site, freebets):
         if i/nb_combis*100 > progress:
             print(str(progress)+"%")
             progress += 10
-        main_odds = cotes_freebet(
+        main_site_odds = cotes_freebet(
             cotes_combine([combine[x][1]['odds'][main_site]
                            for x in range(nb_matches)]))
         second_odds = {second_site:cotes_freebet(cotes_combine(
             combine[x][1]['odds'][second_site] for x in range(nb_matches)))
                        for second_site in second_sites}
-        dict_combine_odds = merge_dicts([{main_site:main_odds}, second_odds])
+        dict_combine_odds = merge_dicts([{main_site:main_site_odds}, second_odds])
         for perm in permutations(range(n), nb_freebets):
             defined_second_sites = [[perm[i], freebet[0], freebet[1]]
                                     for i, freebet in enumerate(freebets)]
@@ -417,7 +407,7 @@ def best_matches_freebet5(main_sites, freebets):
             print(str(progress)+"%")
             progress += 10
         main_sites_distribution = [main_sites[0] for _ in range(n)]
-        main_odds = cotes_freebet(
+        main_site_odds = cotes_freebet(
             cotes_combine([combine[x][1]['odds'][main_sites[0]]
                            for x in range(nb_matches)]))
         for main in main_sites[1:]:
@@ -425,8 +415,8 @@ def best_matches_freebet5(main_sites, freebets):
                 cotes_combine([combine[x][1]['odds'][main]
                                for x in range(nb_matches)]))
             for j, odd in enumerate(potential_odds):
-                if odd>main_odds[j]:
-                    main_odds[j] = odd
+                if odd>main_site_odds[j]:
+                    main_site_odds[j] = odd
                     main_sites_distribution[j] = main
         second_odds = {second_site:cotes_freebet(cotes_combine(
             combine[x][1]['odds'][second_site] for x in range(nb_matches)))
@@ -436,7 +426,7 @@ def best_matches_freebet5(main_sites, freebets):
             defined_second_sites = [[perm[i], freebet[0], freebet[1]]
                                     for i, freebet in enumerate(freebets)]
             copy_second_sites = deepcopy(defined_second_sites)
-            defined_bets_temp = defined_bets2(main_odds, dict_combine_odds,
+            defined_bets_temp = defined_bets2(main_site_odds, dict_combine_odds,
                                               main_sites_distribution,
                                               defined_second_sites)
             if defined_bets_temp[0]/np.sum(defined_bets_temp[1]) > best_rate:
@@ -545,7 +535,7 @@ def best_match_freebet_tennis_basket(site, sport='tennis', freebet=None):
                     best_overall_odds = odds_to_check
                     sites = best_sites[:i]+[site]+best_sites[i+1:]
     try:
-        print(best_match, best_profit, sites, best_overall_odds, sep='\n')
+        print(best_match, all_odds[best_match]["date"], best_profit, sites, best_overall_odds, sep='\n')
         if freebet:
             print(mises_freebet(best_overall_odds, freebet, best_rank, True))
     except UnboundLocalError:
@@ -587,7 +577,7 @@ def best_match_freebet_football(site, freebet=None):
                     best_overall_odds = odds_to_check
                     sites = best_sites[:i]+[site]+best_sites[i+1:]
     try:
-        print(best_match, best_profit, sites, best_overall_odds, sep='\n')
+        print(best_match, all_odds[best_match]["date"], best_profit, sites, best_overall_odds, sep='\n')
         if freebet:
             print(mises_freebet(best_overall_odds, freebet, best_rank, True))
     except UnboundLocalError:
@@ -601,8 +591,9 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
     gain, knowing that you need to bet a bet on a minimum odd before a limit
     date
     """ 
-    all_odds = parse_sport("football")
+#     all_odds = parse_sport("football")
 #     all_odds = parse(LIGUE1)
+    all_odds = main_odds
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -921,7 +912,8 @@ def best_bets_match(match, site, bet):
     Given a match, a bookmaker and a sum to bet, return the best odds on which
     bet among different bookmakers
     """
-    all_odds = odds_match(match)
+#     all_odds = odds_match(match)
+    all_odds = main_odds
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
     best_sites = [site, site, site]

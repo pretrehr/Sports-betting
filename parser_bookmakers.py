@@ -9,6 +9,9 @@ import urllib.error
 import selenium
 import itertools
 from selenium.webdriver.chrome.options import Options
+from database import *
+
+
 
 locale.setlocale(locale.LC_TIME, "fr")
 
@@ -80,7 +83,7 @@ def merge_dict_odds(dict_odds):
         for odds in dict_odds:
             if odds:
                 site = list(list(odds.values())[0]["odds"].keys())[0]
-                if match in odds.keys():
+                if match in odds.keys() and odds[match]["odds"][site]:
                     if not date_found and odds[match]["date"]!="undefined":
                         new_dict[match]["date"] = odds[match]["date"]
                         date_found = True
@@ -129,7 +132,7 @@ def get_link(site, competition, sport="", country=""):
         driver = selenium.webdriver.Chrome("D:/Raphaël/git/Sports-betting/chromedriver")
         driver.get(URLs[site])
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
     else:
         soup = BeautifulSoup(urllib.request.urlopen(URLs[site]), features="lxml")
     radical = URLs[site].split(".fr/")[0]+".fr/"
@@ -156,11 +159,14 @@ def get_link(site, competition, sport="", country=""):
 
 
 def parse_betclic(url=""):
+    if url == "tennis":
+        return parse_sport_betclic("tennis")
     if not url:
         url = "https://www.betclic.fr/football/ligue-1-conforama-e4"
 #     url = 'https://www.betclic.fr/football/angl-premier-league-e3'
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
+    one_match_page = False
     for line in soup.find_all():
         if line.name == "time":
             date = line["datetime"]
@@ -174,6 +180,17 @@ def parse_betclic(url=""):
             match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"betclic":odds}
             match_odds_hash[match]['date'] = date_time
+        elif "class" in line.attrs and "section-header-left" in line["class"]:
+            strings = list(line.stripped_strings)
+            date_time = datetime.datetime.strptime(strings[0], "%A %d %B %Y - %H:%M")
+            match = strings[1]
+            one_match_page = True
+        elif one_match_page and "class" in line.attrs and "expand-selection-bet" in line["class"]:
+            odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
+            match_odds_hash[match] = {}
+            match_odds_hash[match]['odds'] = {"betclic":odds}
+            match_odds_hash[match]['date'] = date_time
+            break
     return match_odds_hash
 
 def parse_sport_betclic(sport):
@@ -182,8 +199,12 @@ def parse_sport_betclic(sport):
     odds = []
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "/"+sport+"/" in line["href"]:
-            link = url+line["href"]
-            odds.append(parse_betclic(link))
+            if "https://" in line["href"]:
+                link = line["href"]
+            else:
+                link = url+line["href"]
+            if not("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
+                odds.append(parse_betclic(link))
     return merge_dicts(odds)
 
 def get_url_betclic(sport):
@@ -282,7 +303,7 @@ def parse_pmu(url=""):
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
             if "//" in string:
-                match = string.replace("//", "-").replace("St ", "Saint-")
+                match = string.replace("//", "-")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
             odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)))
             match_odds_hash[match] = {}
@@ -419,8 +440,25 @@ def parse_sport_winamax(sport):
                     return parse_winamax(url+key)
     
 
+def parse_sport_betstars(sport):
+    driver.get("https://www.betstars.fr/#/{}/competitions".format(sport))
+    urls = set()
+    while not urls:
+        innerHTML = driver.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(innerHTML, features="lxml")
+        for line in soup.findAll(["a"]):
+            if "href" in line.attrs and sport+"/competitions/" in line["href"] and "data-leagueid" in line.attrs:
+                urls.add("https://www.betstars.fr/"+line["href"])
+    list_odds = []
+    for url in urls:
+        list_odds.append(parse_betstars(url))
+    return merge_dicts(list_odds)
+    
 
-def parse_betstars(url=""): #TODO NBA
+
+def parse_betstars(url=""):
+    if url == "tennis":
+        return parse_sport_betstars(url)
     if not url:
         url = "https://www.betstars.fr/#/soccer/competitions/2152298"
 #     url = "https://www.betstars.fr/#/tennis/daily/1571004000000"
@@ -432,7 +470,7 @@ def parse_betstars(url=""): #TODO NBA
     is_12 = False
     while not match_odds_hash:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in line.text:
                 print("Betstars inaccessible")
@@ -472,9 +510,11 @@ def parse_parionssport(url=""):
 #     url = "https://www.enligne.parionssport.fdj.fr/paris-rugby"
     driver.get(url)
     match_odds_hash = {}
+    if "basket" in url:
+        return parse_parionssport_nba(url)
     while not match_odds_hash:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
                 if line.text.strip() == "Aujourd'hui":
@@ -487,7 +527,7 @@ def parse_parionssport(url=""):
                 except ValueError:
                     date_time = "undefined"
             if "class" in line.attrs and "wpsel-desc" in line["class"]:
-                match = line.text.strip().replace("St ", "Saint-")
+                match = line.text.strip()
             if "class" in line.attrs and "buttonLine" in line["class"]:
                 try:
                     odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)))
@@ -497,6 +537,44 @@ def parse_parionssport(url=""):
                 except ValueError: #Live
                     pass
     return match_odds_hash
+
+def parse_parionssport_nba(url=""):
+    if not url:
+        url = "https://www.enligne.parionssport.fdj.fr/paris-basketball/usa/nba"
+#     url = "https://www.enligne.parionssport.fdj.fr/paris-tennis"
+#     url = "https://www.enligne.parionssport.fdj.fr/paris-rugby"
+    driver.get(url)
+    urls = []
+    while not urls:
+        innerHTML = driver.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(innerHTML, features="lxml")
+        for line in soup.findAll(["a"]):
+            if "href" in line.attrs and list(line.stripped_strings) and "+" in list(line.stripped_strings)[0]:
+                urls.append("https://www.enligne.parionssport.fdj.fr"+line["href"])
+    list_odds = []
+    for match_url in urls:
+        list_odds.append(parse_match_nba_parionssport(match_url))
+    return merge_dicts(list_odds)
+
+def parse_match_nba_parionssport(url):
+    driver.get(url)
+    odds = []
+    match_odds = {}
+    while not odds:
+        innerHTML = driver.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(innerHTML, features="lxml")
+        for line in soup.findAll():
+            if "class" in line.attrs and "header-banner-event-date-section" in line["class"]:
+                date_time = datetime.datetime.strptime(list(line.stripped_strings)[0]+" 2019", "Le %d %B à %H:%M %Y")
+            elif "class" in line.attrs and "headband-eventLabel" in line["class"]:
+                match = list(line.stripped_strings)[0]
+                print("\t"+match)
+            elif "class" in line.attrs and "wpsel-market-detail" in line["class"]:
+                strings = list(line.stripped_strings)
+                odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)[2::2]))
+                match_odds[match] = {"date":date_time, "odds":{"parionssport":odds}}
+                return match_odds
+    
 
 def parse_sport_parionssport(sport):
     return parse_parionssport("https://www.enligne.parionssport.fdj.fr/paris-"+sport)
@@ -510,7 +588,7 @@ def parse_pasinobet(url=""):
 #     soup = offline_soup
     while not match_odds_hash:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "game-events-view-v3" in line["class"] and "vs" in line.text:
                 strings = list(line.stripped_strings)
@@ -544,7 +622,7 @@ def parse_vbet(url=""):
     match_odds_hash = {}
     while not match_odds_hash:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "event-title" in line["class"]:
                 match = " - ".join(list(line.stripped_strings)) 
@@ -571,7 +649,7 @@ def parse_unibet(url=""):
     match = ""
     while not match_odds_hash:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
                 match = line.text.strip()
@@ -597,17 +675,19 @@ def parse_bwin(url = ""):
 #     url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/angleterre-14/premier-league-46"
 #     url = "https://sports.bwin.fr/fr/sports/tennis-5"
 #     url = "https://sports.bwin.fr/fr/sports/football-4"
+    if url in ["europa", "ldc"]:
+        return parse_bwin_coupes_europe(url)
     driver.get(url)
     match_odds_hash = {}
     is_1N2 = False
     match = ""
     n=3
     is_NBA = "nba" in url
-    while not match_odds_hash:
+    odds=[]
+    while not odds:
         innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML)
+        soup = BeautifulSoup(innerHTML, features="lxml")
         i=0
-        odds=[]
         date_time = "undefined"
         for line in soup.findAll():
             if "class" in line.attrs and "participants-pair-game" in line["class"]:
@@ -662,6 +742,30 @@ def parse_bwin(url = ""):
         match_odds_hash[match]['date'] = date_time
     return match_odds_hash
 
+
+def parse_bwin_coupes_europe(coupe):
+    driver.get("https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/europe-7")
+    urls = []
+    while not urls:
+        innerHTML = driver.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(innerHTML, features="lxml")
+        for line in soup.findAll(["a"]):
+            if ("href" in line.attrs and list(line.stripped_strings)
+                and coupe.lower() in list(line.stripped_strings)[0].lower()
+                and "groupe" in list(line.stripped_strings)[0].lower()):
+                urls.append("https://sports.bwin.fr"+line["href"])
+    list_odds = []
+    for url in urls:
+        print(url)
+        list_odds.append(parse_bwin(url))
+    return merge_dicts(list_odds)
+#     for match_url in urls:
+#         list_odds.append(parse_match_nba_parionssport(match_url))
+#     return merge_dicts(list_odds)
+    
+    
+    
+
 def get_teams_ligue1(site):
     exec(site+"_ligue1 = parse_"+site+"()")
     return eval('list(set(itertools.chain.from_iterable(list(map(lambda x: x.split(" - "), list('+site+'_ligue1.keys()))))))')
@@ -705,7 +809,7 @@ def add_url_to_db_complete(site, sport, urls):
     
 
 def add_names_to_db_complete(site, sport, competition):
-    if "http" in competition:
+    if "http" in competition or "tennis" in competition or "europa" in competition or "ldc" in competition:
         url = competition
     else:
         url = get_link(site, competition)

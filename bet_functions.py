@@ -249,4 +249,14 @@ def pari_rembourse_si_perdant2(cotes, remboursement_max, freebet, taux_rembourse
     x = np.linalg.solve(a, b)
     print("Bénéfice net:", x[-1]-sum(x[:-1]))
     print(x[:-1])
-    
+
+
+def merge_dicts(dict_args):
+    """
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+    """
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
