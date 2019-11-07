@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import urllib
 import urllib.error
 import urllib.request
@@ -51,4 +53,6 @@ def add_names_to_db_all_sites(competition, sport, *sites_not_to_parse):
                 add_names_to_db_complete(site, sport, url)
             except KeyboardInterrupt:
                 pass
+            except urllib.error.URLError:
+                print("Site non accessible (délai écoulé)")
     

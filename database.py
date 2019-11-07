@@ -223,3 +223,11 @@ def import_site_in_db(url):
                 pass
     conn.commit()
     c.close()
+
+def import_sport_teams_in_db(sport):
+    url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.find_all(["a"]):
+        if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
+            import_teams_in_db("http://www.comparateur-de-cotes.fr/"+line["href"])
+    

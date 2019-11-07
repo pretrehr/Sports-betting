@@ -336,8 +336,8 @@ def best_matches_freebet4(main_site, freebets):
     all_odds = {}
     for match in new_odds:
         if not(any([site not in new_odds[match]["odds"].keys() for site in list(second_sites)+[main_site]])):
-#             if match == 'Nîmes - Amiens' or match == 'Metz - Nantes':
-            all_odds[match] = new_odds[match]
+#             if match in ['Lyon - Benfica', 'Borussia Dortmund - Inter Milan']:
+                all_odds[match] = new_odds[match]
     best_rate = 0
     nb_matches = 2
     n = 3**nb_matches
@@ -558,6 +558,7 @@ def best_match_freebet_football(site, freebet=None):
             best_odds = deepcopy(odds_site)
             best_sites = [site, site, site]
             for odds in all_odds[match]['odds'].items():
+                print(match)
                 for i in range(3):
                     if odds[1][i] > best_odds[i]:
                         best_odds[i] = odds[1][i]
@@ -661,7 +662,7 @@ def best_match_under_conditions_tennis_basket(site, sport, minimum_odd, bet,
     date
     """
 #     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
-    all_odds = odds_tennis
+    all_odds = odds_tennis if sport == "tennis" else odds_nba
     best_profit = -bet
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -741,7 +742,7 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
     """
 #     all_odds = parse_all_1N2()
 #     all_odds = parse(LIGUE1)
-#     all_odds = parse_sport("rugby")
+#     all_odds = parse_sport("football", "betclic")
 #     all_odds = merge_dicts([parse(url) for url in MAIN_CHAMPIONSHIPS])
     all_odds = main_odds
     best_profit = -bet
@@ -912,8 +913,7 @@ def best_bets_match(match, site, bet):
     Given a match, a bookmaker and a sum to bet, return the best odds on which
     bet among different bookmakers
     """
-#     all_odds = odds_match(match)
-    all_odds = main_odds
+    all_odds = odds_match(match)
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
     best_sites = [site, site, site]
