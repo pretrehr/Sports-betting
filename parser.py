@@ -558,7 +558,6 @@ def best_match_freebet_football(site, freebet=None):
             best_odds = deepcopy(odds_site)
             best_sites = [site, site, site]
             for odds in all_odds[match]['odds'].items():
-                print(match)
                 for i in range(3):
                     if odds[1][i] > best_odds[i]:
                         best_odds[i] = odds[1][i]
@@ -815,8 +814,9 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
     Given several conditions, return the best match to bet on to maximize
     the gain with a cashback-like promotion
     """
-    all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
+#     all_odds = parse_sport("basketball") if sport == 'nba' else parse_sport("tennis")
 #     all_odds = parse("http://www.comparateur-de-cotes.fr/comparateur/basketball/Coupe-du-Monde-FIBA-(H)-ed1487", is_basketball=1)
+    all_odds = odds_tennis if sport == "tennis" else odds_nba
     best_profit = 0
     best_rank = 0
     hour_max, minute_max = 0, 0
@@ -953,4 +953,27 @@ def repeat_research():
         if res_football is None:
             sys.stdout = saved_stdout
             break
+
+def best_odds(match_odds):
+    best_odds_list = list(match_odds.values())[0]
+    n = len(best_odds_list)
+    default_site = list(match_odds.keys())[0]
+    best_sites = [default_site for _ in range(n)]
+    for site, odds in match_odds.items():
+        for i, odd in enumerate(odds):
+            if odd>best_odds_list[i]:
+                best_odds_list[i] = odd
+                best_sites[i] = site
+    return best_odds_list, best_sites
+
+def find_surebets(list_matches):
+    surebets = []
+    for match, values in list_matches.items():
+        odds, sites = best_odds(values["odds"])
+        if gain(odds)>=1:
+            surebets.append((match, odds, sites))
+    if surebets:
+        print("*************************** SUREBET ***************************")
+        return surebets
+    
         

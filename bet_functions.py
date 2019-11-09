@@ -186,14 +186,14 @@ def cote_boostee(cote, boost_selon_cote = True):
     Calcul de cote boostee pour promotion Betclic
     """
     if not boost_selon_cote:
-        return cote+(cote-1)*0.77
+        return cote+(cote-1)*0.8
     if cote < 2:
         return cote
     if cote < 2.51:
-        return cote+(cote-1)*0.25*0.77
+        return cote+(cote-1)*0.25*0.8
     if cote < 3.51:
-        return cote+(cote-1)*0.5*0.77
-    return cote+(cote-1)*0.77
+        return cote+(cote-1)*0.5*0.8
+    return cote+(cote-1)*0.8
 
 def taux_boost(cote, boost_selon_cote = True):
     """
@@ -217,10 +217,10 @@ def gains_nets_boostes(cotes, gain_max, boost_selon_cote = True, output=False):
     print(new_cotes)
     for i, cote in enumerate(cotes):
         try:
-            mise = gain_max/(cotes[i]*taux_boost(cote, boost_selon_cote)-1)
+            mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
             mises_possibles = mises2(new_cotes, mise, i)
             for j, mis in enumerate(mises_possibles):
-                if mis*(cotes[j]*taux_boost(cotes[j], boost_selon_cote)-1) > gain_max+0.1 or mis<0:
+                if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1 or mis<0:
                     break
             else:
                 return mises2(new_cotes, mise, i, output)

@@ -69,7 +69,7 @@ def adapt_names(odds, site, sport):
 def adapt_names_to_all(dict_odds, sport):
     list_odds = []
     for site in dict_odds:
-        if site in ["netbet", "zebet", "france_pari"]:
+        if site in ["netbet", "zebet", "france_pari", "joa"]:
             list_odds.append(adapt_names(dict_odds[site], "netbet", sport))
         else:
             list_odds.append(adapt_names(dict_odds[site], site, sport))
@@ -841,7 +841,7 @@ def parse_bwin(url = ""):
 #     url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/angleterre-14/premier-league-46"
 #     url = "https://sports.bwin.fr/fr/sports/tennis-5"
 #     url = "https://sports.bwin.fr/fr/sports/football-4"
-    if url in ["europa", "ldc"]:
+    if url in ["europa", "ldc", "élim"]:
         return parse_bwin_coupes_europe(url)
     driver.get(url)
     match_odds_hash = {}
@@ -912,27 +912,54 @@ def parse_bwin(url = ""):
 
 
 def parse_bwin_coupes_europe(coupe):
-    driver.get("https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/europe-7")
-    urls = []
+    base_url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/europe-7"
+    driver.get(base_url)
+    urls = {}
     for _ in range(10):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and list(line.stripped_strings)
                 and coupe.lower() in list(line.stripped_strings)[0].lower()
-                and "groupe" in list(line.stripped_strings)[0].lower()):
-                urls.append("https://sports.bwin.fr"+line["href"])
+                and "groupe" in list(line.stripped_strings)[0].lower()
+                and "football" in line["href"]):
+                urls[list(line.stripped_strings)[0]] = "https://sports.bwin.fr"+line["href"]
         if urls:
             break
     list_odds = []
-    for url in urls:
-        print(url)
+    for name, url in urls.items():
+        print(name)
         list_odds.append(parse_bwin(url))
     return merge_dicts(list_odds)
-#     for match_url in urls:
-#         list_odds.append(parse_match_nba_parionssport(match_url))
-#     return merge_dicts(list_odds)
-    
+
+
+def parse_joa(url):
+    if not url:
+        url = "https://paris-sportifs.joa-online.fr/pari/competition/id/96/pariez-sur-Ligue-1-Conforama"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    match_odds_hash = {}
+    for line in soup.find_all():
+        if "class" in line.attrs and "date_paris" in line["class"]:
+            date = line.text.strip()+" 2019"
+        elif "class" in line.attrs and "paris-chrono" in line["class"]:
+            time = line.text.strip()
+            try:
+                date_time = datetime.datetime.strptime(date+" "+time, "%A %d %B %Y %H:%M")
+            except ValueError:
+                date_time = "undefined"
+        elif "class" in line.attrs and "pc-match-long" in line["class"]:
+            match = line.text.strip().replace("/", "-")
+        elif "class" in line.attrs and "pc-bloc-cote" in line["class"]:
+            if "..." in match:
+                for child in line.findChildren("a", recursive=True):
+                    if "data-evenement" in child.attrs:
+                        match = child["data-evenement"].strip().replace("/", "-")
+                        break
+            odds = list(map(float, list(line.stripped_strings)))
+            match_odds_hash[match] = {}
+            match_odds_hash[match]['odds'] = {"joa":odds}
+            match_odds_hash[match]['date'] = date_time
+    return match_odds_hash
     
     
 
@@ -979,7 +1006,9 @@ def add_url_to_db_complete(site, sport, urls):
     
 
 def add_names_to_db_complete(site, sport, competition):
-    if "http" in competition or "tennis" in competition or "europa" in competition or "ldc" in competition:
+    if ("http" in competition or "tennis" in competition
+        or "europa" in competition or "ldc" in competition
+        or "élim" in competition):
         url = competition
     else:
         url = get_link(site, competition)
