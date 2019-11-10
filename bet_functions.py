@@ -214,19 +214,26 @@ def gains_nets_boostes(cotes, gain_max, boost_selon_cote = True, output=False):
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(lambda x:cote_boostee(x, boost_selon_cote), cotes))
-    print(new_cotes)
+    benefice_max = 0
     for i, cote in enumerate(cotes):
-        try:
-            mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
-            mises_possibles = mises2(new_cotes, mise, i)
-            for j, mis in enumerate(mises_possibles):
-                if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1 or mis<0:
-                    break
+        mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
+        mises_possibles = mises2(new_cotes, mise, i)
+        mises_corrigees = []
+        gain = 0
+        for j, mis in enumerate(mises_possibles):
+            if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1:
+                mises_corrigees.append(mise*cote/cotes[j])
             else:
-                return mises2(new_cotes, mise, i, output)
-        except ZeroDivisionError:
-            pass
-
+                mises_corrigees.append(mis)
+                gain=mises_corrigees[j]*new_cotes[j]
+        gain-=sum(mises_corrigees)
+        if gain>benefice_max:
+            benefice_max = gain
+            meilleures_mises = mises_corrigees
+    if output:
+        print("somme des mises =", sum(meilleures_mises))
+        print("plus-value =", round(benefice_max, 2))
+    return meilleures_mises
 
 def pari_rembourse_si_perdant2(cotes, remboursement_max, freebet, taux_remboursement):
     rg_max = np.argmax(cotes)
