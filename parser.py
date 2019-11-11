@@ -899,6 +899,7 @@ def odds_match(match):
     """
 #     all_odds = parse_all()
     all_odds = main_odds
+    all_odds = odds_tennis
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
@@ -908,7 +909,7 @@ def odds_match(match):
     print(match_name)
     return all_odds[match_name]
 
-def best_bets_match(match, site, bet):
+def best_bets_match(match, site, bet, minimum_odd):
     """
     Given a match, a bookmaker and a sum to bet, return the best odds on which
     bet among different bookmakers
@@ -916,21 +917,23 @@ def best_bets_match(match, site, bet):
     all_odds = odds_match(match)
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
-    best_sites = [site, site, site]
     best_profit = -bet
+    n = len(all_odds['odds'][site])
+    best_sites = [site for _ in range(n)]
     for odds in all_odds['odds'].items():
-        for i in range(3):
+        for i in range(n):
             if odds[1][i] > best_odds[i]:
                 best_odds[i] = odds[1][i]
                 best_sites[i] = odds[0]
-    for i in range(3):
-        odds_to_check = (best_odds[:i]+[odds_site[i]]+best_odds[i+1:])
-        profit = gain2(odds_to_check, i, bet)
-        if profit > best_profit:
-            best_profit = profit
-            best_overall_odds = odds_to_check
-            sites = best_sites[:i]+[site]+best_sites[i+1:]
-            bets = mises2(odds_to_check, bet, i)
+    for i in range(n):
+        if odds_site[i]>=minimum_odd:
+            odds_to_check = (best_odds[:i]+[odds_site[i]]+best_odds[i+1:])
+            profit = gain2(odds_to_check, i, bet)
+            if profit > best_profit:
+                best_profit = profit
+                best_overall_odds = odds_to_check
+                sites = best_sites[:i]+[site]+best_sites[i+1:]
+                bets = mises2(odds_to_check, bet, i)
     print(best_profit, sites, best_overall_odds, bets, sep='\n')
 
 def repeat_research():

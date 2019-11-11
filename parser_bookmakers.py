@@ -252,15 +252,20 @@ def parse_france_pari(url=""):
 #     url = "https://www.france-pari.fr/sport/21-parier-sur-tennis"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = " "+str(today.year)
     for line in soup.find_all():
         if "class" in line.attrs and "date" in line["class"]:
-            date = line.text+" 2019"
+            date = line.text+year
         elif "class" in line.attrs and "odd-event-block" in line["class"]:
             strings = list(line.stripped_strings)
             if "snc-odds-date-lib" in line["class"]:
                 time = strings[0]
                 i = strings.index("/")
                 date_time = datetime.datetime.strptime(date+" "+time, "%A %d %B %Y %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
                 match = " ".join(strings[1:i])+" - "+" ".join(strings[i+1:])
             else:
                 odds = []
@@ -353,10 +358,15 @@ def parse_zebet(url=""):
 #     url = "https://www.zebet.fr/fr/category/143-coupe_du_monde_2019"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = str(today.year)+"/"
     for line in soup.find_all():
         if "class" in line.attrs and "bet-time" in line["class"]:
             try:
-                date_time = datetime.datetime.strptime("2019/"+line.text, "%Y/%d/%m %H:%M")            
+                date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "competition" in line["class"]:
@@ -391,15 +401,20 @@ def parse_netbet(url=""):
 #     url = "https://www.netbet.fr/tennis"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = " "+str(today.year)
     for line in soup.find_all():
         if "class" in line.attrs and "nb-date-large" in line["class"]:
-            date = list(line.stripped_strings)[0]+" 2019"
+            date = list(line.stripped_strings)[0]+year
             if "Aujourd'hui" in date:
                 date = datetime.datetime.today().strftime("%A %d %B %Y")
         elif "class" in line.attrs and "time" in line["class"]:
             time = line.text
             try:
                 date_time = datetime.datetime.strptime(date+" "+time, "%A %d %B %Y %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "bet-libEvent" in line["class"]:
@@ -501,6 +516,9 @@ def parse_betstars(url=""):
     match = ""
     odds = []
     is_12 = False
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = str(today.year)
     for _ in range(10):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
@@ -521,7 +539,7 @@ def parse_betstars(url=""):
                 odds.append(float(list(line.stripped_strings)[0]))
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
-                date = strings[0]+" 2019"
+                date = strings[0]+" "+year
                 time = strings[1]
                 try:
                     date_time = datetime.datetime.strptime(date+" "+time, "%d %b, %Y %H:%M")
@@ -529,6 +547,8 @@ def parse_betstars(url=""):
                     date = datetime.datetime.today().strftime("%d %b %Y")
                     time = strings[0]
                     date_time = datetime.datetime.strptime(date+" "+time, "%d %b %Y %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"betstars":odds}
                 match_odds_hash[match]['date'] = date_time
@@ -547,6 +567,9 @@ def parse_parionssport(url=""):
     match_odds_hash = {}
     if "basket" in url:
         return parse_parionssport_nba(url)
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = " "+str(today.year)
     for _ in range(10):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
@@ -555,10 +578,12 @@ def parse_parionssport(url=""):
                 if line.text.strip() == "Aujourd'hui":
                     date = datetime.date.today().strftime("%A %d %B %Y")
                 else:
-                    date = line.text.strip().lower()+" 2019"
+                    date = line.text.strip().lower()+year
             if "class" in line.attrs and "wpsel-timerLabel" in line["class"]:
                 try:
                     date_time = datetime.datetime.strptime(date+" "+line.text, "%A %d %B %Y À %Hh%M")
+                    if date_time<today:
+                        date_time.replace(year = date_time.year+1)
                 except ValueError:
                     date_time = "undefined"
             if "class" in line.attrs and "wpsel-desc" in line["class"]:
@@ -601,12 +626,17 @@ def parse_match_nba_parionssport(url):
     match_odds = {}
     date_time = "undefined"
     match = ""
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = " "+str(today.year)
     for _ in range(10):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "header-banner-event-date-section" in line["class"]:
-                date_time = datetime.datetime.strptime(list(line.stripped_strings)[0]+" 2019", "Le %d %B à %H:%M %Y")
+                date_time = datetime.datetime.strptime(list(line.stripped_strings)[0]+year, "Le %d %B à %H:%M %Y")
+                if date_time<today:
+                        date_time.replace(year = date_time.year+1)
             elif "class" in line.attrs and "headband-eventLabel" in line["class"]:
                 match = list(line.stripped_strings)[0]
                 print("\t"+match)
@@ -811,6 +841,9 @@ def parse_unibet(url=""):
     driver.get(url)
     match_odds_hash = {}
     match = ""
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = str(today.year)+"/"
     for _ in range(10):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
@@ -818,7 +851,9 @@ def parse_unibet(url=""):
             if "class" in line.attrs and "cell-event" in line["class"]:
                 match = line.text.strip().replace("Bordeaux - Bègles", "Bordeaux-Bègles")
             if "class" in line.attrs and "datetime" in line["class"]:
-                date_time = datetime.datetime.strptime("2019/"+line.text, "%Y/%d/%m %H:%M")
+                date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
             if "class" in line.attrs and "oddsbox" in line["class"]:
                 odds = []
                 for i, val in enumerate(list(line.stripped_strings)):
@@ -938,13 +973,18 @@ def parse_joa(url):
         url = "https://paris-sportifs.joa-online.fr/pari/competition/id/96/pariez-sur-Ligue-1-Conforama"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = " "+str(today.year)
     for line in soup.find_all():
         if "class" in line.attrs and "date_paris" in line["class"]:
-            date = line.text.strip()+" 2019"
+            date = line.text.strip()+year
         elif "class" in line.attrs and "paris-chrono" in line["class"]:
             time = line.text.strip()
             try:
                 date_time = datetime.datetime.strptime(date+" "+time, "%A %d %B %Y %H:%M")
+                if date_time<today:
+                    date_time.replace(year = date_time.year+1)
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "pc-match-long" in line["class"]:

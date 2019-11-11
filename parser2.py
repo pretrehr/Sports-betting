@@ -12,7 +12,8 @@ from parser_bookmakers import (parse_betclic, parse_betstars, parse_bwin,
                                parse_winamax, parse_zebet, merge_dict_odds,
                                adapt_names_to_all, add_names_to_db_complete,
                                parse_joa)
-from bet_functions import merge_dicts                               
+from bet_functions import merge_dicts      
+import time                         
 
 def parse_competition(competition, sport, *sites_not_to_parse):
     sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
