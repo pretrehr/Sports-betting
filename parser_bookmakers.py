@@ -8,6 +8,7 @@ import urllib.request
 import urllib.error
 import selenium
 import itertools
+import copy
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -94,7 +95,15 @@ def merge_dict_odds(dict_odds):
                         date_found = True
                     new_dict[match]["odds"][site] = odds[match]["odds"][site]
     return new_dict
-            
+
+def valid_odds(all_odds, sport):    
+    n = 2 + (sport not in ["tennis", "volleyball", "basketball"])
+    copy_all_odds = copy.deepcopy(all_odds)
+    for match in all_odds:
+        for site in all_odds[match]["odds"]:
+            if len(all_odds[match]["odds"][site])!=n:
+                del copy_all_odds[match]["odds"][site]
+    return copy_all_odds
 
 def algo_final():
     dict_odds = test_ligue1()
@@ -485,12 +494,14 @@ def parse_sport_winamax(sport):
 def parse_sport_betstars(sport):
     driver.get("https://www.betstars.fr/#/{}/competitions".format(sport))
     urls = set()
-    while not urls:
+    for _ in range(100):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll(["a"]):
             if "href" in line.attrs and sport+"/competitions/" in line["href"] and "data-leagueid" in line.attrs:
                 urls.add("https://www.betstars.fr/"+line["href"])
+        if urls:
+            break
     list_odds = []
     for url in urls:
         try:
@@ -536,7 +547,10 @@ def parse_betstars(url=""):
                     match = teams[1]+" - "+teams[0]
                 odds = []
             if "class" in line.attrs and ("market-AB" in line["class"] or "market-BAML" in line["class"]):
-                odds.append(float(list(line.stripped_strings)[0]))
+                try:
+                    odds.append(float(list(line.stripped_strings)[0]))
+                except ValueError: #cote non disponible (OTB)
+                    odds.append(1)
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
                 date = strings[0]+" "+year
@@ -617,7 +631,10 @@ def parse_parionssport_nba(url=""):
             break
     list_odds = []
     for match_url in urls:
-        list_odds.append(parse_match_nba_parionssport(match_url))
+        try:
+            list_odds.append(parse_match_nba_parionssport(match_url))
+        except KeyboardInterrupt:
+            break
     return merge_dicts(list_odds)
 
 def parse_match_nba_parionssport(url):
@@ -640,7 +657,7 @@ def parse_match_nba_parionssport(url):
             elif "class" in line.attrs and "headband-eventLabel" in line["class"]:
                 match = list(line.stripped_strings)[0]
                 print("\t"+match)
-            elif "class" in line.attrs and "wpsel-market-detail" in line["class"]:
+            elif "class" in line.attrs and "wpsel-market-detail" in line["class"] and match:
                 strings = list(line.stripped_strings)
                 odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)[2::2]))
                 match_odds[match] = {"date":date_time, "odds":{"parionssport":odds}}
@@ -687,7 +704,7 @@ def parse_pasinobet_sport(sport):
             pass
     sports = driver.find_elements_by_class_name("sports-item-v3")
     for sp in sports:
-        if sport.title() in sp.text:
+        if sport.capitalize() == sp.text.split("\n")[0]:
             try:
                 sp.click()
             except selenium.common.exceptions.ElementClickInterceptedException:
@@ -885,7 +902,7 @@ def parse_bwin(url = ""):
     n=3
     is_NBA = "nba" in url
     odds=[]
-    for _ in range(10):
+    for _ in range(50):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         i=0
@@ -1034,8 +1051,11 @@ def get_id_by_opponent(id_opponent, name_site_match, site, matches):
                 for string in list(line.stripped_strings):
                     if "à" in string:
                         date_time = datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
-                        if abs(date_time-date_match)<datetime.timedelta(days=2):
-                            get_next_id = True
+                        try:
+                            if abs(date_time-date_match)<datetime.timedelta(days=2):
+                                get_next_id = True
+                        except TypeError: #live
+                            pass
 
 def add_url_to_db_complete(site, sport, urls):
     set_db = set(get_db(sport))

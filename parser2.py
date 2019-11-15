@@ -11,7 +11,7 @@ from parser_bookmakers import (parse_betclic, parse_betstars, parse_bwin,
                                parse_pasinobet, parse_pmu, parse_unibet,
                                parse_winamax, parse_zebet, merge_dict_odds,
                                adapt_names_to_all, add_names_to_db_complete,
-                               parse_joa)
+                               parse_joa, valid_odds)
 from bet_functions import merge_dicts      
 import time                         
 
@@ -31,15 +31,15 @@ def parse_competition(competition, sport, *sites_not_to_parse):
         except KeyboardInterrupt:
             res_parsing[site] = {}
     res = adapt_names_to_all(res_parsing, sport)
-    return merge_dict_odds(res)
+    return valid_odds(merge_dict_odds(res), sport)
 
 def parse_main_competitions():
-    competitions = ["france ligue 1", "angleterre premier league", "espagne liga", "italie serie", "allemagne bundesliga", "ligue des champions"]
+    competitions = ["france ligue 1", "angleterre premier league", "espagne liga", "italie serie", "allemagne bundesliga", "ligue des champions", "qualif"]
     list_odds = []
     for competition in competitions:
         print("\n"+competition.title())
         list_odds.append(parse_competition(competition, "football"))
-    return merge_dicts(list_odds)
+    return valid_odds(merge_dicts(list_odds), "football")
 
 def add_names_to_db_all_sites(competition, sport, *sites_not_to_parse):
     id = find_competition_id(competition, sport)
@@ -60,4 +60,18 @@ def add_names_to_db_all_sites(competition, sport, *sites_not_to_parse):
                 pass
             except urllib.error.URLError:
                 print("Site non accessible (délai écoulé)")
+
+def parse_football():
+    global main_odds
+    main_odds = parse_main_competitions()
+
+def parse_tennis():
+    global odds_tennis
+    odds_tennis = parse_competition("tennis", "tennis")
+
+def parse_nba():
+    global odds_nba
+    odds_nba = parse_competition("nba", "basketball")
+
+
     
