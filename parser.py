@@ -784,10 +784,10 @@ def best_match_cashback(site, minimum_odd, bet, freebet=True, combi_max=0,
                         best_sites[i] = odds[0]
             for i in range(3):
                 odds_to_check = (best_odds[:i]
-                                 +[combi_odd*odds_site[i]
-                                   *(1+combi_max)-combi_max]
-                                 +best_odds[i+1:])
+                                +[combi_odd*odds_site[i]]
+                                +best_odds[i+1:])
                 if odds_to_check[i] >= minimum_odd:
+                    odds_to_check[i] = odds_to_check[i]*(1+combi_max)-combi_max
                     profit = pari_rembourse_si_perdant(odds_to_check, bet, i,
                                                        freebet, rate_cashback)
                     if profit > best_profit:
@@ -857,10 +857,10 @@ def best_match_cashback_tennis_basket(site, sport, minimum_odd, bet,
                         best_sites[i] = odds[0]
             for i in range(2):
                 odds_to_check = (best_odds[:i]
-                                +[combi_odd*odds_site[i]
-                                *(1+combi_max)-combi_max]
+                                +[combi_odd*odds_site[i]]
                                 +best_odds[i+1:])
-                if odds_to_check[i]*combi_odd >= minimum_odd:
+                if odds_to_check[i] >= minimum_odd:
+                    odds_to_check[i] = odds_to_check[i]*(1+combi_max)-combi_max
                     profit = pari_rembourse_si_perdant(odds_to_check, bet, i,
                                                     freebet, rate_cashback)
                     if profit > best_profit:
@@ -893,13 +893,12 @@ def odds_basket():
                      for _ in line.strip().replace(',', '.').split(';')])
     return odds
 
-def odds_match(match):
+def odds_match(match, sport="football"):
     """
     Return the different odds of a given match
     """
 #     all_odds = parse_all()
-    all_odds = main_odds
-    all_odds = odds_tennis
+    all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_nba
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
@@ -909,15 +908,16 @@ def odds_match(match):
     print(match_name)
     return all_odds[match_name]
 
-def best_bets_match(match, site, bet, minimum_odd):
+def best_bets_match(match, site, bet, minimum_odd, sport="football"):
     """
     Given a match, a bookmaker and a sum to bet, return the best odds on which
     bet among different bookmakers
     """
-    all_odds = odds_match(match)
+    all_odds = odds_match(match, sport)
+    pprint(all_odds)
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
-    best_profit = -bet
+    best_profit = -float("inf")
     n = len(all_odds['odds'][site])
     best_sites = [site for _ in range(n)]
     for odds in all_odds['odds'].items():
