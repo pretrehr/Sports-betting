@@ -162,6 +162,17 @@ def find_competition(name, sport, site):
         if possible:
             return line[1]
 
+def get_competition_by_id(id, site):
+    """
+    Retourne l'url d'une competition donnée sur un site donné
+    """
+    conn = sqlite3.connect('teams.db')
+    c = conn.cursor()
+    c.execute("""
+    SELECT url_{} FROM competitions WHERE id='{}'
+    """.format(str(site), id))
+    return c.fetchone()[0]
+
 def find_competition_id(name, sport):
     conn = sqlite3.connect('teams.db')
     c = conn.cursor()
@@ -178,6 +189,27 @@ def find_competition_id(name, sport):
                 break
         if possible:
             return line[0]
+
+def get_id_formated_competition_name(competition, sport):
+    """
+    Retourne l'id et le nom tel qu'affiché sur comparateur-de-cotes.fr. Par
+    exemple, "Ligue 1" devient "France - Ligue 1"
+    """
+    conn = sqlite3.connect('teams.db')
+    c = conn.cursor()
+    c.execute("""
+    SELECT id, competition FROM competitions WHERE sport='{}'
+    """.format(sport))
+    possible_results = []
+    for line in c.fetchall():
+        strings_name = competition.lower().split()
+        possible = True
+        for string in strings_name:
+            if string not in line[1].lower():
+                possible = False
+                break
+        if possible:
+            return line[0], line[1]
 
 def add_name_to_db(id, name, site):
     conn = sqlite3.connect('teams.db')
