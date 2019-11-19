@@ -261,7 +261,7 @@ def best_matches_freebet2(main_site, second_site, nb_matches=2):
     """
 #     all_odds = parse_all_1N2(main_site, second_site)
 #     all_odds = parse_sport("rugby", main_site, second_site)
-    new_odds = copy.deepcopy(c)
+    new_odds = copy.deepcopy(main_odds)
     all_odds = {}
     for match in new_odds:
         if main_site in new_odds[match]["odds"].keys() and second_site in new_odds[match]["odds"].keys():
@@ -269,12 +269,12 @@ def best_matches_freebet2(main_site, second_site, nb_matches=2):
     best_rate = 0
     n = 3**nb_matches
     for combine in combinations(all_odds.items(), nb_matches):
-        main_odds = cotes_freebet(cotes_combine(
+        main_site_odds = cotes_freebet(cotes_combine(
             [combine[x][1]['odds'][main_site] for x in range(nb_matches)]))
         second_odds = cotes_freebet(cotes_combine(
             [combine[x][1]['odds'][second_site] for x in range(nb_matches)]))
         for i, e in enumerate(second_odds):
-            odds_to_check = main_odds[:i]+[e]+main_odds[i+1:]
+            odds_to_check = main_site_odds[:i]+[e]+main_site_odds[i+1:]
             rate = gain(odds_to_check)
             if rate > best_rate:
                 best_rate = rate
@@ -386,7 +386,7 @@ def best_matches_freebet5(main_sites, freebets):
 #     all_odds = merge_dicts([parse(url, *main_sites, *second_sites)
 #                             for url in MAIN_CHAMPIONSHIPS])
 #     all_odds = parse(LIGUE1, *main_sites, *second_sites)
-    new_odds = copy.deepcopy(c)
+    new_odds = main_odds
     all_odds = {}
     for match in new_odds:
         if not(any([site not in new_odds[match]["odds"].keys() for site in main_sites]) or any([site not in new_odds[match]["odds"].keys() for site in second_sites])):
@@ -583,7 +583,7 @@ def best_match_freebet_football(site, freebet=None):
     except UnboundLocalError:
         print("No match found")
 
-def best_match_under_conditions(site, minimum_odd, bet, live=False,
+def best_match_under_conditions(site, minimum_odd, bet, one_site=False, live=False,
                                 date_max=None, time_max=None,
                                 date_min=None, time_min=None):
     """
@@ -627,17 +627,18 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
             odds_site = all_odds[match]['odds'][site]
             best_odds = deepcopy(odds_site)
             best_sites = [site, site, site]
-            for odds in all_odds[match]['odds'].items():
-                for i in range(3):
-                    if odds[1][i] > best_odds[i]:
-                        best_odds[i] = odds[1][i]
-                        best_sites[i] = odds[0]
+            if not one_site:
+                for odds in all_odds[match]['odds'].items():
+                    for i in range(3):
+                        if odds[1][i] > best_odds[i]:
+                            best_odds[i] = odds[1][i]
+                            best_sites[i] = odds[0]
             for i in range(3):
                 odds_to_check = (best_odds[:i]
                                  +[odds_site[i]*0.9 if live else odds_site[i]]
                                  +best_odds[i+1:])
                 if odds_to_check[i] >= minimum_odd:
-                    profit = gain2(odds_to_check, i, bet)
+                    profit = gain(odds_to_check, bet)-bet if one_site else gain2(odds_to_check, i, bet)
                     if profit > best_profit:
                         best_rank = i
                         best_profit = profit
@@ -648,7 +649,10 @@ def best_match_under_conditions(site, minimum_odd, bet, live=False,
         print(best_match)
         print(all_odds[best_match]['date'])
         print(best_overall_odds, sites)
-        print(mises2(best_overall_odds, bet, best_rank, True))
+        if one_site:
+            print(mises(best_overall_odds, bet, True))
+        else:
+            print(mises2(best_overall_odds, bet, best_rank, True))
     except UnboundLocalError:
         print("No match found")
 
