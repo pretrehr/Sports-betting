@@ -67,7 +67,12 @@ def adapt_names(odds, site, sport):
             new_dict[new_match] = odds[match]
     return new_dict
 
-def adapt_names_to_all(dict_odds, sport):
+def format_team_names(dict_odds, sport):
+    """
+    Uniformisation des noms d'équipe/joueur conformément au noms disponibles sur
+    comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient
+    "Marseille - Paris SG"
+    """
     list_odds = []
     for site in dict_odds:
         if site in ["netbet", "zebet", "france_pari", "joa"]:
@@ -107,7 +112,7 @@ def valid_odds(all_odds, sport):
 
 def algo_final():
     dict_odds = test_ligue1()
-    res = adapt_names_to_all(dict_odds, "football")
+    res = format_team_names(dict_odds, "football")
     res.append(ligue1_vbet)
     return merge_dict_odds(res)
 
@@ -967,7 +972,7 @@ def parse_bwin_coupes_europe(coupe):
     base_url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/europe-7"
     driver.get(base_url)
     urls = {}
-    for _ in range(10):
+    for _ in range(50):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll(["a"]):
