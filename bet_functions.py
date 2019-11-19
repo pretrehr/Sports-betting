@@ -51,12 +51,23 @@ def mises(cotes, mise=1, output=False):
     for combi in combinations(cotes, taille-1):
         somme += prod(combi)
     produit = prod(cotes)
-    out = []
+    mis = []
     for i in range(taille):
-        out.append(mise*produit/(somme*cotes[i]))
-    if output and mise != 1:
-        print(round(sum(out), 2))
-    return out
+        mis.append(mise*produit/(somme*cotes[i]))
+    if output:
+        for i, elem in enumerate(mis):
+            mis[i] = round(elem, 2)
+        print(cotes)
+        print("somme des mises =", round(sum(mis), 2))
+        print("gain min =", min([troncature(mis[i]*cotes[i])
+                                 for i in range(len(mis))]))
+        print("gain max =", max([troncature(mis[i]*cotes[i])
+                                 for i in range(len(mis))]))
+        print("plus-value max =",
+              round(min([troncature(mis[i]*cotes[i])
+                         for i in range(len(mis))])-sum(mis), 2))
+        return mis
+    return mis
 
 def troncature(nombre, precision=2):
     """
@@ -77,6 +88,7 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
     for i, elem in enumerate(mis):
         mis[i] = round(mise_requise*elem/rapport, 2)
     if output:
+        print(cotes)
         print("somme des mises =", sum(mis))
         print("gain min =", min([troncature(mis[i]*cotes[i])
                                  for i in range(len(mis))]))
@@ -120,6 +132,7 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
         else:
             mis.append(round(gains/cote, 2))
     if output:
+        print(cotes)
         print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
         print("mise totale =", sum(mis))
     return mis
