@@ -132,9 +132,9 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
         else:
             mis.append(round(gains/cote, 2))
     if output:
-        print(cotes)
         print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
-        print("mise totale =", sum(mis))
+        print("gain =", gains)
+        print("mise totale (hors freebet) =", sum(mis)-freebet)
     return mis
 
 
@@ -156,8 +156,30 @@ def meilleurs_parmi(cotes, nomb):
     return sorted(cotes, key=gain, reverse=True)[:nomb]
 
 
-def pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
-                              taux_remboursement=1, output=False):
+def gain_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
+                                   taux_remboursement=1):
+    """
+    Calcule les mises lorsque l'un des paris est totalement rembourse. Par
+    defaut, la mise remboursee est placee sur la cote la plus basse et le
+    remboursement est effectue en argent reel
+    """
+    taux = ((not remb_freebet) + 0.77*remb_freebet)*taux_remboursement
+    if rang == -1:
+        cote_max = max(cotes)
+        for elem, i in enumerate(cotes):
+            if i == cote_max:
+                rang = elem
+    gains = mise_max*cotes[rang]
+    mis = []
+    for i, elem in enumerate(cotes):
+        if i == rang:
+            mis.append(mise_max)
+        else:
+            mis.append((gains-mise_max*taux)/elem)
+    return gains-sum(mis)
+
+def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
+                                   taux_remboursement=1, output=False):
     """
     Calcule les mises lorsque l'un des paris est totalement rembourse. Par
     defaut, la mise remboursee est placee sur la cote la plus basse et le
@@ -178,8 +200,7 @@ def pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
             mis.append((gains-mise_max*taux)/elem)
     if output:
         print("gain net =", gains-sum(mis))
-        print(mis)
-    return gains-sum(mis)
+    return mis
 
 def promo_zebet(cotes):
     """
@@ -280,3 +301,58 @@ def merge_dicts(dict_args):
     for dictionary in dict_args:
         result.update(dictionary)
     return result
+
+
+def cotes_combine_all_sites(*matches, freebet=False):
+    sites = set(matches[0]["odds"].keys())
+    for match in matches:
+        sites = sites.intersection(match["odds"].keys())
+    combine_dict = {}
+    combine_dict["date"] = max([match["date"] for match in matches])
+    combine_dict["odds"] = {}
+    for site in sites:
+        if freebet:
+            combine_dict["odds"][site] = cotes_freebet(cotes_combine([match["odds"][site] for match in matches]))
+        else:
+            combine_dict["odds"][site] = cotes_combine([match["odds"][site] for match in matches])
+    return combine_dict
+
+
+def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
+                           rang_freebet=None, uniquement_freebet=False):
+    opponents = []
+    is1N2 = sport not in ["tennis", "volleyball", "basketball", "nba"]
+    for match in matches:
+        opponents_match = match.split(" - ")
+        if is1N2:
+            opponents_match.insert(1, "Nul")
+        opponents.append(opponents_match)
+#     pprint(list(product(*opponents)))
+    dict_mises = {}
+    dict_combinaison = {}
+    print("\nRépartition des mises (les totaux affichés prennent en compte les "
+          "éventuels freebets):")
+    for i, combinaison in enumerate(product(*opponents)):
+        sites_bet_combinaison = {}
+        for j, list_sites in enumerate(sites):
+            if list_sites[i] in sites_bet_combinaison:
+                if rang_freebet == i or uniquement_freebet:
+                    sites_bet_combinaison[list_sites[i]]["mise freebet"] += mises[j][i]
+                else:
+                    sites_bet_combinaison[list_sites[i]]["mise"] += mises[j][i]
+            else:
+                sites_bet_combinaison[list_sites[i]] = {}
+                if rang_freebet == i or uniquement_freebet:
+                    sites_bet_combinaison[list_sites[i]]["mise freebet"] = mises[j][i]
+                else:
+                    sites_bet_combinaison[list_sites[i]]["mise"] = mises[j][i]
+                if uniquement_freebet:
+                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]+1
+                else:
+                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
+        try:
+            sites_bet_combinaison["total"] = sum(x["cote"]*x["mise"] for x in sites_bet_combinaison.values())
+        except KeyError:
+            sites_bet_combinaison["total"] = sum((x["cote"]-1)*x["mise freebet"] for x in sites_bet_combinaison.values())
+        dict_combinaison[combinaison] = sites_bet_combinaison
+        print(" / ".join(combinaison)+"\t", sites_bet_combinaison)
