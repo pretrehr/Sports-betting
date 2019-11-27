@@ -10,7 +10,7 @@ from parser_bookmakers import (parse_betclic, parse_betstars, parse_bwin,
                                parse_france_pari, parse_netbet, parse_parionssport,
                                parse_pasinobet, parse_pmu, parse_unibet,
                                parse_winamax, parse_zebet, merge_dict_odds,
-                               adapt_names_to_all, add_names_to_db_complete,
+                               format_team_names, add_names_to_db_complete,
                                parse_joa, valid_odds)
 from bet_functions import merge_dicts      
 import time                         
@@ -30,7 +30,7 @@ def parse_competition(competition, sport, *sites_not_to_parse):
             print("Site non accessible (délai écoulé)")
         except KeyboardInterrupt:
             res_parsing[site] = {}
-    res = adapt_names_to_all(res_parsing, sport)
+    res = format_team_names(res_parsing, sport)
     return valid_odds(merge_dict_odds(res), sport)
 
 def parse_main_competitions():
