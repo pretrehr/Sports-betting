@@ -3,8 +3,6 @@
 Assistant de paris sportifs
 """
 
-#Salzburg: 46.18
-#N:109.2
 
 from itertools import combinations, product
 from math import log, exp
@@ -17,22 +15,13 @@ def prod(data):
         return 0
     return exp(sum([log(_) for _ in data]))
 
-def somme_vect(vect1, vect2):
-    """
-    Calcule la somme de deux vecteurs
-    """
-    return [vect1[i]+vect2[i] for i in range(len(vect1))]
 
 def gain(cotes, mise=1):
     """
     Calcule le gain pour une somme des mises egale a mise
     """
-    somme = 0
-    taille = len(cotes)
-    for combi in combinations(cotes, taille-1):
-        somme += prod(combi)
-    produit = prod(cotes)
-    return mise*produit/somme
+    return mise/sum(map(lambda x:1/x, cotes))
+
 
 def gain2(cotes, rang, mise=1):
     """
@@ -46,58 +35,48 @@ def mises(cotes, mise=1, output=False):
     Calcule la repartition des mises pour minimiser les pertes
     avec une mise totale egale a mise
     """
-    somme = 0
-    taille = len(cotes)
-    for combi in combinations(cotes, taille-1):
-        somme += prod(combi)
-    produit = prod(cotes)
-    mis = []
-    for i in range(taille):
-        mis.append(mise*produit/(somme*cotes[i]))
+    gains = gain(cotes, mise)
+    mises_reelles = list(map(lambda x: gains/x, cotes))
     if output:
-        for i, elem in enumerate(mis):
-            mis[i] = round(elem, 2)
-        print(cotes)
+        mis = list(map(lambda x:round(x, 2), mises_reelles))
         print("somme des mises =", round(sum(mis), 2))
-        print("gain min =", min([troncature(mis[i]*cotes[i])
+        print("gain min =", min([round(mis[i]*cotes[i], 2)
                                  for i in range(len(mis))]))
-        print("gain max =", max([troncature(mis[i]*cotes[i])
+        print("gain max =", max([round(mis[i]*cotes[i], 2)
                                  for i in range(len(mis))]))
         print("plus-value max =",
-              round(min([troncature(mis[i]*cotes[i])
+              round(min([round(mis[i]*cotes[i], 2)
                          for i in range(len(mis))])-sum(mis), 2))
-        return mis
-    return mis
+        print("mises arrondies =", mis)
+    else:
+        return mises_reelles
 
-def troncature(nombre, precision=2):
-    """
-    Effectue une troncature a n chiffres apres la virgule
-    """
-    return int(nombre*10**precision)/10**precision
 
 def mises2(cotes, mise_requise, choix=-1, output=False):
     """
     Calcule la repartition des mises en pariant mise_requise sur l'une des
     issues. Par defaut, mise_requise est placee sur la cote la plus basse.
     """
-    mis = mises(cotes)
-    if choix == -1:
-        rapport = max(mis)
-    else:
-        rapport = mis[choix]
-    for i, elem in enumerate(mis):
-        mis[i] = round(mise_requise*elem/rapport, 2)
+    if choix==-1:
+        choix = np.argmin(cotes)
+    gains = mise_requise*cotes[choix]
+    mises_reelles = list(map(lambda x:gains/x, cotes))
     if output:
-        print(cotes)
-        print("somme des mises =", sum(mis))
-        print("gain min =", min([troncature(mis[i]*cotes[i])
+        mis = list(map(lambda x:round(x, 2), mises_reelles))
+        print("somme des mises =", round(sum(mis), 2))
+        print("gain min =", min([round(mis[i]*cotes[i], 2)
                                  for i in range(len(mis))]))
-        print("gain max =", max([troncature(mis[i]*cotes[i])
+        print("gain max =", max([round(mis[i]*cotes[i], 2)
                                  for i in range(len(mis))]))
-        print("plus-value max =",
-              round(min([troncature(mis[i]*cotes[i])
+        print("plus-value min =",
+              round(min([round(mis[i]*cotes[i], 2)
                          for i in range(len(mis))])-sum(mis), 2))
-    return mis
+        print("plus-value max =",
+              round(max([round(mis[i]*cotes[i], 2)
+                         for i in range(len(mis))])-sum(mis), 2))
+        print("mises arrondies =", mis)
+    else:
+        return mises_reelles
 
 def cotes_freebet(cotes):
     """
@@ -118,24 +97,19 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
     Calcule la repartition des mises en presence d'un freebet a placer sur l'une
     des issues. Par defaut, le freebet est place sur la cote la plus haute.
     """
-    mis = []
-    if issue > -1:
-        cote_max = cotes[issue]
-    else:
-        cote_max = max(cotes)
-    gains = (cote_max-1)*freebet
-    max_trouve = False
-    for cote in cotes:
-        if cote == cote_max and not max_trouve:
-            mis.append(freebet)
-            max_trouve = True
-        else:
-            mis.append(round(gains/cote, 2))
+    if issue==-1:
+        issue = np.argmax(cotes)
+    mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
+    gains = mises_reelles[issue]*(cotes[issue]-1)
     if output:
+        mis = list(map(lambda x:round(x, 2), mises_reelles))
         print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
-        print("gain =", gains)
-        print("mise totale (hors freebet) =", sum(mis)-freebet)
-    return mis
+        print("gain sur freebet / mise freebet =", round(gains+freebet-sum(mis), 2)/freebet)
+        print("gain =", round(gains, 2))
+        print("mise totale (hors freebet) =", round(sum(mis)-freebet, 2))
+        print("mises arrondies =", mis)
+    else:
+        return mises_reelles  
 
 
 def cotes_combine(cotes):
@@ -149,58 +123,41 @@ def cotes_combine(cotes):
     return out
 
 
-def meilleurs_parmi(cotes, nomb):
-    """
-    Calcule les n meilleurs matches parmi un ensemble de matches
-    """
-    return sorted(cotes, key=gain, reverse=True)[:nomb]
-
-
 def gain_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
                                    taux_remboursement=1):
     """
-    Calcule les mises lorsque l'un des paris est totalement rembourse. Par
-    defaut, la mise remboursee est placee sur la cote la plus basse et le
+    Calcule le bénéfice lorsque l'un des paris est rembourse. Par
+    defaut, la mise remboursee est placee sur la cote la plus haute et le
     remboursement est effectue en argent reel
     """
     taux = ((not remb_freebet) + 0.77*remb_freebet)*taux_remboursement
     if rang == -1:
-        cote_max = max(cotes)
-        for elem, i in enumerate(cotes):
-            if i == cote_max:
-                rang = elem
+        rang = np.argmax(cotes)
     gains = mise_max*cotes[rang]
-    mis = []
-    for i, elem in enumerate(cotes):
-        if i == rang:
-            mis.append(mise_max)
-        else:
-            mis.append((gains-mise_max*taux)/elem)
+    mis = list(map(lambda x: (gains-mise_max*taux)/x, cotes))
+    mis[rang] = mise_max
     return gains-sum(mis)
+
 
 def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
                                    taux_remboursement=1, output=False):
     """
-    Calcule les mises lorsque l'un des paris est totalement rembourse. Par
-    defaut, la mise remboursee est placee sur la cote la plus basse et le
+    Calcule les mises lorsque l'un des paris est rembourse. Par
+    defaut, la mise remboursee est placee sur la cote la plus haute et le
     remboursement est effectue en argent reel
     """
     taux = ((not remb_freebet) + 0.77*remb_freebet)*taux_remboursement
     if rang == -1:
-        cote_max = max(cotes)
-        for elem, i in enumerate(cotes):
-            if i == cote_max:
-                rang = elem
+        rang = np.argmax(cotes)
     gains = mise_max*cotes[rang]
-    mis = []
-    for i, elem in enumerate(cotes):
-        if i == rang:
-            mis.append(mise_max)
-        else:
-            mis.append((gains-mise_max*taux)/elem)
+    mis_reelles = list(map(lambda x: (gains-mise_max*taux)/x, cotes))
+    mis_reelles[rang] = mise_max
     if output:
+        mis = list(map(lambda x:round(x, 2), mis_reelles))
         print("gain net =", gains-sum(mis))
-    return mis
+        print("mises arrondies =", mis)
+    else:
+        return mis_reelles
 
 def promo_zebet(cotes):
     """
@@ -319,7 +276,8 @@ def cotes_combine_all_sites(*matches, freebet=False):
 
 
 def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
-                           rang_freebet=None, uniquement_freebet=False):
+                           rang_freebet=None, uniquement_freebet=False,
+                           cotes_boostees=None):
     opponents = []
     is1N2 = sport not in ["tennis", "volleyball", "basketball", "nba"]
     for match in matches:
@@ -344,15 +302,21 @@ def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
                 sites_bet_combinaison[list_sites[i]] = {}
                 if rang_freebet == i or uniquement_freebet:
                     sites_bet_combinaison[list_sites[i]]["mise freebet"] = mises[j][i]
-                else:
-                    sites_bet_combinaison[list_sites[i]]["mise"] = mises[j][i]
-                if uniquement_freebet:
                     sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]+1
                 else:
+                    sites_bet_combinaison[list_sites[i]]["mise"] = mises[j][i]
                     sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
-        try:
-            sites_bet_combinaison["total"] = sum(x["cote"]*x["mise"] for x in sites_bet_combinaison.values())
-        except KeyError:
-            sites_bet_combinaison["total"] = sum((x["cote"]-1)*x["mise freebet"] for x in sites_bet_combinaison.values())
+        for site in sites_bet_combinaison:
+            try:
+                sites_bet_combinaison[site]["mise"] = round(sites_bet_combinaison[site]["mise"], 2)
+            except KeyError:
+                sites_bet_combinaison[site]["mise freebet"] = round(sites_bet_combinaison[site]["mise freebet"], 2)
+        if cotes_boostees and cotes_boostees[i]>cotes[list_sites[i]][i]:
+            sites_bet_combinaison["total boosté"] = round(cotes_boostees[i]*sites_bet_combinaison[list_sites[i]]["mise"],2)
+        else:
+            try:
+                sites_bet_combinaison["total"] = round(sum(x["cote"]*x["mise"] for x in sites_bet_combinaison.values()), 2)
+            except KeyError:
+                sites_bet_combinaison["total"] = round(sum((x["cote"]-1)*x["mise freebet"] for x in sites_bet_combinaison.values()), 2)
         dict_combinaison[combinaison] = sites_bet_combinaison
         print(" / ".join(combinaison)+"\t", sites_bet_combinaison)
