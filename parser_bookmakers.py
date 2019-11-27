@@ -509,10 +509,12 @@ def parse_sport_betstars(sport):
             break
     list_odds = []
     for url in urls:
+        print(url)
         try:
-            odds = parse_betstars(url)
-            while odds and odds in list_odds:
+            for _ in range(10):
                 odds = parse_betstars(url)
+                if odds:
+                    break
             list_odds.append(odds)
         except KeyboardInterrupt:
             pass
@@ -770,10 +772,10 @@ def parse_pasinobet_sport(sport):
     
 
 def parse_pasinobet(url=""):
-    if "http" not in url:
-        return parse_pasinobet_sport(url)
     if not url:
         url = "https://www.pasinobet.fr/#/sport/?type=0&competition=20896&sport=1&region=830001"
+    if "http" not in url:
+        return parse_pasinobet_sport(url)
 #     driver = selenium.webdriver.Chrome("D:/Raphaël/git/Sports-betting/chromedriver")
     driver.get(url)    
     is_NBA = "competition=756" in url
@@ -794,6 +796,8 @@ def parse_pasinobet(url=""):
                     odds = list(map(float, list(line.find_parent().stripped_strings)[1::2]))
                     all_odds.append(odds)
                     break
+            else:
+                all_odds.append([])
         iter_odds = iter(all_odds)
     match_odds_hash = {}
     for _ in range(10):
@@ -907,6 +911,7 @@ def parse_bwin(url = ""):
     n=3
     is_NBA = "nba" in url
     odds=[]
+    odds_unavailable = False
     for _ in range(50):
         innerHTML = driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
@@ -914,7 +919,7 @@ def parse_bwin(url = ""):
         date_time = "undefined"
         for line in soup.findAll():
             if "class" in line.attrs and "participants-pair-game" in line["class"]:
-                if match and len(odds)==n:
+                if match and len(odds)==n and not odds_unavailable:
                     if is_NBA:
                         odds.reverse()
                     match_odds_hash[match] = {}
@@ -927,6 +932,7 @@ def parse_bwin(url = ""):
                     match = strings[1]+" - "+strings[0] if is_NBA else " - ".join(strings)
                 i = 0
                 odds = []
+                odds_unavailable = False
             if "class" in line.attrs and "starting-time" in line["class"]:
                 try:
                     date_time = datetime.datetime.strptime(line.text, "%d/%m/%Y %H:%M")
@@ -949,6 +955,8 @@ def parse_bwin(url = ""):
                         date_time = "undefined"
             if "class" in line.attrs and "group-title" in line["class"] and not is_1N2:
                 is_1N2 = (line.text == "Résultat 1 X 2")
+            if "class" in line.attrs and "offline" in line["class"]:
+                odds_unavailable = True
             if "class" in line.attrs and "option-indicator" in line["class"]:
                 if is_1N2:
                     n = 3
@@ -1036,8 +1044,13 @@ def get_future_opponnents(name, matches):
         if name in match:
             future_matches.append(match)
             opponents = match.split(" - ")
-            opponents.remove(name)
-            future_opponents.append(opponents[0])
+            try:
+                opponents.remove(name)
+                future_opponents.append(opponents[0])
+            except ValueError:
+                pass
+            except IndexError:
+                pass
     return future_opponents, future_matches
     
 
