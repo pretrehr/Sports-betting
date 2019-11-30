@@ -6,10 +6,14 @@ Fonctions principales d'assistant de paris
 from pprint import pprint
 from copy import deepcopy
 import winsound
+import unidecode
 from itertools import combinations, permutations, product, chain
 import numpy as np
 import time
+import inspect
+from win10toast import ToastNotifier
 from bs4 import BeautifulSoup
+import selenium_init
 from bet_functions import (merge_dicts, gain2, mises2, gain, mises,
                            mises_freebet, gain_pari_rembourse_si_perdant,
                            mises_pari_rembourse_si_perdant, cotes_freebet,
@@ -30,6 +34,7 @@ import urllib.error
 import datetime
 
 
+
 def parse_competition(competition, sport="football", *sites):
     """
     Retourne les cotes d'une competition donnée pour un ou plusieurs sites de
@@ -46,6 +51,9 @@ def parse_competition(competition, sport="football", *sites):
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax',
                  'zebet']
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+        selenium_init.start_selenium()
     res_parsing = {}
     for site in sites:
         if len(sites)>1:
@@ -58,6 +66,8 @@ def parse_competition(competition, sport="football", *sites):
             print("Site non accessible (délai écoulé)")
         except KeyboardInterrupt:
             res_parsing[site] = {}
+    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+        selenium_init.driver.quit()
     if len(sites)>1:
         res = format_team_names(res_parsing, sport)
         return valid_odds(merge_dict_odds(res), sport)
@@ -68,14 +78,19 @@ def parse_main_competitions(*sites):
     Retourne les cotes des principaux championnats de football
     """
     competitions = ["france ligue 1", "angleterre premier league",
-                    "espagne liga", "italie serie", "allemagne bundesliga",
-                    "ligue des champions"]#, "qualif"]
+                    "espagne liga", "italie serie", "allemagne bundesliga"]#,
+                    #"ligue des champions"]#, "qualif"]
 #     competitions = ["angleterre premier league", "espagne liga", "italie serie",
 #                     "allemagne bundesliga"]
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+        selenium_init.start_selenium()
     list_odds = []
     for competition in competitions:
         list_odds.append(parse_competition(competition, "football", *sites))
         print()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+        selenium_init.driver.quit()
     return merge_dicts(list_odds)
 
 def parse_football(*sites):
@@ -83,39 +98,67 @@ def parse_football(*sites):
     Stocke les cotes des principaux championnats de football en global
     """
     global main_odds
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
     main_odds = parse_main_competitions(*sites)
-    winsound.Beep(262, 1000)
-    winsound.Beep(330, 1000)
-    winsound.Beep(392, 1000)
+    if selenium_required:
+        selenium_init.driver.quit()
+    toaster = ToastNotifier()
+    toaster.show_toast("Sports-betting", "Fin du parsing")
 
 def parse_tennis(*sites):
     """
     Stocke les cotes des tournois de tennis en global
     """
     global odds_tennis
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
     odds_tennis = parse_competition("tennis", "tennis", *sites)
+    if selenium_required:
+        selenium_init.driver.quit()
 
 def parse_nba(*sites):
     """
     Stocke les cotes de la NBA en global
     """
     global odds_nba
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
     odds_nba = parse_competition("nba", "basketball", *sites)
+    if selenium_required:
+        selenium_init.driver.quit()
+
+def parse_handball(*sites):
+    global odds_handball
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
+    odds_handball = parse_competition("champions", "handball", *sites)
+    if selenium_required:
+        selenium_init.driver.quit()
 
 
 def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
-    all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_nba
+    all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_handball if sport=="handball" else odds_nba
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
-        if (opponents[0].lower().strip() in match_name.lower()
-                and opponents[1].lower().strip() in match_name.lower()):
+        if (opponents[0].lower().strip() in unidecode.unidecode(match_name.lower())
+                and opponents[1].lower().strip() in unidecode.unidecode(match_name.lower())):
             break
+    else:
+        return
     print(match_name)
-    return all_odds[match_name]
+    return match_name, all_odds[match_name]
 
 
 def best_bets_match(match, site, bet, minimum_odd, sport="football"):
@@ -123,7 +166,10 @@ def best_bets_match(match, site, bet, minimum_odd, sport="football"):
     Pour un match, un bookmaker, une somme à miser sur ce bookmaker et une cote
     minimale donnés, retourne la meilleure combinaison de paris à placer
     """
-    all_odds = odds_match(match, sport)
+    best_match, all_odds = odds_match(match, sport)
+    if not all_odds:
+        print("No match found")
+        return
     pprint(all_odds)
     odds_site = all_odds['odds'][site]
     best_odds = deepcopy(odds_site)
@@ -147,8 +193,8 @@ def best_bets_match(match, site, bet, minimum_odd, sport="football"):
                 bets = mises2(odds_to_check, bet, i)
                 best_i = i
     try:
-        print(best_overall_odds, sites, sep='\n')
-        return mises2(best_overall_odds, bet, best_i, True)
+        mises2(best_overall_odds, bet, best_i, True)
+        afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport)  
     except UnboundLocalError:
         print("No match found")
 
@@ -167,7 +213,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
         if combine:
             all_odds = all_odds_combine
         else:
-            all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_nba
+            all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_handball if sport=="handball" else odds_nba
     except NameError:
         print("""
         Merci de définir les côtes de base, appelez la fonction parse_football,
@@ -346,7 +392,8 @@ def best_matches_combine(site, minimum_odd, bet,sport, nb_matches=2, one_site=Fa
     global main_odds
     global odds_nba
     global odds_tennis
-    all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_nba
+    global odds_handball
+    all_odds = main_odds if sport=="football" else odds_tennis if sport=="tennis" else odds_handball if sport=="handball" else odds_nba
     best_rate = -float('inf')
     all_odds_combine = {}
     for combine in combinations(all_odds.items(), nb_matches):
