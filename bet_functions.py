@@ -288,9 +288,11 @@ def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
 #     pprint(list(product(*opponents)))
     dict_mises = {}
     dict_combinaison = {}
+    nb_chars = max(map(lambda x:len(" / ".join(x)), product(*opponents)))
     print("\nRépartition des mises (les totaux affichés prennent en compte les "
           "éventuels freebets):")
     for i, combinaison in enumerate(product(*opponents)):
+        diff = nb_chars-len(" / ".join(combinaison))
         sites_bet_combinaison = {}
         for j, list_sites in enumerate(sites):
             if list_sites[i] in sites_bet_combinaison:
@@ -302,7 +304,7 @@ def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
                 sites_bet_combinaison[list_sites[i]] = {}
                 if rang_freebet == i or uniquement_freebet:
                     sites_bet_combinaison[list_sites[i]]["mise freebet"] = mises[j][i]
-                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]+1
+                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]+(not rang_freebet == i)
                 else:
                     sites_bet_combinaison[list_sites[i]]["mise"] = mises[j][i]
                     sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
@@ -319,4 +321,4 @@ def afficher_mises_combine(matches, sites, mises, cotes, sport="football",
             except KeyError:
                 sites_bet_combinaison["total"] = round(sum((x["cote"]-1)*x["mise freebet"] for x in sites_bet_combinaison.values()), 2)
         dict_combinaison[combinaison] = sites_bet_combinaison
-        print(" / ".join(combinaison)+"\t", sites_bet_combinaison)
+        print(" / ".join(combinaison)+" "*diff+"\t", sites_bet_combinaison)
