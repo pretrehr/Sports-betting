@@ -22,7 +22,7 @@ import selenium_init
 
 
 
-locale.setlocale(locale.LC_TIME, "fr")
+locale.setlocale(locale.LC_TIME, "fr_FR.utf8") #sous windows : locale.setlocale(locale.LC_TIME, "fr")
 
 # try:
 #     driver.quit()
@@ -921,7 +921,7 @@ def parse_bwin(url = ""):
     options.add_experimental_option("prefs", prefs)
     if "handball" not in url:
         options.add_argument("--headless")
-    driver_bwin = selenium.webdriver.Chrome("D:/Raphaël/git/Sports-betting/chromedriver", options=options)
+    driver_bwin = selenium.webdriver.Chrome("chromedriver", options=options)
     driver_bwin.get(url)
     match_odds_hash = {}
     is_1N2 = False

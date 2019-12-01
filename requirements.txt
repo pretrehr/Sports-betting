@@ -1,2 +1,5 @@
 numpy>=1.13.3
 beautifulsoup4>=4.8.0
+unidecode>=1.1.1
+selenium>=3.141.0
+urllib>=1.25.7

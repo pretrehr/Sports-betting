@@ -5,13 +5,18 @@ Fonctions principales d'assistant de paris
 
 from pprint import pprint
 from copy import deepcopy
-import winsound
-import unidecode
-from itertools import combinations, permutations, product, chain
-import numpy as np
+import urllib
+import urllib.error
+import datetime
 import time
+from itertools import combinations, permutations, product, chain
 import inspect
-from win10toast import ToastNotifier
+import unidecode
+import numpy as np
+try:
+    from win10toast import ToastNotifier
+except ModuleNotFoundError:
+    import subprocess
 from bs4 import BeautifulSoup
 import selenium_init
 from bet_functions import (merge_dicts, gain2, mises2, gain, mises,
@@ -28,10 +33,7 @@ from parser_bookmakers import (valid_odds, format_team_names, merge_dict_odds,
                                parse_betclic, parse_betstars, parse_bwin,
                                parse_france_pari, parse_joa, parse_netbet,
                                parse_parionssport, parse_pasinobet, parse_pmu,
-                               parse_unibet, parse_winamax, parse_zebet)                               
-import urllib
-import urllib.error
-import datetime
+                               parse_unibet, parse_winamax, parse_zebet)
 
 
 
@@ -52,7 +54,8 @@ def parse_competition(competition, sport="football", *sites):
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax',
                  'zebet']
     selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
-    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+    if (inspect.currentframe().f_back.f_code.co_name=="<module>"
+        and selenium_sites.intersection(sites)):
         selenium_init.start_selenium()
     res_parsing = {}
     for site in sites:
@@ -105,8 +108,11 @@ def parse_football(*sites):
     main_odds = parse_main_competitions(*sites)
     if selenium_required:
         selenium_init.driver.quit()
-    toaster = ToastNotifier()
-    toaster.show_toast("Sports-betting", "Fin du parsing")
+    try:
+        toaster = ToastNotifier()
+        toaster.show_toast("Sports-betting", "Fin du parsing")
+    except NameError:
+        subprocess.Popen(['notify-send', "Fin du parsing"])
 
 def parse_tennis(*sites):
     """
@@ -194,7 +200,7 @@ def best_bets_match(match, site, bet, minimum_odd, sport="football"):
                 best_i = i
     try:
         mises2(best_overall_odds, bet, best_i, True)
-        afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport)  
+        afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport)
     except UnboundLocalError:
         print("No match found")
 
@@ -316,7 +322,7 @@ def find_almost_won_matches(best_matches, mises, output=False):
         print("bonus min =", min(sum(mises[k] for k in list_index) for list_index in dict_index_almost_won.values()))
         print("bonus max =", max(sum(mises[k] for k in list_index) for list_index in dict_index_almost_won.values()))
     return max(sum(mises[k] for k in list_index) for list_index in dict_index_almost_won.values())
-   
+
 
 def best_match_under_conditions(site, minimum_odd, bet, sport="football",
                                  one_site=False, live=False, date_max=None,
@@ -334,7 +340,7 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football",
                                  +[odds_site[i]*0.9 if live else odds_site[i]]
                                  +odds_site[i+1:])
     profit_function = lambda odds_to_check, i : gain(odds_to_check, bet)-bet if one_site else gain2(odds_to_check, i, bet)
-    criteria = lambda odds_to_check, i : ((not one_site and odds_to_check[i] >= minimum_odd) 
+    criteria = lambda odds_to_check, i : ((not one_site and odds_to_check[i] >= minimum_odd)
                                           or (one_site and all(odd>=minimum_odd for odd in odds_to_check)))
     display_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, best_rank, True) if not one_site else mises(best_overall_odds, bet, True)
     result_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, best_rank, False) if not one_site else mises(best_overall_odds, bet, False)
@@ -345,7 +351,7 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football",
 def best_match_freebet(site, freebet, sport, date_max=None, time_max=None, date_min=None,
                     time_min=None):
     """
-    Retourne le match qui génère le meilleur gain pour un unique freebet placé, 
+    Retourne le match qui génère le meilleur gain pour un unique freebet placé,
     couvert avec de l'argent réel.
     """
     odds_function = lambda best_odds, odds_site, i : (best_odds[:i]
@@ -406,7 +412,7 @@ def best_matches_combine(site, minimum_odd, bet,sport, nb_matches=2, one_site=Fa
                                  +[odds_site[i]]
                                  +best_odds[i+1:]) if not one_site else odds_site
     profit_function = lambda odds_to_check, i : gain(odds_to_check, bet)-bet if one_site else gain2(odds_to_check, i, bet)
-    criteria = lambda odds_to_check, i : ((not one_site and odds_to_check[i] >= minimum_odd) 
+    criteria = lambda odds_to_check, i : ((not one_site and odds_to_check[i] >= minimum_odd)
                                           or (one_site and all(odd>=minimum_odd for odd in odds_to_check)))
     display_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, best_rank, True) if not one_site else mises(best_overall_odds, bet, True)
     result_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, best_rank, False) if not one_site else mises(best_overall_odds, bet, False)
@@ -442,7 +448,7 @@ def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_sel
                     time_min, True, nb_matches, one_site=True, recalcul=True)
 
 def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
-                                  freebet=True, combi_max=0, rate_cashback=1, 
+                                  freebet=True, combi_max=0, rate_cashback=1,
                                   nb_matches=2, date_max=None, time_max=None,
                                   date_min=None, time_min=None):
     global all_odds_combine
@@ -596,23 +602,10 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
 def add_names_to_db_complete(site, sport, competition):
     if ("http" in competition or "tennis" in competition
         or "europa" in competition or "ldc" in competition
-        or "élim" in competition):
+        or "élim" in competition or "handball" in competition):
         url = competition
     else:
-        url = get_link(site, competition)
-        print(url)
-        ans = input("ok ?")
-        if ans.strip() == "url":
-            url = input("url:")
-            ans = ""
-        while ans or not url:
-            competition = input("Enter competition name:")
-            url = get_link(site, competition)
-            print(url)
-            ans = input("ok ?")
-            if ans.strip() == "url":
-                url = input("url:")
-                ans = ""
+        return
     odds = eval("parse_{}(url)".format(site))
     matches = odds.keys()
     teams = list(set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches))))))
@@ -649,10 +642,10 @@ def add_names_to_db_complete(site, sport, competition):
         found = False
         for future_opponent, future_match in zip(future_opponents, future_matches):
             id_opponent = get_id_by_site(future_opponent, sport, site)
-            id = get_id_by_opponent(id_opponent, future_match, site, odds)
-            if id:
+            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+            if id_to_find:
                 found = True
-                add_name_to_db(id, team, site)
+                add_name_to_db(id_to_find, team, site)
         if not found:
             teams_3rd_round.append(team)
     print(teams_3rd_round)
@@ -668,10 +661,10 @@ def add_names_to_db_complete(site, sport, competition):
         found = False
         for future_opponent, future_match in zip(future_opponents, future_matches):
             id_opponent = get_id_by_site(future_opponent, sport, site)
-            id = get_id_by_opponent(id_opponent, future_match, site, odds)
-            if id:
+            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+            if id_to_find:
                 found = True
-                add_name_to_db(id, team, site)
+                add_name_to_db(id_to_find, team, site)
         if not found:
             teams_5th_round.append(team)
     print(teams_5th_round)
@@ -692,12 +685,10 @@ def get_future_opponnents(name, matches):
                 pass
     return future_opponents, future_matches
 
-def get_id_by_opponent(id_opponent, name_site_match, site, matches):
+def get_id_by_opponent(id_opponent, name_site_match, matches):
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/Nice-td"+str(id_opponent)
         date_match = matches[name_site_match]["date"]
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-        opponent_ids = []
-        i = 0
         get_next_id = False
         for line in soup.find_all(["a", "table"]):
             if get_next_id and "class" in line.attrs and "otn" in line["class"]:
@@ -712,15 +703,16 @@ def get_id_by_opponent(id_opponent, name_site_match, site, matches):
                                 get_next_id = True
                         except TypeError: #live
                             pass
+        return
 
 
 
 def add_names_to_db_all_sites(competition, sport, *sites):
-    id = find_competition_id(competition, sport)
+    id_competition = find_competition_id(competition, sport)
     if competition==sport:
         import_sport_teams_in_db(sport)
     else:
-        import_teams_in_db("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"+str(id))
+        import_teams_in_db("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"+str(id_competition))
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'netbet', 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax']
     for site in sites:
