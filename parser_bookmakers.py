@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import urllib
 import urllib.request
 import urllib.error
+import sys
 import selenium
 import itertools
 import copy
@@ -19,10 +20,13 @@ from bet_functions import merge_dicts
 import selenium_init
 
 
+if sys.platform == "win32":
+    locale.setlocale(locale.LC_TIME, "fr")
+else:
+    locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
 
 
-locale.setlocale(locale.LC_TIME, "fr_FR.utf8") #sous windows : locale.setlocale(locale.LC_TIME, "fr")
 
 # try:
 #     driver.quit()
@@ -811,7 +815,7 @@ def parse_pasinobet(url=""):
                 all_odds.append([])
         iter_odds = iter(all_odds)
     match_odds_hash = {}
-    for _ in range(20):
+    for _ in range(100):
         innerHTML = selenium_init.driver.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(innerHTML, features="lxml")
         for line in soup.findAll():
@@ -985,7 +989,7 @@ def parse_bwin(url = ""):
                     i+=1
         if odds:
             break
-    if match and len(odds)==n:
+    if len(odds)==n and match and ("handball" in url or not odds_unavailable):
         if is_NBA:
             odds.reverse()
         match_odds_hash[match] = {}
