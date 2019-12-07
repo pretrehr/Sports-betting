@@ -54,8 +54,8 @@ def parse_competition(competition, sport="football", *sites):
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax',
                  'zebet']
     selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
-    if (inspect.currentframe().f_back.f_code.co_name=="<module>"
-        and selenium_sites.intersection(sites)):
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
         selenium_init.start_selenium()
     res_parsing = {}
     for site in sites:
@@ -71,6 +71,12 @@ def parse_competition(competition, sport="football", *sites):
             res_parsing[site] = {}
     if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
         selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
     if len(sites)>1:
         res = format_team_names(res_parsing, sport)
         return valid_odds(merge_dict_odds(res), sport)
@@ -81,12 +87,13 @@ def parse_main_competitions(*sites):
     Retourne les cotes des principaux championnats de football
     """
     competitions = ["france ligue 1", "angleterre premier league",
-                    "espagne liga", "italie serie", "allemagne bundesliga"]#,
-                    #"ligue des champions"]#, "qualif"]
+                    "espagne liga", "italie serie", "allemagne bundesliga",
+                    "ligue des champions"]#, "qualif"]
 #     competitions = ["angleterre premier league", "espagne liga", "italie serie",
 #                     "allemagne bundesliga"]
     selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
-    if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
         selenium_init.start_selenium()
     list_odds = []
     for competition in competitions:
@@ -94,6 +101,31 @@ def parse_main_competitions(*sites):
         print()
     if inspect.currentframe().f_back.f_code.co_name=="<module>" and selenium_sites.intersection(sites):
         selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
+    return merge_dicts(list_odds)
+
+def parse_competitions(competitions, *sites):
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
+    list_odds = []
+    for competition in competitions:
+        list_odds.append(parse_competition(competition, "football", *sites))
+        print()
+    if selenium_required:
+        selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
     return merge_dicts(list_odds)
 
 def parse_football(*sites):
@@ -108,11 +140,12 @@ def parse_football(*sites):
     main_odds = parse_main_competitions(*sites)
     if selenium_required:
         selenium_init.driver.quit()
-    try:
-        toaster = ToastNotifier()
-        toaster.show_toast("Sports-betting", "Fin du parsing")
-    except NameError:
-        subprocess.Popen(['notify-send', "Fin du parsing"])
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 def parse_tennis(*sites):
     """
@@ -126,6 +159,12 @@ def parse_tennis(*sites):
     odds_tennis = parse_competition("tennis", "tennis", *sites)
     if selenium_required:
         selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 def parse_nba(*sites):
     """
@@ -139,6 +178,12 @@ def parse_nba(*sites):
     odds_nba = parse_competition("nba", "basketball", *sites)
     if selenium_required:
         selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 def parse_handball(*sites):
     global odds_handball
@@ -148,6 +193,12 @@ def parse_handball(*sites):
     odds_handball = parse_competition("champions", "handball", *sites)
     if selenium_required:
         selenium_init.driver.quit()
+    if inspect.currentframe().f_back.f_code.co_name=="<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def odds_match(match, sport="football"):
@@ -286,27 +337,29 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
         print(best_match)
         pprint(all_odds[best_match], compact=True)
         if recalcul:
-            sum_almost_won = find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank))
+            sum_almost_won = find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank), sport)
             display_function = lambda x, i : mises(x, 10000*50/sum_almost_won, True)
             result_function = lambda x, i : mises(x, 10000*50/sum_almost_won, False)
-            find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank), True)
+            find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank), sport, True)
         display_function(best_overall_odds, best_rank)
         afficher_mises_combine(best_match.split(" / "), [sites], [result_function(best_overall_odds, best_rank)], all_odds[best_match]["odds"], sport, best_rank if freebet else None, one_site and freebet, best_overall_odds)
     except UnboundLocalError:
         print("No match found")
 
-def find_almost_won_matches(best_matches, mises, output=False):
+def find_almost_won_matches(best_matches, mises, sport, output=False):
     matches = best_matches.split(" / ")
     opponents = []
     for match in matches:
         opponents_match = match.split(" - ")
-        opponents_match.insert(1, "Nul")
+        if sport not in ["tennis", "volleyball", "basketball", "nba"]:
+            opponents_match.insert(1, "Nul")
         opponents.append(opponents_match)
     dict_almost_won = {}
+    n = 2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])
     for combinaison in product(*opponents):
         almost_won_combis = []
         for i in range(len(combinaison)):
-            for j in range(3):
+            for j in range(n):
                 combi = list(combinaison)
                 if combi[i] == opponents[i][j]:
                     pass
@@ -348,7 +401,24 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football",
                     result_function, site, sport, date_max, time_max, date_min,
                     time_min, one_site=one_site)
 
-def best_match_freebet(site, freebet, sport, date_max=None, time_max=None, date_min=None,
+
+def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
+                            date_max=None, time_max=None, date_min=None,
+                            time_min=None):
+    """
+    Retourne le meilleur match sur lequel miser lorsqu'on doit gagner un pari à
+    une cote donnée sur un site donné. 
+    """
+    odds_function = lambda best_odds, odds_site, i : odds_site
+    profit_function = lambda odds_to_check, i : gain2(odds_to_check, np.argmax(odds_to_check), bet)
+    criteria = lambda odds_to_check, i : all(odd>=minimum_odd for odd in odds_to_check)
+    display_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, np.argmax(best_overall_odds), True)
+    result_function = lambda best_overall_odds, best_rank : mises2(best_overall_odds, bet, np.argmax(best_overall_odds), False)
+    best_match_base(odds_function, profit_function, criteria, display_function,
+                    result_function, site, sport, date_max, time_max, date_min,
+                    time_min, one_site=True)
+
+def best_match_freebet(site, freebet, sport="football", date_max=None, time_max=None, date_min=None,
                     time_min=None):
     """
     Retourne le match qui génère le meilleur gain pour un unique freebet placé,
@@ -426,9 +496,10 @@ def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_sel
                                   time_min=None):
     global all_odds_combine
     global main_odds
-    sport = "football"
+    global odds_nba
+    sport = "basketball"
     bet = 10000
-    all_odds = main_odds
+    all_odds = odds_nba
     best_rate = -float('inf')
     all_odds_combine = {}
     one_site = False
@@ -715,6 +786,10 @@ def add_names_to_db_all_sites(competition, sport, *sites):
         import_teams_in_db("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"+str(id_competition))
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'netbet', 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax']
+    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_required = inspect.currentframe().f_back.f_code.co_name=="<module>" and (selenium_sites.intersection(sites) or not sites)
+    if selenium_required:
+        selenium_init.start_selenium()
     for site in sites:
         print(site)
         url = find_competition(competition, sport, site)
@@ -725,4 +800,6 @@ def add_names_to_db_all_sites(competition, sport, *sites):
                 pass
             except urllib.error.URLError:
                 print("Site non accessible (délai écoulé)")
+    if selenium_required:
+        selenium_init.driver.quit()
 
