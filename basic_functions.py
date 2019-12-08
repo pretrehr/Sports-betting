@@ -8,15 +8,6 @@ from itertools import product
 from math import log, exp
 import numpy as np
 
-def prod(data):
-    """
-    Calcule le produit des donnees d'un tableau
-    """
-    if 0 in data:
-        return 0
-    return exp(sum([log(_) for _ in data]))
-
-
 def gain(cotes, mise=1):
     """
     Calcule le gain pour une somme des mises egale a mise
@@ -120,7 +111,7 @@ def cotes_combine(cotes):
     out = []
     res = list(product(*cotes))
     for i in res:
-        out.append(round(prod(i), 4))
+        out.append(round(np.prod(i), 4))
     return out
 
 
@@ -251,84 +242,3 @@ def paris_rembourses_si_perdants(cotes, remboursement_max, freebet, taux_rembour
     x = np.linalg.solve(a, b)
     print("Bénéfice net:", x[-1]-sum(x[:-1]))
     print(x[:-1])
-
-
-def cotes_combine_all_sites(*matches, freebet=False):
-    """
-    Calcule les cotes combinées de matches dont on connait les cotes sur plusieurs
-    bookmakers
-    """
-    sites = set(matches[0]["odds"].keys())
-    for match in matches:
-        sites = sites.intersection(match["odds"].keys())
-    combine_dict = {}
-    combine_dict["date"] = max([match["date"] for match in matches])
-    combine_dict["odds"] = {}
-    for site in sites:
-        if freebet:
-            combine_dict["odds"][site] = cotes_freebet(cotes_combine([match["odds"][site]
-                                                                      for match in matches]))
-        else:
-            combine_dict["odds"][site] = cotes_combine([match["odds"][site] for match in matches])
-    return combine_dict
-
-
-def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
-                           rang_freebet=None, uniquement_freebet=False,
-                           cotes_boostees=None):
-    """
-    Affichage de la répartition des mises
-    """
-    opponents = []
-    is_1n2 = sport not in ["tennis", "volleyball", "basketball", "nba"]
-    for match in matches:
-        opponents_match = match.split(" - ")
-        if is_1n2:
-            opponents_match.insert(1, "Nul")
-        opponents.append(opponents_match)
-    dict_combinaison = {}
-    nb_chars = max(map(lambda x: len(" / ".join(x)), product(*opponents)))
-    print("\nRépartition des mises (les totaux affichés prennent en compte les "
-          "éventuels freebets):")
-    for i, combinaison in enumerate(product(*opponents)):
-        diff = nb_chars-len(" / ".join(combinaison))
-        sites_bet_combinaison = {}
-        for j, list_sites in enumerate(sites):
-            if list_sites[i] in sites_bet_combinaison:
-                if rang_freebet == i or uniquement_freebet:
-                    sites_bet_combinaison[list_sites[i]]["mise freebet"] += list_mises[j][i]
-                else:
-                    sites_bet_combinaison[list_sites[i]]["mise"] += list_mises[j][i]
-            else:
-                sites_bet_combinaison[list_sites[i]] = {}
-                if rang_freebet == i or uniquement_freebet:
-                    sites_bet_combinaison[list_sites[i]]["mise freebet"] = list_mises[j][i]
-                    sites_bet_combinaison[list_sites[i]]["cote"] = (cotes[list_sites[i]][i]
-                                                                    +(not rang_freebet == i))
-                else:
-                    sites_bet_combinaison[list_sites[i]]["mise"] = list_mises[j][i]
-                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
-        for site in sites_bet_combinaison:
-            try:
-                sites_bet_combinaison[site]["mise"] = round(sites_bet_combinaison[site]["mise"], 2)
-            except KeyError:
-                sites_bet_combinaison[site]["mise freebet"] = round((sites_bet_combinaison[site]
-                                                                     ["mise freebet"]),
-                                                                    2)
-        if cotes_boostees and cotes_boostees[i] > cotes[sites[0][i]][i]: 
-        #Valable que s'il n'y a qu'un seul match
-            sites_bet_combinaison["total boosté"] = round(cotes_boostees[i]
-                                                          *(sites_bet_combinaison[sites[0][i]]
-                                                            ["mise"]),
-                                                          2)
-        else:
-            try:
-                sites_bet_combinaison["total"] = round(sum(x["cote"]*x["mise"]
-                                                           for x in sites_bet_combinaison.values()),
-                                                       2)
-            except KeyError:
-                sites_bet_combinaison["total"] = round(sum((x["cote"]-1)*x["mise freebet"]
-                                                           for x in sites_bet_combinaison.values()),
-                                                       2)
-        dict_combinaison[combinaison] = sites_bet_combinaison
-        print(" / ".join(combinaison)+" "*diff+"\t", sites_bet_combinaison)
