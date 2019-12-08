@@ -3,3 +3,5 @@
 analyzer_bets.py
 mpg123-1.23.8-x86-64/*
 tts.py
+doc/*
+docs/*
