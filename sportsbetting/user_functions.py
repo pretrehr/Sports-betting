@@ -123,7 +123,8 @@ def parse_football(*sites):
     competitions = ["france ligue 1", "angleterre premier league",
                     "espagne liga", "italie serie", "allemagne bundesliga",
                     "ligue des champions"]
-    sportsbetting.ODDS_FOOTBALL = parse_competitions(competitions, *sites)
+#     sportsbetting.ODDS_FOOTBALL = parse_competitions(competitions, *sites)
+    sportsbetting.ODDS["football"] = parse_competitions(competitions, *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -143,7 +144,8 @@ def parse_tennis(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-    sportsbetting.ODDS_TENNIS = parse_competition("tennis", "tennis", *sites)
+#     sportsbetting.ODDS_TENNIS = parse_competition("tennis", "tennis", *sites)
+    sportsbetting.ODDS["tennis"] = parse_competition("tennis", "tennis", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -162,7 +164,9 @@ def parse_nba(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-    sportsbetting.ODDS_NBA = parse_competition("nba", "basketball", *sites)
+#     sportsbetting.ODDS_NBA = parse_competition("nba", "basketball", *sites)
+    sportsbetting.ODDS["nba"] = parse_competition("nba", "basketball", *sites)
+    sportsbetting.ODDS["basketball"] = sportsbetting.ODDS["nba"]
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -181,7 +185,8 @@ def parse_handball(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-    sportsbetting.ODDS_HANDBALL = parse_competition("champions", "handball", *sites)
+#     sportsbetting.ODDS_HANDBALL = parse_competition("champions", "handball", *sites)
+    sportsbetting.ODDS["handball"] = parse_competition("champions", "handball", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -196,10 +201,11 @@ def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
-    all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-                else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-                      else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-                            else sportsbetting.ODDS_NBA)))
+#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
+#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
+#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
+#                             else sportsbetting.ODDS_NBA)))
+    all_odds = sportsbetting.ODDS[sport]
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
@@ -354,10 +360,11 @@ def best_matches_combine(site, minimum_odd, bet, sport, nb_matches=2, one_site=F
     Given a bookmaker, return on which matches you should share your freebet to
     maximize your gain
     """
-    all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-                else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-                      else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-                            else sportsbetting.ODDS_NBA)))
+#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
+#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
+#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
+#                             else sportsbetting.ODDS_NBA)))
+    all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         try:
@@ -402,7 +409,8 @@ def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_sel
     """
     sport = "football"
     bet = 10000
-    all_odds = sportsbetting.ODDS_FOOTBALL
+#     all_odds = sportsbetting.ODDS_FOOTBALL
+    all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         try:
@@ -435,10 +443,11 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
     """
     Calcule la répartition des mises lorsqu'un unique combiné est remboursé s'il est perdant
     """
-    all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-                else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-                      else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-                            else sportsbetting.ODDS_NBA)))
+#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
+#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
+#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
+#                             else sportsbetting.ODDS_NBA)))
+    all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         (sportsbetting
@@ -473,7 +482,8 @@ def best_matches_freebet(main_sites, freebets):
     if not second_sites:
         print("Veuillez sélectionner des freebets secondaires")
         return
-    new_odds = sportsbetting.ODDS_FOOTBALL
+#     new_odds = sportsbetting.ODDS_FOOTBALL
+    new_odds = sportsbetting.ODDS["football"]
     all_odds = {}
     for match in new_odds:
         if (not(any([site not in new_odds[match]["odds"].keys() for site in main_sites])
@@ -544,10 +554,11 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     """
     Calcule la répartition des paris gratuits sur un unique site
     """
-    all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-                else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-                      else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-                            else sportsbetting.ODDS_NBA)))
+#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
+#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
+#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
+#                             else sportsbetting.ODDS_NBA)))
+    all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         (sportsbetting

@@ -40,7 +40,10 @@ def parse_betclic(url=""):
     match_odds_hash = {}
     one_match_page = False
     for line in soup.find_all():
-        if line.name == "time":
+        if "Nous nous excusons pour cette interruption momentanée du site." in line.text:
+            print("Betclic non accessible")
+            return {}
+        elif line.name == "time":
             date = line["datetime"]
         elif "class" in line.attrs and "hour" in line["class"]:
             hour = line.text
@@ -215,7 +218,10 @@ def parse_bwin(url=""):
                 if len(strings) == 4:
                     match = strings[0]+" ("+strings[1]+") - "+strings[2]+" ("+strings[3]+")"
                 else:
-                    match = strings[0]+" - "+strings[2] if is_nba else " - ".join(strings)
+                    try:
+                        match = strings[0]+" - "+strings[2] if is_nba else " - ".join(strings)
+                    except IndexError:
+                        match = strings[0]+" - "+strings[1] if is_nba else " - ".join(strings)
                 i = 0
                 odds = []
                 odds_unavailable = False
