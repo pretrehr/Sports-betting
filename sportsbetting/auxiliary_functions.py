@@ -46,7 +46,7 @@ def format_team_names(dict_odds, sport):
     """
     list_odds = []
     for site in dict_odds:
-        if site in ["netbet", "zebet", "france_pari", "joa"]:
+        if site in ["netbet", "zebet", "france_pari"]:
             list_odds.append(adapt_names(dict_odds[site], "netbet", sport))
         else:
             list_odds.append(adapt_names(dict_odds[site], site, sport))
