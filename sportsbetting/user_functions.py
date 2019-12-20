@@ -48,7 +48,8 @@ def parse_competition(competition, sport="football", *sites):
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax',
                  'zebet']
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet",
+                      "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -88,7 +89,7 @@ def parse_competitions(competitions, *sites):
     """
     Retourne les cotes de plusieurs competitions
     """
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -115,7 +116,7 @@ def parse_football(*sites):
     """
     Stocke les cotes des principaux championnats de football en global
     """
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -139,7 +140,7 @@ def parse_tennis(*sites):
     """
     Stocke les cotes des tournois de tennis en global
     """
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -159,7 +160,7 @@ def parse_nba(*sites):
     """
     Stocke les cotes de la NBA en global
     """
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -180,7 +181,7 @@ def parse_handball(*sites):
     """
     Stocke les cotes de handball en global
     """
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -589,9 +590,9 @@ def add_names_to_db(competition, sport, *sites):
         import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"
                             +str(id_competition))
     if not sites:
-        sites = ['betclic', 'betstars', 'bwin', 'netbet', 'parionssport', 'pasinobet', 'pmu',
+        sites = ['betclic', 'betstars', 'bwin', 'joa', 'netbet', 'parionssport', 'pasinobet', 'pmu',
                  'unibet', 'winamax']
-    selenium_sites = {"betstars", "bwin", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
