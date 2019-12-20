@@ -122,8 +122,8 @@ def parse_football(*sites):
     if selenium_required:
         selenium_init.start_selenium()
     competitions = ["france ligue 1", "angleterre premier league",
-                    "espagne liga", "italie serie", "allemagne bundesliga",
-                    "ligue des champions"]
+                    "espagne liga", "italie serie", "allemagne bundesliga"]#,
+                    #"ligue des champions"]
 #     sportsbetting.ODDS_FOOTBALL = parse_competitions(competitions, *sites)
     sportsbetting.ODDS["football"] = parse_competitions(competitions, *sites)
     if selenium_required:
