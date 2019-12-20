@@ -4,6 +4,9 @@ Fonctions de gestion de la base de données des noms d'équipe/joueur/compétiti
 
 import sqlite3
 import urllib
+import unidecode
+import datetime
+import re
 from bs4 import BeautifulSoup
 
 def get_id_formated_competition_name(competition, sport):
@@ -105,13 +108,11 @@ def import_teams_by_url(url):
     sport = soup.find("title").string.split()[-1].lower()
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "-td" in line["href"] and line.text:
-            try:
+            if not is_in_db(line.text, sport):
                 c.execute("""
                 INSERT INTO names (id, name, sport)
                 VALUES ({}, "{}", "{}")
                 """.format(line["href"].split("-td")[-1], line.text, sport))
-            except sqlite3.IntegrityError:
-                pass
     conn.commit()
     c.close()
 
@@ -188,7 +189,7 @@ def get_close_name2(name, sport, site):
     """
     split_name = re.split(' |\\.',name)
     split_name2 = " ".join([string for string in split_name if (len(string)>2 or string!=string.upper())])
-    return find_closer_result(split_name2, sport, site)
+    return get_close_name(split_name2, sport, site)
 
 def get_id_by_site(name, sport, site):
     """
