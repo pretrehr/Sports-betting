@@ -219,9 +219,9 @@ def parse_bwin(url=""):
                     match = strings[0]+" ("+strings[1]+") - "+strings[2]+" ("+strings[3]+")"
                 else:
                     try:
-                        match = strings[0]+" - "+strings[2] if is_nba else " - ".join(strings)
+                        match = strings[2]+" - "+strings[0] if is_nba else " - ".join(strings)
                     except IndexError:
-                        match = strings[0]+" - "+strings[1] if is_nba else " - ".join(strings)
+                        match = strings[1]+" - "+strings[0] if is_nba else " - ".join(strings)
                 i = 0
                 odds = []
                 odds_unavailable = False
@@ -337,37 +337,57 @@ def parse_joa(url):
     Retourne les cotes disponibles sur joa
     """
     if not url:
-        url = ("https://paris-sportifs.joa-online.fr/pari/competition/id/96/"
-               "pariez-sur-Ligue-1-Conforama")
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+        url = "https://www.joa-online.fr/fr/sport/paris-sportifs/844/54287323"
+    selenium_init.DRIVER.get(url)
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
-    year = " "+str(today.year)
-    for line in soup.find_all():
-        if "class" in line.attrs and "date_paris" in line["class"]:
-            date = line.text.strip()+year
-        elif "class" in line.attrs and "paris-chrono" in line["class"]:
-            hour = line.text.strip()
-            try:
-                date_time = datetime.datetime.strptime(date+" "+hour, "%A %d %B %Y %H:%M")
-                if date_time < today:
-                    date_time.replace(year=date_time.year+1)
-            except ValueError:
-                date_time = "undefined"
-        elif "class" in line.attrs and "pc-match-long" in line["class"]:
-            match = line.text.strip().replace("/", "-")
-        elif "class" in line.attrs and "pc-bloc-cote" in line["class"]:
-            if "..." in match:
-                for child in line.findChildren("a", recursive=True):
-                    if "data-evenement" in child.attrs:
-                        match = child["data-evenement"].strip().replace("/", "-")
-                        break
-            odds = list(map(float, list(line.stripped_strings)))
-            match_odds_hash[match] = {}
-            match_odds_hash[match]['odds'] = {"joa":odds}
-            match_odds_hash[match]['date'] = date_time
-    return match_odds_hash
+    year = str(today.year)
+    odds_class = ""
+    for _ in range(10):
+        matches = WebDriverWait(selenium_init.DRIVER, 60).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
+        )
+        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(inner_html, features="lxml")
+        for line in soup.find_all():
+            if "class" in line.attrs and "bet-event-name" in line["class"]:
+                match = " - ".join(line.stripped_strings)
+            elif "class" in line.attrs and "bet-outcomes-caption-list" in line["class"]:
+                if ["1", "2"] == list(line.stripped_strings):
+                    n=2
+                    odds_class = line.attrs["class"][-1]
+                elif ["1", "X", "2"] == list(line.stripped_strings):
+                    n=3
+                    odds_class = line.attrs["class"][-1]
+            elif "class" in line.attrs and "bet-outcome-list" in line["class"] and odds_class in line["class"]:
+                odds = list(map(float, list(line.stripped_strings)))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"joa":odds}
+                match_odds_hash[match]['date'] = date_time
+            elif "class" in line.attrs and "bet-event-date-col" in line["class"]:
+                strings = list(line.stripped_strings)
+                if strings[0] == "Demain":
+                    date = (datetime.datetime.today()
+                            +datetime.timedelta(days=1)).strftime("%d %b %Y")
+                    hour = strings[1]
+                    date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
+                elif strings[0] == "Aujourd'hui":
+                    date = datetime.datetime.today().strftime("%d %b %Y")
+                    hour = strings[1]
+                    date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
+                else:
+                    date = strings[0]+"/"+year
+                    hour = strings[1]
+                    try:
+                        date_time = datetime.datetime.strptime(date+" "+hour, "%d/%m/%Y %H:%M")
+                    except ValueError:
+                        date = datetime.datetime.today().strftime("%d/%m/%Y")
+                        hour = strings[0]
+                        date_time = datetime.datetime.strptime(date+" "+hour, "%d/%m/%Y %H:%M")
+                    if date_time < today:
+                        date_time.replace(year=date_time.year+1)
+        return match_odds_hash
 
 def parse_netbet(url=""):
     """
