@@ -9,7 +9,7 @@ import datetime
 import copy
 import sportsbetting
 from sportsbetting.database_functions import get_formated_name
-from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2
+from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises
 
 
 def valid_odds(all_odds, sport):
@@ -84,7 +84,7 @@ def merge_dicts(dict_args):
 #     for dictionary in dict_args:
 #         result.update(dictionary)
     def_dict = collections.defaultdict(dict)
-    for key, val in chain(*map(lambda x:x.items(), dict_args)): 
+    for key, val in chain(*map(lambda x: x.items(), dict_args)):
         def_dict[key]["date"] = val["date"]
         try:
             def_dict[key]["odds"].update(val["odds"])
