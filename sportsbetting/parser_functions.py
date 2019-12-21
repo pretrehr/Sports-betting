@@ -43,7 +43,7 @@ def parse_betclic(url=""):
         if "Nous nous excusons pour cette interruption momentanée du site." in line.text:
             print("Betclic non accessible")
             return {}
-        elif line.name == "time":
+        if line.name == "time":
             date = line["datetime"]
         elif "class" in line.attrs and "hour" in line["class"]:
             hour = line.text
@@ -345,7 +345,7 @@ def parse_joa(url):
     year = str(today.year)
     odds_class = ""
     for _ in range(10):
-        matches = WebDriverWait(selenium_init.DRIVER, 60).until(
+        WebDriverWait(selenium_init.DRIVER, 60).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
         )
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
@@ -354,13 +354,12 @@ def parse_joa(url):
             if "class" in line.attrs and "bet-event-name" in line["class"]:
                 match = " - ".join(line.stripped_strings)
             elif "class" in line.attrs and "bet-outcomes-caption-list" in line["class"]:
-                if ["1", "2"] == list(line.stripped_strings):
-                    n=2
+                if (["1", "2"] == list(line.stripped_strings)
+                        or ["1", "X", "2"] == list(line.stripped_strings)):
                     odds_class = line.attrs["class"][-1]
-                elif ["1", "X", "2"] == list(line.stripped_strings):
-                    n=3
-                    odds_class = line.attrs["class"][-1]
-            elif "class" in line.attrs and "bet-outcome-list" in line["class"] and odds_class in line["class"]:
+            elif ("class" in line.attrs
+                  and "bet-outcome-list" in line["class"]
+                  and odds_class in line["class"]):
                 odds = list(map(float, list(line.stripped_strings)))
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"joa":odds}
@@ -764,6 +763,8 @@ def parse_unibet(url=""):
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
                 match = line.text.strip().replace("Bordeaux - Bègles", "Bordeaux-Bègles")
+                match = match.replace("Flensburg - Handewitt", "Flensburg-Handewitt")
+                match = match.replace("TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
             if "class" in line.attrs and "datetime" in line["class"]:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
