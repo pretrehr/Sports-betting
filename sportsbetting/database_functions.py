@@ -4,9 +4,9 @@ Fonctions de gestion de la base de données des noms d'équipe/joueur/compétiti
 
 import sqlite3
 import urllib
-import unidecode
 import datetime
 import re
+import unidecode
 from bs4 import BeautifulSoup
 
 def get_id_formated_competition_name(competition, sport):
@@ -153,17 +153,17 @@ def is_in_db_site(name, sport, site):
     for line in c.fetchall():
         return line
 
-def add_name_to_db(id, name, site):
+def add_name_to_db(_id, name, site):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
     conn = sqlite3.connect('teams.db')
-    c2 = conn.cursor()
-    c2.execute("""
+    c = conn.cursor()
+    c.execute("""
     UPDATE names
-    SET name_{} = "{}" WHERE id = {} AND name_{} IS NULL
-    """.format(site, name, id, site))
-    c2.close()
+    SET name_{0} = "{1}" WHERE id = {2} AND name_{0} IS NULL
+    """.format(site, name, _id))
+    c.close()
     conn.commit()
 
 def get_close_name(name, sport, site):
@@ -175,11 +175,10 @@ def get_close_name(name, sport, site):
     c.execute("""
     SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
     """.format(sport, site))
-    possible_results = []
     for line in c.fetchall():
-        if (unidecode.unidecode(name.lower()) in unidecode.unidecode(line[1].lower()) 
-            or unidecode.unidecode(line[1].lower()) in unidecode.unidecode(name.lower())):
-                return line
+        if (unidecode.unidecode(name.lower()) in unidecode.unidecode(line[1].lower())
+                or unidecode.unidecode(line[1].lower()) in unidecode.unidecode(name.lower())):
+            return line
 
 
 def get_close_name2(name, sport, site):
@@ -187,8 +186,9 @@ def get_close_name2(name, sport, site):
     Cherche un nom similaire dans la base de données en ignorant tous les sigles. Par exemple,
     "Paris SG" devient "Paris"
     """
-    split_name = re.split(' |\\.',name)
-    split_name2 = " ".join([string for string in split_name if (len(string)>2 or string!=string.upper())])
+    split_name = re.split(' |\\.|-', name)
+    split_name2 = " ".join([string for string in split_name if (len(string) > 2
+                                                                or string != string.upper())])
     return get_close_name(split_name2, sport, site)
 
 def get_id_by_site(name, sport, site):
@@ -200,9 +200,9 @@ def get_id_by_site(name, sport, site):
     c.execute("""
     SELECT id FROM names WHERE name_{}="{}" AND sport='{}'
     """.format(site, name, sport))
-    id = c.fetchone()
-    if id:
-        return id[0]
+    _id = c.fetchone()
+    if _id:
+        return _id[0]
     return 0
 
 
