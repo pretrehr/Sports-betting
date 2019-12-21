@@ -5,7 +5,6 @@ Assistant de paris sportifs
 
 
 from itertools import product
-from math import log, exp
 import numpy as np
 
 def gain(cotes, mise=1):
