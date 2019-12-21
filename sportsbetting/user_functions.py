@@ -10,9 +10,11 @@ import urllib
 import urllib.error
 import copy
 import time
+import sqlite3
 from itertools import combinations, permutations
 import numpy as np
 import unidecode
+from bs4 import BeautifulSoup
 try:
     from win10toast import ToastNotifier
 except ModuleNotFoundError:
@@ -81,8 +83,7 @@ def parse_competition(competition, sport="football", *sites):
         out = valid_odds(res_parsing[sites[0]], sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return out
-    else:
-        sportsbetting.ODDS[sport] = out
+    sportsbetting.ODDS[sport] = out
 
 
 def parse_competitions(competitions, *sites):
@@ -108,8 +109,7 @@ def parse_competitions(competitions, *sites):
             subprocess.Popen(['notify-send', "Fin du parsing"])
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return merge_dicts(list_odds)
-    else:
-        sportsbetting.ODDS[sport] = merge_dicts(list_odds)
+    sportsbetting.ODDS["football"] = merge_dicts(list_odds)
 
 
 def parse_football(*sites):
@@ -609,3 +609,25 @@ def add_names_to_db(competition, sport, *sites):
                 print("Site non accessible (délai écoulé)")
     if selenium_required:
         selenium_init.DRIVER.quit()
+
+
+def add_competition_to_db(url):
+    """
+    Ajout d'une competition à la base de données à partir de son url comparateur-de-cotes.fr
+    """
+    conn = sqlite3.connect('teams.db')
+    c = conn.cursor()
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    sport = soup.find("title").string.split()[-1].lower()
+    print(sport)
+    for line in soup.find_all(["a"]):
+        if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
+            try:
+                c.execute("""
+                INSERT INTO competitions (id, competition, sport)
+                VALUES ({}, "{}", "{}")
+                """.format(line["href"].split("-ed")[-1], line.text.strip(), sport))
+            except sqlite3.IntegrityError:
+                pass
+    conn.commit()
+    c.close()
