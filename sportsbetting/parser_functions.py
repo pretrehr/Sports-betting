@@ -534,6 +534,7 @@ def parse_pasinobet(url=""):
         return parse_pasinobet_sport(url)
     selenium_init.DRIVER.get(url)
     is_basketball = "sport=3" in url
+    is_us = "region=5000" in url
     if is_basketball:
         all_odds = []
         links = []
@@ -564,7 +565,7 @@ def parse_pasinobet(url=""):
                 strings = list(line.stripped_strings)
                 date_time = datetime.datetime.strptime(date+" "+strings[0], "%d.%m.%y %H:%M")
                 i = strings.index("vs")
-                match = (strings[i+1]+" - "+strings[i-1] if is_basketball
+                match = (strings[i+1]+" - "+strings[i-1] if is_us
                          else strings[i-1]+" - "+strings[i+1])
                 odds = []
                 next_odd = False
@@ -580,6 +581,7 @@ def parse_pasinobet(url=""):
                         odds = next(iter_odds)
                     except StopIteration:
                         pass
+                if is_us:
                     odds.reverse()
                 match_odds_hash[match]['odds'] = {"pasinobet":odds}
                 match_odds_hash[match]['date'] = date_time
