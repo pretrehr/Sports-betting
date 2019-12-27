@@ -95,7 +95,7 @@ def merge_dicts(dict_args):
 
 def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                            rang_freebet=None, uniquement_freebet=False,
-                           cotes_boostees=None):
+                           cotes_boostees=None, rang_2e_freebet=-1):
     """
     Affichage de la répartition des mises
     """
@@ -115,16 +115,17 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
         sites_bet_combinaison = {}
         for j, list_sites in enumerate(sites):
             if list_sites[i] in sites_bet_combinaison:
-                if rang_freebet == i or uniquement_freebet:
+                if i in [rang_freebet, rang_2e_freebet] or uniquement_freebet:
                     sites_bet_combinaison[list_sites[i]]["mise freebet"] += list_mises[j][i]
                 else:
                     sites_bet_combinaison[list_sites[i]]["mise"] += list_mises[j][i]
             else:
                 sites_bet_combinaison[list_sites[i]] = {}
-                if rang_freebet == i or uniquement_freebet:
+                if i in [rang_freebet, rang_2e_freebet] or uniquement_freebet:
                     sites_bet_combinaison[list_sites[i]]["mise freebet"] = list_mises[j][i]
                     sites_bet_combinaison[list_sites[i]]["cote"] = (cotes[list_sites[i]][i]
-                                                                    +(not rang_freebet == i))
+                                                                    +(not rang_freebet == i)
+                                                                    -(rang_2e_freebet==i))
                 else:
                     sites_bet_combinaison[list_sites[i]]["mise"] = list_mises[j][i]
                     sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
@@ -351,10 +352,10 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
             result_function = lambda x, i: mises(x, 10000*50/sum_almost_won, False)
             find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank),
                                     sport, True)
-        display_function(best_overall_odds, best_rank)
+        second_rank = display_function(best_overall_odds, best_rank)
         afficher_mises_combine(best_match.split(" / "), [sites],
                                [result_function(best_overall_odds, best_rank)],
                                all_odds[best_match]["odds"], sport, best_rank if freebet else None,
-                               one_site and freebet, best_overall_odds)
+                               one_site and freebet, best_overall_odds, second_rank)
     except UnboundLocalError:
         print("No match found")
