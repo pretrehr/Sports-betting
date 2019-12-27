@@ -31,7 +31,7 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
                                                cotes_combine_all_sites, defined_bets,
                                                best_match_base)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
-                                           gain_pari_rembourse_si_perdant,
+                                           gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
                                            mises_pari_rembourse_si_perdant, cotes_combine)
 
 def parse_competition(competition, sport="football", *sites):
@@ -328,6 +328,25 @@ def best_match_freebet(site, freebet, sport="football", live=False, date_max=Non
                     result_function, site, sport, date_max, time_max, date_min,
                     time_min, freebet=True)
 
+
+def best_match_freebet2(site, freebet, sport="football", live=False, date_max=None, time_max=None,
+                        date_min=None, time_min=None):
+    """
+    Retourne le match qui génère le meilleur gain pour un unique freebet placé,
+    couvert avec de l'argent réel.
+    """
+    fact_live = 1-0.2*live
+    odds_function = lambda best_odds, odds_site, i: (best_odds[:i]+[odds_site[i]*fact_live-1]
+                                                     +best_odds[i+1:])
+    profit_function = lambda x, i: gain_freebet2(x[:i]+[x[i]+1]+x[i+1:], freebet, i)
+    criteria = lambda odds_to_check, i: True
+    display_function = lambda x, i: mises_freebet2(x[:i]+[x[i]+1]+x[i+1:], freebet, i, True)
+    result_function = lambda x, i: mises_freebet2(x[:i]+[x[i]+1]+x[i+1:], freebet, i, False)
+    best_match_base(odds_function, profit_function, criteria, display_function,
+                    result_function, site, sport, date_max, time_max, date_min,
+                    time_min, freebet=True)
+
+
 def best_match_cashback(site, minimum_odd, bet, sport="football", freebet=True,
                         combi_max=0, combi_odd=1, rate_cashback=1, date_max=None,
                         time_max=None, date_min=None, time_min=None):
@@ -474,7 +493,7 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
                     time_min, True, nb_matches)
 
 
-def best_matches_freebet(main_sites, freebets):
+def best_matches_freebet(main_sites, freebets, *matches):
     """
     Compute of best way to bet freebets following the model
     [[bet, bookmaker], ...]
@@ -483,8 +502,13 @@ def best_matches_freebet(main_sites, freebets):
     if not second_sites:
         print("Veuillez sélectionner des freebets secondaires")
         return
-#     new_odds = sportsbetting.ODDS_FOOTBALL
-    new_odds = sportsbetting.ODDS["football"]
+    if matches:
+        new_odds = {}
+        for match in matches:
+            match_name, odds = odds_match(match)
+            new_odds[match_name] = odds
+    else:
+        new_odds = sportsbetting.ODDS["football"]
     all_odds = {}
     for match in new_odds:
         if (not(any([site not in new_odds[match]["odds"].keys() for site in main_sites])
@@ -578,7 +602,7 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
                     time_min, True, nb_matches, True, one_site=True)
 
 
-def add_names_to_db(competition, sport, *sites):
+def add_names_to_db(competition, sport="football", *sites):
     """
     Ajoute à la base de données les noms d'équipe/joueur pour une competition donnée sur tous les
     sites
