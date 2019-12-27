@@ -124,7 +124,6 @@ def parse_football(*sites):
     competitions = ["france ligue 1", "angleterre premier league",
                     "espagne liga", "italie serie", "allemagne bundesliga"]#,
                     #"ligue des champions"]
-#     sportsbetting.ODDS_FOOTBALL = parse_competitions(competitions, *sites)
     sportsbetting.ODDS["football"] = parse_competitions(competitions, *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -145,7 +144,6 @@ def parse_tennis(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-#     sportsbetting.ODDS_TENNIS = parse_competition("tennis", "tennis", *sites)
     sportsbetting.ODDS["tennis"] = parse_competition("tennis", "tennis", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -165,7 +163,6 @@ def parse_nba(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-#     sportsbetting.ODDS_NBA = parse_competition("nba", "basketball", *sites)
     sportsbetting.ODDS["nba"] = parse_competition("nba", "basketball", *sites)
     sportsbetting.ODDS["basketball"] = sportsbetting.ODDS["nba"]
     if selenium_required:
@@ -202,10 +199,6 @@ def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
-#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-#                             else sportsbetting.ODDS_NBA)))
     all_odds = sportsbetting.ODDS[sport]
     opponents = match.split('-')
     match_name = ""
@@ -380,10 +373,6 @@ def best_matches_combine(site, minimum_odd, bet, sport, nb_matches=2, one_site=F
     Given a bookmaker, return on which matches you should share your freebet to
     maximize your gain
     """
-#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-#                             else sportsbetting.ODDS_NBA)))
     all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
@@ -429,7 +418,6 @@ def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_sel
     """
     sport = "football"
     bet = 10000
-#     all_odds = sportsbetting.ODDS_FOOTBALL
     all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
@@ -463,10 +451,6 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
     """
     Calcule la répartition des mises lorsqu'un unique combiné est remboursé s'il est perdant
     """
-#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-#                             else sportsbetting.ODDS_NBA)))
     all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
@@ -579,10 +563,6 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     """
     Calcule la répartition des paris gratuits sur un unique site
     """
-#     all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-#                 else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-#                       else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-#                             else sportsbetting.ODDS_NBA)))
     all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
@@ -635,10 +615,11 @@ def add_names_to_db(competition, sport="football", *sites):
         selenium_init.DRIVER.quit()
 
 
-def add_competition_to_db(url):
+def add_competition_to_db(sport):
     """
-    Ajout d'une competition à la base de données à partir de son url comparateur-de-cotes.fr
+    Ajout des competitions d'un sport donné disponibles sur comparateur-de-cotes
     """
+    url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
     conn = sqlite3.connect('teams.db')
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")

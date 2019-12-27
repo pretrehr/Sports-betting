@@ -80,9 +80,6 @@ def merge_dicts(dict_args):
     Given any number of dicts, shallow copy and merge into a new dict,
     precedence goes to key value pairs in latter dicts.
     """
-#     result = {}
-#     for dictionary in dict_args:
-#         result.update(dictionary)
     def_dict = collections.defaultdict(dict)
     for key, val in chain(*map(lambda x: x.items(), dict_args)):
         def_dict[key]["date"] = val["date"]
@@ -273,10 +270,6 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
         if combine:
             all_odds = sportsbetting.ALL_ODDS_COMBINE
         else:
-#             all_odds = (sportsbetting.ODDS_FOOTBALL if sport == "football"
-#                         else (sportsbetting.ODDS_TENNIS if sport == "tennis"
-#                               else (sportsbetting.ODDS_HANDBALL if sport == "handball"
-#                                     else sportsbetting.ODDS_NBA)))
             all_odds = sportsbetting.ODDS[sport]
     except NameError:
         print("""
