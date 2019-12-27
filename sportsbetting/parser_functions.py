@@ -136,7 +136,7 @@ def parse_betstars(url=""):
                     hour = strings[0]
                     date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"betstars":odds}
                 match_odds_hash[match]['date'] = date_time
@@ -190,7 +190,7 @@ def parse_bwin(url=""):
     prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
     options.add_argument('log-level=3')
     options.add_experimental_option("prefs", prefs)
-    if "handball" not in url:
+    if "handball" not in url:# and "hockey" not in url:
         options.add_argument("--headless")
     driver_bwin = selenium.webdriver.Chrome("chromedriver", options=options)
     driver_bwin.get(url)
@@ -198,75 +198,88 @@ def parse_bwin(url=""):
     is_1n2 = False
     match = ""
     n = 3
-    is_nba = "nba" in url
+    is_hockey = "hockey" in url
+    is_us = "nba" in url or "nhl" in url
     odds = []
     odds_unavailable = False
-    for _ in range(50):
-        inner_html = driver_bwin.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        i = 0
-        date_time = "undefined"
-        for line in soup.findAll():
-            if "class" in line.attrs and "participants-pair-game" in line["class"]:
-                if len(odds) == n and match and ("handball" in url or not odds_unavailable):
-                    if is_nba:
+    WebDriverWait(driver_bwin, 60).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "participants-pair-game"))
+    )
+    inner_html = driver_bwin.execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    i = 0
+    date_time = "undefined"
+    for line in soup.findAll():
+        if is_hockey and "class" in line.attrs and "href" in line.attrs and "grid-event-wrapper" in line["class"]:
+            odds = parse_bwin_hockey("https://sports.bwin.fr"+line["href"])
+        if "class" in line.attrs and "participants-pair-game" in line["class"]:
+            if (len(odds) == n and match and ("handball" in url or not odds_unavailable)
+                    and not is_hockey):
+                if is_us:
+                    odds.reverse()
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"bwin":odds}
+                match_odds_hash[match]['date'] = date_time
+            strings = list(line.stripped_strings)
+            if len(strings) == 4:
+                match = strings[0]+" ("+strings[1]+") - "+strings[2]+" ("+strings[3]+")"
+            else:
+                try:
+                    match = strings[2]+" - "+strings[0] if is_us else " - ".join(strings)
+                except IndexError:
+                    match = strings[1]+" - "+strings[0] if is_us else " - ".join(strings)
+            i = 0
+            if is_hockey:
+                print(match)
+            else:
+                odds = []
+            odds_unavailable = False
+        if "class" in line.attrs and "starting-time" in line["class"]:
+            try:
+                date_time = datetime.datetime.strptime(line.text, "%d/%m/%Y %H:%M")
+            except ValueError:
+                if "Demain" in line.text:
+                    date = (datetime.datetime.today()
+                            +datetime.timedelta(days=1)).strftime("%d %b %Y")
+                    hour = line.text.split(" / ")[1]
+                    date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
+                elif "Aujourd'hui" in line.text:
+                    date = datetime.datetime.today().strftime("%d %b %Y")
+                    hour = line.text.split(" / ")[1]
+                    date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
+                elif "Commence dans" in line.text:
+                    date_time = datetime.datetime.strptime(datetime.datetime.today()
+                                                            .strftime("%d %b %Y %H:%M"),
+                                                            "%d %b %Y %H:%M")
+                    date_time += datetime.timedelta(minutes=int(line.text.split("dans ")[1]
+                                                                .split("min")[0]))
+                elif "Commence maintenant" in line.text:
+                    date_time = datetime.datetime.strptime(datetime.datetime.today()
+                                                            .strftime("%d %b %Y %H:%M"),
+                                                            "%d %b %Y %H:%M")
+                else:
+                    print(match, line.text)
+                    date_time = "undefined"
+                if is_hockey:
+                    if is_us:
                         odds.reverse()
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"bwin":odds}
                     match_odds_hash[match]['date'] = date_time
-                strings = list(line.stripped_strings)
-                if len(strings) == 4:
-                    match = strings[0]+" ("+strings[1]+") - "+strings[2]+" ("+strings[3]+")"
-                else:
-                    try:
-                        match = strings[2]+" - "+strings[0] if is_nba else " - ".join(strings)
-                    except IndexError:
-                        match = strings[1]+" - "+strings[0] if is_nba else " - ".join(strings)
-                i = 0
-                odds = []
-                odds_unavailable = False
-            if "class" in line.attrs and "starting-time" in line["class"]:
-                try:
-                    date_time = datetime.datetime.strptime(line.text, "%d/%m/%Y %H:%M")
-                except ValueError:
-                    if "Demain" in line.text:
-                        date = (datetime.datetime.today()
-                                +datetime.timedelta(days=1)).strftime("%d %b %Y")
-                        hour = line.text.split(" / ")[1]
-                        date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
-                    elif "Aujourd'hui" in line.text:
-                        date = datetime.datetime.today().strftime("%d %b %Y")
-                        hour = line.text.split(" / ")[1]
-                        date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
-                    elif "Commence dans" in line.text:
-                        date_time = datetime.datetime.strptime(datetime.datetime.today()
-                                                               .strftime("%d %b %Y %H:%M"),
-                                                               "%d %b %Y %H:%M")
-                        date_time += datetime.timedelta(minutes=int(line.text.split("dans ")[1]
-                                                                    .split("min")[0]))
-                    elif "Commence maintenant" in line.text:
-                        date_time = datetime.datetime.strptime(datetime.datetime.today()
-                                                               .strftime("%d %b %Y %H:%M"),
-                                                               "%d %b %Y %H:%M")
-                    else:
-                        print(match, line.text)
-                        date_time = "undefined"
-            if "class" in line.attrs and "group-title" in line["class"] and not is_1n2:
-                is_1n2 = (line.text == "Résultat 1 X 2")
-            if "class" in line.attrs and "offline" in line["class"]:
-                odds_unavailable = True
-            if "class" in line.attrs and "option-indicator" in line["class"]:
-                if is_1n2:
-                    n = 3
-                else:
-                    n = 2
-                if i < n:
-                    odds.append(float(line.text))
-                    i += 1
-        if odds:
-            break
+        if "class" in line.attrs and "group-title" in line["class"] and not is_1n2:
+            is_1n2 = (line.text == "Résultat 1 X 2")
+        if "class" in line.attrs and "offline" in line["class"] and not is_hockey:
+            odds_unavailable = True
+        if "class" in line.attrs and "option-indicator" in line["class"] and not is_hockey:
+            if is_1n2:
+                n = 3
+            else:
+                n = 2
+            if i < n:
+                odds.append(float(line.text))
+                i += 1
     if len(odds) == n and match and ("handball" in url or not odds_unavailable):
-        if is_nba:
+        if is_us:
             odds.reverse()
         match_odds_hash[match] = {}
         match_odds_hash[match]['odds'] = {"bwin":odds}
@@ -299,6 +312,28 @@ def parse_bwin_coupes_europe(coupe):
         list_odds.append(parse_bwin(url))
     return merge_dicts(list_odds)
 
+def parse_bwin_hockey(url):
+    options = selenium.webdriver.ChromeOptions()
+    prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
+    options.add_argument('log-level=3')
+    options.add_experimental_option("prefs", prefs)
+    options.add_argument("--headless")
+    driver_bwin = selenium.webdriver.Chrome("chromedriver", options=options)
+    driver_bwin.get(url)
+    WebDriverWait(driver_bwin, 60).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "option-panel"))
+    )
+    inner_html = driver_bwin.execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    driver_bwin.quit()
+    i = 0
+    date_time = "undefined"
+    for line in soup.findAll():
+        if "class" in line.attrs and "option-panel" in line["class"]:
+            if "1X2 (temps réglementaire)" in line.text:
+                return list(map(float, list(line.stripped_strings)[2::2]))
+    
+
 def parse_france_pari(url=""):
     """
     Retourne les cotes disponibles sur france-pari
@@ -320,7 +355,7 @@ def parse_france_pari(url=""):
                 i = strings.index("/")
                 date_time = datetime.datetime.strptime(date+" "+hour, "%A %d %B %Y %H:%M")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
                 match = " ".join(strings[1:i])+" - "+" ".join(strings[i+1:])
             else:
                 odds = []
@@ -360,7 +395,9 @@ def parse_joa(url):
             elif ("class" in line.attrs
                   and "bet-outcome-list" in line["class"]
                   and odds_class in line["class"]):
-                odds = list(map(float, list(line.stripped_strings)))
+                odds = []
+                for odd in line.stripped_strings:
+                    odds.append(float(odd.replace("-", "1")))
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"joa":odds}
                 match_odds_hash[match]['date'] = date_time
@@ -385,7 +422,7 @@ def parse_joa(url):
                         hour = strings[0]
                         date_time = datetime.datetime.strptime(date+" "+hour, "%d/%m/%Y %H:%M")
                     if date_time < today:
-                        date_time.replace(year=date_time.year+1)
+                        date_time = date_time.replace(year=date_time.year+1)
         return match_odds_hash
 
 def parse_netbet(url=""):
@@ -409,7 +446,7 @@ def parse_netbet(url=""):
             try:
                 date_time = datetime.datetime.strptime(date+" "+hour, "%A %d %B %Y %H:%M")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "bet-libEvent" in line["class"]:
@@ -449,7 +486,7 @@ def parse_parionssport(url=""):
                     date_time = datetime.datetime.strptime(date+" "+line.text,
                                                            "%A %d %B %Y À %Hh%M")
                     if date_time < today:
-                        date_time.replace(year=date_time.year+1)
+                        date_time = date_time.replace(year=date_time.year+1)
                 except ValueError:
                     date_time = "undefined"
             if "class" in line.attrs and "wpsel-desc" in line["class"]:
@@ -512,7 +549,7 @@ def parse_match_nba_parionssport(url):
                 date_time = datetime.datetime.strptime(list(line.stripped_strings)[0]+year,
                                                        "Le %d %B à %H:%M %Y")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
             elif "class" in line.attrs and "headband-eventLabel" in line["class"]:
                 match = list(line.stripped_strings)[0]
                 print("\t"+match)
@@ -723,6 +760,16 @@ def parse_pmu(url=""):
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"pmu":odds}
                     match_odds_hash[match]['date'] = date_time
+                elif "hockey" in url:
+                    handicap = True
+                    odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                       +line.parent["href"])[1]
+                    if "nhl" in url:
+                        odds.reverse()
+                    match = string.replace("//", "-")
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"pmu":odds}
+                    match_odds_hash[match]['date'] = date_time
                 else:
                     match = string.replace("//", "-")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"] and not handicap:
@@ -741,7 +788,7 @@ def parse_page_match_pmu(url):
     odds = []
     name = soup.find("title").text.split(" - ")[0].replace("//", "-")
     for line in soup.find_all(["option", "a"]):
-        if line.text == "Vainqueur du match":
+        if line.text in ["Vainqueur du match", "1N2 à la 60e minute"]:
             _id = line["data-market-id"]
         if "data-ev_mkt_id" in line.attrs and line["data-ev_mkt_id"] == _id:
             odds.append(float(line.text.replace(",", ".")))
@@ -770,7 +817,7 @@ def parse_unibet(url=""):
             if "class" in line.attrs and "datetime" in line["class"]:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
             if "class" in line.attrs and "oddsbox" in line["class"]:
                 odds = []
                 for i, val in enumerate(list(line.stripped_strings)):
@@ -842,7 +889,7 @@ def parse_zebet(url=""):
             try:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
-                    date_time.replace(year=date_time.year+1)
+                    date_time = date_time.replace(year=date_time.year+1)
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "competition" in line["class"]:
