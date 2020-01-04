@@ -210,7 +210,8 @@ def parse_bwin(url=""):
     i = 0
     date_time = "undefined"
     for line in soup.findAll():
-        if is_hockey and "class" in line.attrs and "href" in line.attrs and "grid-event-wrapper" in line["class"]:
+        if (is_hockey and "class" in line.attrs and "href" in line.attrs
+                and "grid-event-wrapper" in line["class"]):
             odds = parse_bwin_hockey("https://sports.bwin.fr"+line["href"])
         if "class" in line.attrs and "participants-pair-game" in line["class"]:
             if (len(odds) == n and match and ("handball" in url or not odds_unavailable)
@@ -230,7 +231,7 @@ def parse_bwin(url=""):
                     match = strings[1]+" - "+strings[0] if is_us else " - ".join(strings)
             i = 0
             if is_hockey:
-                print(match)
+                print("\t"+match)
             else:
                 odds = []
             odds_unavailable = False
@@ -249,23 +250,23 @@ def parse_bwin(url=""):
                     date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
                 elif "Commence dans" in line.text:
                     date_time = datetime.datetime.strptime(datetime.datetime.today()
-                                                            .strftime("%d %b %Y %H:%M"),
-                                                            "%d %b %Y %H:%M")
+                                                           .strftime("%d %b %Y %H:%M"),
+                                                           "%d %b %Y %H:%M")
                     date_time += datetime.timedelta(minutes=int(line.text.split("dans ")[1]
                                                                 .split("min")[0]))
                 elif "Commence maintenant" in line.text:
                     date_time = datetime.datetime.strptime(datetime.datetime.today()
-                                                            .strftime("%d %b %Y %H:%M"),
-                                                            "%d %b %Y %H:%M")
+                                                           .strftime("%d %b %Y %H:%M"),
+                                                           "%d %b %Y %H:%M")
                 else:
                     print(match, line.text)
                     date_time = "undefined"
-                if is_hockey:
-                    if is_us:
-                        odds.reverse()
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"bwin":odds}
-                    match_odds_hash[match]['date'] = date_time
+            if is_hockey:
+                if is_us:
+                    odds.reverse()
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"bwin":odds}
+                match_odds_hash[match]['date'] = date_time
         if "class" in line.attrs and "group-title" in line["class"] and not is_1n2:
             is_1n2 = (line.text == "Résultat 1 X 2")
         if "class" in line.attrs and "offline" in line["class"] and not is_hockey:
@@ -313,26 +314,19 @@ def parse_bwin_coupes_europe(coupe):
     return merge_dicts(list_odds)
 
 def parse_bwin_hockey(url):
-    options = selenium.webdriver.ChromeOptions()
-    prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
-    options.add_argument('log-level=3')
-    options.add_experimental_option("prefs", prefs)
-    options.add_argument("--headless")
-    driver_bwin = selenium.webdriver.Chrome("chromedriver", options=options)
-    driver_bwin.get(url)
-    WebDriverWait(driver_bwin, 60).until(
+    """
+    Retourne les cotes 1N2 d'un match de hockey
+    """
+    selenium_init.DRIVER.get(url)
+    WebDriverWait(selenium_init.DRIVER, 60).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "option-panel"))
     )
-    inner_html = driver_bwin.execute_script("return document.body.innerHTML")
+    inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
-    driver_bwin.quit()
-    i = 0
-    date_time = "undefined"
     for line in soup.findAll():
         if "class" in line.attrs and "option-panel" in line["class"]:
             if "1X2 (temps réglementaire)" in line.text:
                 return list(map(float, list(line.stripped_strings)[2::2]))
-    
 
 def parse_france_pari(url=""):
     """
@@ -763,7 +757,7 @@ def parse_pmu(url=""):
                 elif "hockey" in url:
                     handicap = True
                     odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                       +line.parent["href"])[1]
+                                                +line.parent["href"])[1]
                     if "nhl" in url:
                         odds.reverse()
                     match = string.replace("//", "-")
