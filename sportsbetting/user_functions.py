@@ -8,6 +8,7 @@ from pprint import pprint
 import inspect
 import urllib
 import urllib.error
+import urllib3
 import copy
 import time
 import sqlite3
@@ -31,8 +32,9 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
                                                cotes_combine_all_sites, defined_bets,
                                                best_match_base)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
-                                           gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
-                                           mises_pari_rembourse_si_perdant, cotes_combine)
+                                           gain_pari_rembourse_si_perdant, gain_freebet2,
+                                           mises_freebet2, mises_pari_rembourse_si_perdant,
+                                           cotes_combine)
 
 def parse_competition(competition, sport="football", *sites):
     """
@@ -48,10 +50,8 @@ def parse_competition(competition, sport="football", *sites):
     print(formated_name)
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
-                 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax',
-                 'zebet']
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet",
-                      "unibet"}
+                 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
@@ -63,7 +63,13 @@ def parse_competition(competition, sport="football", *sites):
         url = get_competition_by_id(_id, site)
         try:
             if url:
-                res_parsing[site] = parse(site, url)
+                try:
+                    res_parsing[site] = parse(site, url)
+                except urllib3.exceptions.MaxRetryError:
+                    selenium_init.DRIVER.quit()
+                    print("Redémarrage de selenium")
+                    selenium_init.start_selenium()
+                    res_parsing[site] = parse(site, url)
         except urllib.error.URLError:
             print("Site non accessible (délai écoulé)")
         except KeyboardInterrupt:
@@ -185,6 +191,24 @@ def parse_handball(*sites):
         selenium_init.start_selenium()
 #     sportsbetting.ODDS_HANDBALL = parse_competition("champions", "handball", *sites)
     sportsbetting.ODDS["handball"] = parse_competition("champions", "handball", *sites)
+    if selenium_required:
+        selenium_init.DRIVER.quit()
+    if inspect.currentframe().f_back.f_code.co_name == "<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
+
+
+def parse_nhl(*sites):
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
+                         and (selenium_sites.intersection(sites) or not sites))
+    if selenium_required:
+        selenium_init.start_selenium()
+    sportsbetting.ODDS["nhl"] = parse_competition("nhl", "hockey-sur-glace", *sites)
+    sportsbetting.ODDS["hockey-sur-glace"] = sportsbetting.ODDS["nhl"]
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -493,6 +517,7 @@ def best_matches_freebet(main_sites, freebets, *matches):
             new_odds[match_name] = odds
     else:
         new_odds = sportsbetting.ODDS["football"]
+#         new_odds = sportsbetting.ODDS["nba"]
     all_odds = {}
     for match in new_odds:
         if (not(any([site not in new_odds[match]["odds"].keys() for site in main_sites])
