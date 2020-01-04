@@ -105,21 +105,21 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
 
 def mises_freebet2(cotes, freebet, issue=-1, output=False):
     """
-    Calcule la repartition des mises en presence d'un freebet a placer sur l'une
-    des issues. Par defaut, le freebet est place sur la cote la plus haute.
+    Calcule la repartition des mises en presence de 2 freebets a placer sur des issues d'un même
+    match. Le 2e freebet est placé automatiquement.
     """
     i_max = np.argmax(cotes)
     if issue == -1:
         issue = i_max
     mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
     gains = mises_reelles[issue]*(cotes[issue]-1)
-    issue2 = np.argmax(cotes[:i_max]+[0]+cotes[i_max+1:]) if issue==i_max else i_max
+    issue2 = np.argmax(cotes[:i_max]+[0]+cotes[i_max+1:]) if issue == i_max else i_max
     mis = list(map(lambda x: round(x, 2), mises_reelles))
     rapport_gain = (gains+freebet-sum(mis))/freebet
     if rapport_gain < (cotes[issue2]-1)/cotes[issue2]:
         mises_reelles[issue2] = round(gains/(cotes[issue2]-1), 2)
         mis = list(map(lambda x: round(x, 2), mises_reelles))
-        freebet+=mis[issue2]
+        freebet += mis[issue2]
     if output:
         print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
         print("gain sur freebet / mise freebet =", round(gains+freebet-sum(mis), 2)/freebet)
@@ -131,17 +131,20 @@ def mises_freebet2(cotes, freebet, issue=-1, output=False):
 
 
 def gain_freebet2(cotes, freebet, issue=-1):
+    """
+    Calcule le taux de gain si l'on place deux freebets sur un match même match.
+    """
     i_max = np.argmax(cotes)
     if issue == -1:
         issue = i_max
     mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
     gains = mises_reelles[issue]*(cotes[issue]-1)
-    issue2 = np.argmax(cotes[:i_max]+cotes[i_max+1:]) if issue==i_max else i_max
+    issue2 = np.argmax(cotes[:i_max]+cotes[i_max+1:]) if issue == i_max else i_max
     mis = list(map(lambda x: round(x, 2), mises_reelles))
     rapport_gain = (gains+freebet-sum(mis))/freebet
     if rapport_gain < (cotes[issue2]-1)/cotes[issue2]:
         mis[issue2] = round(gains/(cotes[issue2]-1), 2)
-        freebet+=mis[issue2]
+        freebet += mis[issue2]
     return (gains+freebet-sum(mis))/freebet
 
 def cotes_combine(cotes):

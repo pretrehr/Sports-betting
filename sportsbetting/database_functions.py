@@ -197,9 +197,10 @@ def get_close_name2(name, sport, site):
     for line in c.fetchall():
         split_line = re.split(' |\\.|-', line[1])
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
-                                                                or string != string.upper())])
+                                                                    or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
-                or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2.lower())):
+                or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
+                                                                                   .lower())):
             return line
 
 def get_id_by_site(name, sport, site):
