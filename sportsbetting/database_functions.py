@@ -108,11 +108,12 @@ def import_teams_by_url(url):
     sport = soup.find("title").string.split()[-1].lower()
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "-td" in line["href"] and line.text:
-            if not is_in_db(line.text, sport):
+            _id = line["href"].split("-td")[-1]
+            if not is_id_in_db(_id):
                 c.execute("""
                 INSERT INTO names (id, name, sport)
                 VALUES ({}, "{}", "{}")
-                """.format(line["href"].split("-td")[-1], line.text, sport))
+                """.format(_id, line.text, sport))
     conn.commit()
     c.close()
 
@@ -128,15 +129,28 @@ def import_teams_by_sport(sport):
         if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
             import_teams_by_url("http://www.comparateur-de-cotes.fr/"+line["href"])
 
-def is_in_db(name, sport):
+
+def is_id_in_db(_id):
+    """
+    Vérifie si l'id est dans la base de données
+    """
+    conn = sqlite3.connect('teams.db')
+    c = conn.cursor()
+    c.execute("""
+    SELECT id FROM names WHERE id="{}"
+    """.format(_id))
+    for line in c.fetchall():
+        return line
+
+def is_in_db(name, sport, site):
     """
     Vérifie si le nom uniformisé de l'équipe est dans la base de données
     """
     conn = sqlite3.connect('teams.db')
     c = conn.cursor()
     c.execute("""
-    SELECT id FROM names WHERE sport="{}" AND name="{}"
-    """.format(sport, name))
+    SELECT id FROM names WHERE sport="{}" AND name="{}" and name_{} IS NULL
+    """.format(sport, name, site))
     for line in c.fetchall():
         return line
 
