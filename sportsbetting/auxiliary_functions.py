@@ -324,15 +324,18 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                     break
             else:
                 for i in range(n):
-                    odds_to_check = odds_function(best_odds, odds_site, i)
-                    if criteria(odds_to_check, i):
-                        profit = profit_function(odds_to_check, i)
-                        if profit > best_profit:
-                            best_rank = i
-                            best_profit = profit
-                            best_match = match
-                            best_overall_odds = odds_to_check
-                            sites = best_sites[:i]+[site]+best_sites[i+1:]
+                    try:
+                        odds_to_check = odds_function(best_odds, odds_site, i)
+                        if criteria(odds_to_check, i):
+                            profit = profit_function(odds_to_check, i)
+                            if profit > best_profit:
+                                best_rank = i
+                                best_profit = profit
+                                best_match = match
+                                best_overall_odds = odds_to_check
+                                sites = best_sites[:i]+[site]+best_sites[i+1:]
+                    except ZeroDivisionError: #Si calcul freebet avec cote de 1
+                        pass
     try:
         print(best_match)
         pprint(all_odds[best_match], compact=True)
