@@ -636,6 +636,11 @@ def add_names_to_db(competition, sport="football", *sites):
                 pass
             except urllib.error.URLError:
                 print("Site non accessible (délai écoulé)")
+            except urllib3.exceptions.MaxRetryError:
+                selenium_init.DRIVER.quit()
+                print("Redémarrage de selenium")
+                selenium_init.start_selenium()
+                parse_and_add_to_db(site, sport, url)
     if selenium_required:
         selenium_init.DRIVER.quit()
 
