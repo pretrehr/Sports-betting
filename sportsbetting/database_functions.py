@@ -240,3 +240,44 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                     except TypeError: #live
                         pass
     return
+
+
+def are_same_double(team1, team2):
+    return ((team1[0] in team2[0] and team1[1] in team2[1])
+            or (team1[0] in team2[1] and team1[1] in team2[0])
+            or (team2[0] in team1[0] and team2[1] in team1[1])
+            or (team2[0] in team1[1] and team2[1] in team1[0]))
+
+
+def get_double_team_tennis(team, site):
+    if site in ["joa", "netbet"]:
+        separator_team = "-"
+    elif site in ["betclic", "winamax", "pmu"]:
+        separator_team = " / "
+    elif site in ["parionssport", "pasinobet", "unibet"]:
+        separator_team = "/"
+    elif site in ["betstars"]:
+        separator_team = " & "
+    if separator_team and separator_team in team:
+        complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
+        if site in ["betstars", "pasinobet"]:
+            players = list(map(lambda x: x.split(" ")[-1], complete_names))
+        elif site in ["netbet", "winamax"]:
+            players = list(map(lambda x: x.split(".")[-1], complete_names))
+        elif site in ["parionssport", "pmu"]:
+            players = complete_names
+        elif site in ["unibet"]:
+            if ", " in team:
+                players = list(map(lambda x: x.split(", ")[0], complete_names))
+            else:
+                players = list(map(lambda x: x.split(" ")[0], complete_names))
+        conn = sqlite3.connect('teams.db')
+        c = conn.cursor()
+        c.execute("""
+        SELECT id, name FROM names WHERE sport='tennis' AND name_{} IS NULL AND name LIKE '% & %'
+        """.format(site))
+        for line in c.fetchall():
+            compared_players = unidecode.unidecode(line[1]).lower().split(" & ")
+            if are_same_double(players, compared_players):
+                return line
+        

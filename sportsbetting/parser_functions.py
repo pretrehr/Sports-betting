@@ -20,7 +20,7 @@ from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import merge_dicts, get_future_opponents
 from sportsbetting.database_functions import (is_in_db, is_in_db_site, add_name_to_db,
                                               get_close_name, get_close_name2, get_id_by_site,
-                                              get_id_by_opponent)
+                                              get_id_by_opponent, get_double_team_tennis)
 
 
 if sys.platform == "win32":
@@ -942,27 +942,30 @@ def parse_and_add_to_db(site, sport, competition):
     teams_3rd_round = []
     teams_4th_round = []
     teams_5th_round = []
+    teams_6th_round = []
+    teams_7th_round = []
     for team in teams:
         line = is_in_db_site(team, sport, site)
-        if line:
-            add_name_to_db(line[0], team, site)
-        else:
+#         if line:
+#             add_name_to_db(line[0], team, site)
+#         else:
+        if not line:
             teams_not_in_db_site.append(team)
-    print(teams_not_in_db_site)
+    print(0, teams_not_in_db_site)
     for team in teams_not_in_db_site:
-        line = is_in_db(team, sport)
+        line = is_in_db(team, sport, site)
         if line:
             add_name_to_db(line[0], team, site)
         else:
             teams_1st_round.append(team)
-    print(teams_1st_round)
+    print(1, teams_1st_round)
     for team in teams_1st_round:
         line = get_close_name(team, sport, site)
         if line:
             add_name_to_db(line[0], team, site)
         else:
             teams_2nd_round.append(team)
-    print(teams_2nd_round)
+    print(2, teams_2nd_round)
     for team in teams_2nd_round:
         future_opponents, future_matches = get_future_opponents(team, matches)
         found = False
@@ -974,14 +977,14 @@ def parse_and_add_to_db(site, sport, competition):
                 add_name_to_db(id_to_find, team, site)
         if not found:
             teams_3rd_round.append(team)
-    print(teams_3rd_round)
+    print(3, teams_3rd_round)
     for team in teams_3rd_round:
         line = get_close_name2(team, sport, site)
         if line:
             add_name_to_db(line[0], team, site)
         else:
             teams_4th_round.append(team)
-    print(teams_4th_round)
+    print(4, teams_4th_round)
     for team in teams_4th_round:
         future_opponents, future_matches = get_future_opponents(team, matches)
         found = False
@@ -993,4 +996,24 @@ def parse_and_add_to_db(site, sport, competition):
                 add_name_to_db(id_to_find, team, site)
         if not found:
             teams_5th_round.append(team)
-    print(teams_5th_round)
+    print(5, teams_5th_round)
+    if sport=="tennis": #pour doubles tennis
+        for team in teams_5th_round:
+            line = get_double_team_tennis(team, site)
+            if line:
+                add_name_to_db(line[0], team, site)
+            else:
+                teams_6th_round.append(team)
+        print(6, teams_6th_round)
+        for team in teams_6th_round:
+            future_opponents, future_matches = get_future_opponents(team, matches)
+            found = False
+            for future_opponent, future_match in zip(future_opponents, future_matches):
+                id_opponent = get_id_by_site(future_opponent, sport, site)
+                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_to_find:
+                    found = True
+                    add_name_to_db(id_to_find, team, site)
+            if not found:
+                teams_7th_round.append(team)
+        print(7, teams_7th_round)
