@@ -872,10 +872,10 @@ def parse_zebet(url=""):
     """
     Retourne les cotes disponibles sur zebet
     """
-    if "http" not in url:
-        return parse_sport_zebet(url)
     if not url:
         url = "https://www.zebet.fr/fr/competition/96-ligue_1_conforama"
+    if "http" not in url:
+        return parse_sport_zebet(url)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
     today = datetime.datetime.today()
@@ -884,7 +884,8 @@ def parse_zebet(url=""):
     for line in soup.find_all():
         if "class" in line.attrs and "bet-time" in line["class"]:
             try:
-                date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
+                date_time = datetime.datetime.strptime(year+" ".join(line.text.strip().split()),
+                                                       "%Y/%d/%m %H:%M")
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year+1)
             except ValueError:
@@ -892,22 +893,15 @@ def parse_zebet(url=""):
         elif "class" in line.attrs and "competition" in line["class"]:
             strings = list(line.stripped_strings)
             match = (strings[1]+" - "+strings[-3])
-            del strings[-4], strings[-3], strings[1], strings[0]
+#             del strings[-4], strings[-3], strings[1], strings[0]
             odds = []
             for i, val in enumerate(strings):
-                if not i%2:
+                if not i%4:
                     odds.append(float(val.replace(",", ".")))
             match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"zebet":odds}
             match_odds_hash[match]['date'] = date_time
     return match_odds_hash
-
-def parse(site, url=""):
-    """
-    Retourne les cotes d'un site donné
-    """
-    return eval("parse_{}('{}')".format(site, url))
-
 
 def parse_sport_zebet(sport):
     """
@@ -925,6 +919,12 @@ def parse_sport_zebet(sport):
                     link = url+child["href"]
                     odds.append(parse_zebet(link))
     return merge_dicts(odds)
+
+def parse(site, url=""):
+    """
+    Retourne les cotes d'un site donné
+    """
+    return eval("parse_{}('{}')".format(site, url))
 
 def parse_and_add_to_db(site, sport, competition):
     """
