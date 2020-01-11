@@ -8,11 +8,11 @@ from pprint import pprint
 import inspect
 import urllib
 import urllib.error
-import urllib3
 import copy
 import time
 import sqlite3
 from itertools import combinations, permutations
+import urllib3
 import numpy as np
 import unidecode
 from bs4 import BeautifulSoup
@@ -202,6 +202,9 @@ def parse_handball(*sites):
 
 
 def parse_nhl(*sites):
+    """
+    Stocke les cotes de NHL en global
+    """
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
