@@ -104,6 +104,9 @@ def parse_betstars(url=""):
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
     for _ in range(10):
+        WebDriverWait(selenium_init.DRIVER, 60).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
+        )
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
@@ -997,7 +1000,7 @@ def parse_and_add_to_db(site, sport, competition):
         if not found:
             teams_5th_round.append(team)
     print(5, teams_5th_round)
-    if sport=="tennis": #pour doubles tennis
+    if sport == "tennis": #pour doubles tennis
         for team in teams_5th_round:
             line = get_double_team_tennis(team, site)
             if line:
