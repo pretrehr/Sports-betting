@@ -57,6 +57,7 @@ def get_formated_name(name, site, sport):
         print(name, site)
         return "unknown team/player ".upper()+name
 
+
 def get_competition_id(name, sport):
     """
     Retourne l'id d'une compétition
@@ -114,7 +115,7 @@ def import_teams_by_url(url):
                 INSERT INTO names (id, name, sport)
                 VALUES ({}, "{}", "{}")
                 """.format(_id, line.text, sport))
-    conn.commit()
+                conn.commit()
     c.close()
 
 
@@ -127,7 +128,8 @@ def import_teams_by_sport(sport):
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
-            import_teams_by_url("http://www.comparateur-de-cotes.fr/"+line["href"])
+            import_teams_by_url(unidecode.unidecode("http://www.comparateur-de-cotes.fr/"
+                                                    +line["href"]))
 
 
 def is_id_in_db(_id):
@@ -173,12 +175,50 @@ def add_name_to_db(_id, name, site):
     """
     conn = sqlite3.connect('teams.db')
     c = conn.cursor()
-    c.execute("""
-    UPDATE names
-    SET name_{0} = "{1}" WHERE id = {2} AND name_{0} IS NULL
-    """.format(site, name, _id))
+    if is_id_available_for_site(_id, site):
+        c.execute("""
+        UPDATE names
+        SET name_{0} = "{1}"
+        WHERE _rowid_ = (
+            SELECT _rowid_
+            FROM names
+            WHERE id = {2} AND name_{0} IS NULL
+            ORDER BY _rowid_
+            LIMIT 1
+        );
+        """.format(site, name, _id))
+    else:
+        c.execute("""
+        SELECT sport, name, name_{} FROM names
+        WHERE id = {}
+        """.format(site, _id))
+        sport, formated_name, name_site = c.fetchone()
+        ans = input("Créer une nouvelle entrée pour {} sur {} "
+                    "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
+                    .format(formated_name, site, name_site, name))
+        if ans == 'y':
+            c.execute("""
+            INSERT INTO names (id, name, sport, name_{})
+            VALUES ({}, "{}", "{}", "{}")
+            """.format(site, _id, formated_name, sport, name))
     c.close()
     conn.commit()
+
+def is_id_available_for_site(_id, site):
+    """
+    Vérifie s'il est possible d'ajouter un nom associé à un site et à un id sans créer de nouvelle
+    entrée
+    """
+    conn = sqlite3.connect('teams.db')
+    c = conn.cursor()
+    c.execute("""
+    SELECT name_{} FROM names WHERE id = {}
+    """.format(site, _id))
+    for line in c.fetchall():
+        if line[0] is None:
+            return True
+    return False
+
 
 def get_close_name(name, sport, site):
     """
@@ -257,6 +297,9 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
 
 
 def are_same_double(team1, team2):
+    """
+    Vérifie si deux équipes de double au tennis sont potentiellement identiques
+    """
     return ((team1[0] in team2[0] and team1[1] in team2[1])
             or (team1[0] in team2[1] and team1[1] in team2[0])
             or (team2[0] in team1[0] and team2[1] in team1[1])
@@ -264,34 +307,38 @@ def are_same_double(team1, team2):
 
 
 def get_double_team_tennis(team, site):
-    if site in ["joa", "netbet"]:
+    """
+    Trouve l'équipe de double la plus proche d'une équipe donnée
+    """
+    if site in ["netbet"]:
         separator_team = "-"
     elif site in ["betclic", "winamax", "pmu"]:
         separator_team = " / "
-    elif site in ["parionssport", "pasinobet", "unibet"]:
+    elif site in ["joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
     elif site in ["betstars"]:
         separator_team = " & "
     if separator_team and separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
-        if site in ["betstars", "pasinobet"]:
+        if site in ["betstars", "pasinobet", "pmu"]:
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
         elif site in ["netbet", "winamax"]:
             players = list(map(lambda x: x.split(".")[-1], complete_names))
-        elif site in ["parionssport", "pmu"]:
+        elif site in ["joa", "parionssport"]:
             players = complete_names
         elif site in ["unibet"]:
             if ", " in team:
                 players = list(map(lambda x: x.split(", ")[0], complete_names))
             else:
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
+        elif site in ["betclic"]:
+            players = list(map(lambda x: x.split(" ")[0], complete_names))
         conn = sqlite3.connect('teams.db')
         c = conn.cursor()
         c.execute("""
-        SELECT id, name FROM names WHERE sport='tennis' AND name_{} IS NULL AND name LIKE '% & %'
-        """.format(site))
+        SELECT id, name FROM names WHERE sport='tennis' AND name LIKE '% & %'
+        """)
         for line in c.fetchall():
             compared_players = unidecode.unidecode(line[1]).lower().split(" & ")
             if are_same_double(players, compared_players):
                 return line
-        
