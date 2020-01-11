@@ -230,11 +230,16 @@ def odds_match(match, sport="football"):
     opponents = match.split('-')
     match_name = ""
     for match_name in all_odds:
-        if (opponents[0].lower().strip() in unidecode.unidecode(match_name.lower())
-                and opponents[1].lower().strip() in unidecode.unidecode(match_name.lower())):
+        if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
+                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1].lower())):
             break
     else:
-        return
+        for match_name in all_odds:
+            if (opponents[0].lower().strip() in unidecode.unidecode(match_name.lower())
+                    and opponents[1].lower().strip() in unidecode.unidecode(match_name.lower())):
+                break
+        else:
+            return
     print(match_name)
     return match_name, all_odds[match_name]
 
