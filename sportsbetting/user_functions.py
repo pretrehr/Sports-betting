@@ -658,7 +658,7 @@ def add_competition_to_db(sport):
     Ajout des competitions d'un sport donné disponibles sur comparateur-de-cotes
     """
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
-    conn = sqlite3.connect('teams.db')
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sport = soup.find("title").string.split()[-1].lower()

@@ -3,6 +3,7 @@ Fonctions de parsing
 """
 
 import sys
+import os
 import locale
 import urllib
 import urllib.error
@@ -195,7 +196,9 @@ def parse_bwin(url=""):
     options.add_experimental_option("prefs", prefs)
     if "handball" not in url:# and "hockey" not in url:
         options.add_argument("--headless")
+    os.system("cd sportsbetting/resources")
     driver_bwin = selenium.webdriver.Chrome("chromedriver", options=options)
+    os.system("cd ../..")
     driver_bwin.get(url)
     match_odds_hash = {}
     is_1n2 = False
