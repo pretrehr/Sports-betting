@@ -314,7 +314,7 @@ def get_double_team_tennis(team, site):
         separator_team = "-"
     elif site in ["betclic", "winamax", "pmu"]:
         separator_team = " / "
-    elif site in ["joa", "parionssport", "pasinobet", "unibet"]:
+    elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
     elif site in ["betstars"]:
         separator_team = " & "
@@ -326,6 +326,8 @@ def get_double_team_tennis(team, site):
             players = list(map(lambda x: x.split(".")[-1], complete_names))
         elif site in ["joa", "parionssport"]:
             players = complete_names
+        elif site in ["bwin"]:
+            players = list(map(lambda x: x.split(". ")[-1], complete_names))
         elif site in ["unibet"]:
             if ", " in team:
                 players = list(map(lambda x: x.split(", ")[0], complete_names))
