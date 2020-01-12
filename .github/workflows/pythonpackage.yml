@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: win32
+    runs-on: windows-latest
     strategy:
       max-parallel: 4
       matrix:
