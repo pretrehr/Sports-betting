@@ -2,7 +2,6 @@
 Initialisation de selenium
 """
 
-import os
 import selenium
 
 
@@ -16,6 +15,4 @@ def start_selenium():
     options.add_argument('log-level=3')
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless")
-    os.system("cd sportsbetting/resources")
-    DRIVER = selenium.webdriver.Chrome("chromedriver", options=options)
-    os.system("cd ../..")
+    DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
