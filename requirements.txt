@@ -1,7 +1,6 @@
 urllib3>=1.25.3
 selenium>=3.141.0
 Unidecode>=1.1.1
-win10toast>=0.9
 numpy>=1.16.3
 beautifulsoup4>=4.8.2
 pprint>=0.1
