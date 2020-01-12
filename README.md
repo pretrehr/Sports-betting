@@ -5,7 +5,7 @@ Sports betting assistant which optimizes earnings regarding odds and offers
 - Download the repository
 - Go to the root of the repository
 ```
-pip install requirements
+pip install -r requirements.txt
 ```
 - Launch python3
 ```
