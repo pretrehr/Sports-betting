@@ -103,7 +103,7 @@ def parse_betstars(url=""):
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
-    for _ in range(10):
+    try:
         WebDriverWait(selenium_init.DRIVER, 60).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
         )
@@ -151,6 +151,8 @@ def parse_betstars(url=""):
                     odds = []
         if match_odds_hash:
             return match_odds_hash
+    except selenium.common.exceptions.TimeoutException:
+        pass
     return match_odds_hash
 
 def parse_sport_betstars(sport):
@@ -375,6 +377,7 @@ def parse_joa(url):
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
+    date_time = ""
     odds_class = ""
     for _ in range(10):
         WebDriverWait(selenium_init.DRIVER, 60).until(
@@ -569,6 +572,7 @@ def parse_pasinobet(url=""):
     selenium_init.DRIVER.get(url)
     is_basketball = "sport=3" in url
     is_us = "region=5000" in url
+    date = ""
     if is_basketball:
         all_odds = []
         links = []
@@ -630,6 +634,7 @@ def parse_pasinobet_sport(sport):
     Retourne les cotes disponibles sur pasinobet pour un sport donné
     """
     all_odds = []
+    date = ""
     selenium_init.DRIVER.get("https://www.pasinobet.fr/#/sport/?type=0")
     WebDriverWait(selenium_init.DRIVER, 30).until(
         EC.element_to_be_clickable((By.TAG_NAME, "button"))
@@ -811,6 +816,7 @@ def parse_unibet(url=""):
                 match = line.text.strip().replace("Bordeaux - Bègles", "Bordeaux-Bègles")
                 match = match.replace("Flensburg - Handewitt", "Flensburg-Handewitt")
                 match = match.replace("TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
+                match = match.replace("Tremblay - en - France", "Tremblay-en-France")
             if "class" in line.attrs and "datetime" in line["class"]:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
