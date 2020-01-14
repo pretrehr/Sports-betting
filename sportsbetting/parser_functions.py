@@ -161,24 +161,25 @@ def parse_sport_betstars(sport):
     Retourne les cotes disponibles sur betstars pour un sport donné
     """
     selenium_init.DRIVER.get("https://www.betstars.fr/#/{}/competitions".format(sport))
-    urls = set()
+    urls = []
+    competitions = []
     for _ in range(100):
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and sport+"/competitions/" in line["href"]
                     and "data-leagueid" in line.attrs):
-                urls.add("https://www.betstars.fr/"+line["href"])
+                url = "https://www.betstars.fr/"+line["href"]
+                if url not in urls:
+                    urls.append(url)
+                    competitions.append(line.text.strip())
         if urls:
             break
     list_odds = []
-    for url in urls:
-        print(url)
+    for url, competition in zip(urls, competitions):
+        print("\t"+competition)
         try:
-            for _ in range(10):
-                odds = parse_betstars(url)
-                if odds:
-                    break
+            odds = parse_betstars(url)
             list_odds.append(odds)
         except KeyboardInterrupt:
             pass
