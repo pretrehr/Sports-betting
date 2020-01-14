@@ -924,7 +924,7 @@ def parse_sport_zebet(sport):
             for child in line.findChildren():
                 if ("href" in child.attrs and "fr/category/" in child["href"]
                         and "uk-visible-small" in child["class"]):
-                    link = url+child["href"]
+                    link = url+child["href"][2:]
                     odds.append(parse_zebet(link))
     return merge_dicts(odds)
 
@@ -944,6 +944,8 @@ def parse_and_add_to_db(site, sport, competition):
     else:
         return
     odds = parse(site, url)
+    if site == "france_pari":
+        site = "netbet"
     matches = odds.keys()
     teams = list(set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches))))))
     print(teams)

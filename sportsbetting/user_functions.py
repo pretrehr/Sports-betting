@@ -24,8 +24,7 @@ import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formated_competition_name,
                                               get_competition_by_id, get_competition_url,
-                                              get_competition_id, import_teams_by_sport,
-                                              import_teams_by_url)
+                                              import_teams_by_sport, import_teams_by_url)
 from sportsbetting.parser_functions import parse_and_add_to_db, parse
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
@@ -231,7 +230,8 @@ def odds_match(match, sport="football"):
     match_name = ""
     for match_name in all_odds:
         if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
-                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1].lower())):
+                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1]
+                                                                        .lower())):
             break
     else:
         for match_name in all_odds:
@@ -620,15 +620,20 @@ def add_names_to_db(competition, sport="football", *sites):
     Ajoute à la base de données les noms d'équipe/joueur pour une competition donnée sur tous les
     sites
     """
-    id_competition = get_competition_id(competition, sport)
+    try:
+        id_competition, formated_name = get_id_formated_competition_name(competition, sport)
+    except TypeError:
+        print("Competition inconnue")
+        return {}
+    print(formated_name)
     if competition == sport:
         import_teams_by_sport(sport)
     else:
         import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"
                             +str(id_competition))
     if not sites:
-        sites = ['betclic', 'betstars', 'bwin', 'joa', 'netbet', 'parionssport', 'pasinobet', 'pmu',
-                 'unibet', 'winamax']
+        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
+                 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
@@ -642,8 +647,6 @@ def add_names_to_db(competition, sport="football", *sites):
                 parse_and_add_to_db(site, sport, url)
             except KeyboardInterrupt:
                 pass
-            except urllib.error.URLError:
-                print("Site non accessible (délai écoulé)")
             except urllib3.exceptions.MaxRetryError:
                 selenium_init.DRIVER.quit()
                 print("Redémarrage de selenium")
