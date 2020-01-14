@@ -6,3 +6,5 @@ tts.py
 doc/*
 docs/*
 .pylintrc
+.github/*
+debug.log
