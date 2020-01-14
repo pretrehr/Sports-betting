@@ -193,13 +193,14 @@ def add_name_to_db(_id, name, site):
         WHERE id = {}
         """.format(site, _id))
         sport, formated_name, name_site = c.fetchone()
-        ans = input("Créer une nouvelle entrée pour {} sur {} "
-                    "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
-                    .format(formated_name, site, name_site, name))
-        if ans == 'y':
-            c.execute("""
-            INSERT INTO names (id, name, sport, name_{})
-            VALUES ({}, "{}", "{}", "{}")
+        if name != name_site:
+            ans = input("Créer une nouvelle entrée pour {} sur {} "
+                        "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
+                        .format(formated_name, site, name_site, name))
+            if ans == 'y':
+                c.execute("""
+                INSERT INTO names (id, name, sport, name_{})
+                VALUES ({}, "{}", "{}", "{}")
             """.format(site, _id, formated_name, sport, name))
     c.close()
     conn.commit()
@@ -240,22 +241,48 @@ def get_close_name2(name, sport, site):
     Cherche un nom similaire dans la base de données en ignorant tous les sigles. Par exemple,
     "Paris SG" devient "Paris"
     """
-    split_name = re.split(' |\\.|-', name)
+    split_name = re.split(' |\\.|-|,', name)
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
+    set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
     conn = sqlite3.connect("sportsbetting/resources/teams.db")
     c = conn.cursor()
     c.execute("""
     SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
     """.format(sport, site))
     for line in c.fetchall():
-        split_line = re.split(' |\\.|-', line[1])
+        split_line = re.split(' |\\.|-|,', line[1])
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
                                                                     or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
                 or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
                                                                                    .lower())):
             return line
+        set_line = set(map(lambda x: unidecode.unidecode(x.lower()), split_line))
+        if set_line.issubset(set_name):
+            return line
+
+
+def get_close_name3(name, sport, site):
+    """
+    Cherche un nom proche dans la base de données si le nom est de la forme "Initiale prénom + Nom"
+    Par exemple "R. Nadal" renverra "Rafael Nadal"
+    """
+    if "." in name:
+        splitted_name = name.split("(")[0].split(".")
+        if len(splitted_name) == 2 and len(splitted_name[0]) == 1:
+            init_first_name = splitted_name[0]
+            last_name = splitted_name[1].strip()
+            reg_exp = r'{}[a-z]+\s{}'.format(init_first_name, last_name)
+            conn = sqlite3.connect("sportsbetting/resources/teams.db")
+            c = conn.cursor()
+            c.execute("""
+            SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
+            """.format(sport, site))
+            for line in c.fetchall():
+                if re.match(reg_exp, line[1]):
+                    return line
+
 
 def get_id_by_site(name, sport, site):
     """
@@ -278,7 +305,10 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
     """
     url = "http://www.comparateur-de-cotes.fr/comparateur/football/Nice-td"+str(id_opponent)
     date_match = matches[name_site_match]["date"]
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    try:
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    except urllib.error.HTTPError:
+        return
     get_next_id = False
     for line in soup.find_all(["a", "table"]):
         if get_next_id and "class" in line.attrs and "otn" in line["class"]:
