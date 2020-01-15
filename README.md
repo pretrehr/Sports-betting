@@ -89,8 +89,8 @@ Le tableau ci-dessous indique quelle fonction appeler pour chaque sport
 | football  | `parse_football()`  |
 | basketball  | `parse_nba()` (ou `parse_competition("nba", "basketball")`)|
 | tennis  | `parse_tennis()`  |
-| rugby  | `parse_competition()`  |
-| basketball  | parse_nba()  |
+| rugby  | `parse_competitions(["top 14", "champions cup", "6 nations"], "rugby")`  |
+| hockey-sur-glace  | parse_nhl()  |
 
 ### *English version*
 ## Installation
