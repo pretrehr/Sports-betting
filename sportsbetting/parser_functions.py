@@ -10,6 +10,7 @@ import urllib.request
 import datetime
 import json
 import time
+import re
 from itertools import chain
 import selenium
 from selenium.webdriver.support.wait import WebDriverWait
@@ -819,6 +820,9 @@ def parse_unibet(url=""):
                 match = match.replace("Flensburg - Handewitt", "Flensburg-Handewitt")
                 match = match.replace("TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
                 match = match.replace("Tremblay - en - France", "Tremblay-en-France")
+                reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*\)'
+                if list(re.finditer(reg_exp, match)): #match tennis live
+                    match = match.split("(")[0].strip().replace("-", " - ")
             if "class" in line.attrs and "datetime" in line["class"]:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
@@ -901,7 +905,6 @@ def parse_zebet(url=""):
         elif "class" in line.attrs and "competition" in line["class"]:
             strings = list(line.stripped_strings)
             match = (strings[1]+" - "+strings[-3])
-#             del strings[-4], strings[-3], strings[1], strings[0]
             odds = []
             for i, val in enumerate(strings):
                 if not i%4:
@@ -961,9 +964,6 @@ def parse_and_add_to_db(site, sport, competition):
     teams_9th_round = []
     for team in teams:
         line = is_in_db_site(team, sport, site)
-#         if line:
-#             add_name_to_db(line[0], team, site)
-#         else:
         if not line:
             teams_not_in_db_site.append(team)
     print(0, teams_not_in_db_site)
@@ -1012,7 +1012,7 @@ def parse_and_add_to_db(site, sport, competition):
         if not found:
             teams_5th_round.append(team)
     print(5, teams_5th_round)
-    if sport == "tennis": #pour doubles tennis
+    if sport == "tennis":
         for team in teams_5th_round:
             line = get_close_name3(team, sport, site)
             if line:
