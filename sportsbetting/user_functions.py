@@ -45,7 +45,7 @@ def parse_competition(competition, sport="football", *sites):
         _id, formated_name = get_id_formated_competition_name(competition, sport)
     except TypeError:
         print("Competition inconnue")
-        return {}
+        return
     print(formated_name)
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
@@ -283,8 +283,8 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
 
 
 def best_match_under_conditions(site, minimum_odd, bet, sport="football", one_site=False,
-                                live=False, date_max=None, time_max=None, date_min=None,
-                                time_min=None):
+                                date_max=None, time_max=None, date_min=None, time_min=None, 
+                                live=False):
     """
     Retourne le meilleur match sur lequel miser lorsqu'on doit miser une somme
     donnée à une cote donnée. Cette somme peut-être sur seulement une issue
