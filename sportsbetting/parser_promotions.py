@@ -90,3 +90,15 @@ def parse_promotion_betclic(url_promo):
     pprint(dict_steps)
     print("Infos:")
     pprint(dict_infos)
+
+def get_promotions_pmu():
+    """
+    Affiche les promotions proposées sur pmu
+    """
+    url = "https://www.netbet.fr/promotions"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.find_all():
+        if "class" in line.attrs and "node-pmu-promotions" in line["class"]:
+            promotion = list(line.stripped_strings)
+            print("\n".join(promotion))
+            print()
