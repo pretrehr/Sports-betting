@@ -169,13 +169,24 @@ def is_in_db_site(name, sport, site):
     for line in c.fetchall():
         return line
 
+def get_formated_name_by_id(_id):
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    c = conn.cursor()
+    c.execute("""
+    SELECT name FROM names WHERE id='{}'
+    """.format(_id))
+    return c.fetchone()[0]
+    
+
 def add_name_to_db(_id, name, site):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
     conn = sqlite3.connect("sportsbetting/resources/teams.db")
     c = conn.cursor()
-    if is_id_available_for_site(_id, site):
+    name_is_potential_double = any(x in name for x in ["-", "/", "&"])
+    id_is_potential_double = "&" in get_formated_name_by_id(_id)
+    if is_id_available_for_site(_id, site) and (not (name_is_potential_double ^ id_is_potential_double)):
         c.execute("""
         UPDATE names
         SET name_{0} = "{1}"
@@ -202,8 +213,11 @@ def add_name_to_db(_id, name, site):
                 INSERT INTO names (id, name, sport, name_{})
                 VALUES ({}, "{}", "{}", "{}")
             """.format(site, _id, formated_name, sport, name))
+            else:
+                return False
     c.close()
     conn.commit()
+    return True
 
 def is_id_available_for_site(_id, site):
     """
@@ -342,13 +356,13 @@ def get_double_team_tennis(team, site):
     """
     if site in ["netbet"]:
         separator_team = "-"
-    elif site in ["betclic", "winamax", "pmu"]:
+    elif site in ["betclic", "winamax", "pmu", "zebet"]:
         separator_team = " / "
     elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
     elif site in ["betstars"]:
         separator_team = " & "
-    if separator_team and separator_team in team:
+    if separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
         if site in ["betstars", "pasinobet", "pmu"]:
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
@@ -365,6 +379,8 @@ def get_double_team_tennis(team, site):
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["betclic"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
+        elif site in ["zebet"]:
+            players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
         conn = sqlite3.connect("sportsbetting/resources/teams.db")
         c = conn.cursor()
         c.execute("""

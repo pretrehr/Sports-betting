@@ -970,14 +970,18 @@ def parse_and_add_to_db(site, sport, competition):
     for team in teams_not_in_db_site:
         line = is_in_db(team, sport, site)
         if line:
-            add_name_to_db(line[0], team, site)
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_1st_round.append(team)
         else:
             teams_1st_round.append(team)
     print(1, teams_1st_round)
     for team in teams_1st_round:
         line = get_close_name(team, sport, site)
         if line:
-            add_name_to_db(line[0], team, site)
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_2nd_round.append(team)
         else:
             teams_2nd_round.append(team)
     print(2, teams_2nd_round)
@@ -989,14 +993,18 @@ def parse_and_add_to_db(site, sport, competition):
             id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
             if id_to_find:
                 found = True
-                add_name_to_db(id_to_find, team, site)
+                success = add_name_to_db(id_to_find, team, site)
+                if not success:
+                    teams_3rd_round.append(team)
         if not found:
             teams_3rd_round.append(team)
     print(3, teams_3rd_round)
     for team in teams_3rd_round:
         line = get_close_name2(team, sport, site)
         if line:
-            add_name_to_db(line[0], team, site)
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_4th_round.append(team)
         else:
             teams_4th_round.append(team)
     print(4, teams_4th_round)
@@ -1008,7 +1016,9 @@ def parse_and_add_to_db(site, sport, competition):
             id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
             if id_to_find:
                 found = True
-                add_name_to_db(id_to_find, team, site)
+                success = add_name_to_db(id_to_find, team, site)
+                if not success:
+                    teams_5th_round.append(team)
         if not found:
             teams_5th_round.append(team)
     print(5, teams_5th_round)
@@ -1016,7 +1026,9 @@ def parse_and_add_to_db(site, sport, competition):
         for team in teams_5th_round:
             line = get_close_name3(team, sport, site)
             if line:
-                add_name_to_db(line[0], team, site)
+                success = add_name_to_db(line[0], team, site)
+                if not success:
+                    teams_6th_round.append(team)
             else:
                 teams_6th_round.append(team)
         print(6, teams_6th_round)
@@ -1028,14 +1040,18 @@ def parse_and_add_to_db(site, sport, competition):
                 id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                 if id_to_find:
                     found = True
-                    add_name_to_db(id_to_find, team, site)
+                    success = add_name_to_db(id_to_find, team, site)
+                    if not success:
+                        teams_7th_round.append(team)
             if not found:
                 teams_7th_round.append(team)
         print(7, teams_7th_round)
         for team in teams_7th_round:
             line = get_double_team_tennis(team, site)
             if line:
-                add_name_to_db(line[0], team, site)
+                success = add_name_to_db(line[0], team, site)
+                if not success:
+                    teams_8th_round.append(team)
             else:
                 teams_8th_round.append(team)
         print(8, teams_8th_round)
@@ -1046,8 +1062,9 @@ def parse_and_add_to_db(site, sport, competition):
                 id_opponent = get_id_by_site(future_opponent, sport, site)
                 id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                 if id_to_find:
-                    found = True
-                    add_name_to_db(id_to_find, team, site)
+                    success = add_name_to_db(id_to_find, team, site)
+                    if not success:
+                        teams_9th_round.append(team)
             if not found:
                 teams_9th_round.append(team)
         print(9, teams_9th_round)
