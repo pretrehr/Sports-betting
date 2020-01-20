@@ -188,7 +188,6 @@ def parse_handball(*sites):
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
-#     sportsbetting.ODDS_HANDBALL = parse_competition("champions", "handball", *sites)
     sportsbetting.ODDS["handball"] = parse_competition("champions", "handball", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -282,8 +281,8 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
         print("No match found")
 
 
-def best_match_under_conditions(site, minimum_odd, bet, sport="football", one_site=False,
-                                date_max=None, time_max=None, date_min=None, time_min=None, 
+def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_max=None,
+                                time_max=None, date_min=None, time_min=None, one_site=False,
                                 live=False):
     """
     Retourne le meilleur match sur lequel miser lorsqu'on doit miser une somme
@@ -525,7 +524,6 @@ def best_matches_freebet(main_sites, freebets, *matches):
             new_odds[match_name] = odds
     else:
         new_odds = sportsbetting.ODDS["football"]
-#         new_odds = sportsbetting.ODDS["nba"]
     all_odds = {}
     for match in new_odds:
         if (not(any([site not in new_odds[match]["odds"].keys() for site in main_sites])
