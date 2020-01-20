@@ -745,6 +745,8 @@ def parse_pmu(url=""):
     match_odds_hash = {}
     match = ""
     date_time = "undefined"
+    live = False
+    handicap = False
     for line in soup.find_all():
         if "data-date" in line.attrs and "shadow" in line["class"]:
             date = line["data-date"]
@@ -757,31 +759,34 @@ def parse_pmu(url=""):
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
             if "//" in string:
-                handicap = False
-                if "Egalité" in string:
-                    handicap = True
-                    match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                       +line.parent["href"])
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"pmu":odds}
-                    match_odds_hash[match]['date'] = date_time
-                elif "hockey" in url:
-                    handicap = True
-                    odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                +line.parent["href"])[1]
-                    if "nhl" in url:
-                        odds.reverse()
-                    match = string.replace("//", "-")
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"pmu":odds}
-                    match_odds_hash[match]['date'] = date_time
-                else:
-                    match = string.replace("//", "-")
+                live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
+                if not live:
+                    handicap = False
+                    if "Egalité" in string:
+                        handicap = True
+                        match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                        +line.parent["href"])
+                        match_odds_hash[match] = {}
+                        match_odds_hash[match]['odds'] = {"pmu":odds}
+                        match_odds_hash[match]['date'] = date_time
+                    elif "hockey" in url:
+                        handicap = True
+                        odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                    +line.parent["href"])[1]
+                        if "nhl" in url:
+                            odds.reverse()
+                        match = string.replace("//", "-")
+                        match_odds_hash[match] = {}
+                        match_odds_hash[match]['odds'] = {"pmu":odds}
+                        match_odds_hash[match]['date'] = date_time
+                    else:
+                        match = string.replace("//", "-")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"] and not handicap:
-            odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
-            match_odds_hash[match] = {}
-            match_odds_hash[match]['odds'] = {"pmu":odds}
-            match_odds_hash[match]['date'] = date_time
+            if not live:
+                odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"pmu":odds}
+                match_odds_hash[match]['date'] = date_time
     return match_odds_hash
 
 def parse_page_match_pmu(url):
