@@ -1073,3 +1073,38 @@ def parse_and_add_to_db(site, sport, competition):
             if not found:
                 teams_9th_round.append(team)
         print(9, teams_9th_round)
+
+def parse_buteurs_betclic(url):
+    options = selenium.webdriver.ChromeOptions()
+    prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
+    options.add_argument('log-level=3')
+    options.add_experimental_option("prefs", prefs)
+    driver = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+    driver.maximize_window()
+    match_odds_hash = {}
+    driver.get(url)
+    innerHTML = driver.execute_script("return document.body.innerHTML")
+    categories = driver.find_elements_by_class_name("marketTypeCodeName")
+    for cat in categories:
+        if "Qui marquera le plus" in cat.text or "Duel de buteurs" in cat.text:
+            cat.click()
+            innerHTML = driver.execute_script("return document.body.innerHTML")
+            soup = BeautifulSoup(innerHTML, features="lxml")
+            for line in soup.find_all():
+                if line.name == "time":
+                    date = line["datetime"]
+                elif "class" in line.attrs and "hour" in line["class"]:
+                    hour = line.text
+                elif "class" in line.attrs and "expand-selection-bet" in line["class"]:
+                    strings = list(line.stripped_strings)
+                    try:
+                        match = strings[0]+" - "+strings[-2]
+                    except IndexError:
+                        match = strings[0]
+                    odds = list(map(lambda x: float(x.replace(",", ".")), strings[1::2]))
+                    if len(odds)==3:
+                        match_odds_hash[match] = {}
+                        match_odds_hash[match]['odds'] = {"betclic":odds}
+                        match_odds_hash[match]['date'] = datetime.datetime.strptime(date+" "+hour, "%Y-%m-%d %H:%M")
+    driver.quit()
+    return match_odds_hash

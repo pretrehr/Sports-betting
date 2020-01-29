@@ -15,6 +15,7 @@ from itertools import combinations, permutations
 import urllib3
 import numpy as np
 import unidecode
+import selenium
 from bs4 import BeautifulSoup
 try:
     from win10toast import ToastNotifier
@@ -25,7 +26,7 @@ from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formated_competition_name,
                                               get_competition_by_id, get_competition_url,
                                               import_teams_by_sport, import_teams_by_url)
-from sportsbetting.parser_functions import parse_and_add_to_db, parse
+from sportsbetting.parser_functions import parse_and_add_to_db, parse, parse_buteurs_betclic
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets,
@@ -218,6 +219,28 @@ def parse_nhl(*sites):
             toaster.show_toast("Sports-betting", "Fin du parsing")
         except NameError:
             subprocess.Popen(['notify-send', "Fin du parsing"])
+    if inspect.currentframe().f_back.f_code.co_name != "<module>":
+        return merge_dicts(list_odds)
+    sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
+
+
+def parse_buteurs():
+    competitions = ["france ligue 1", "espagne liga", "italie serie", "allemagne bundesliga"]
+    list_odds = []
+    for competition in competitions:
+        print(get_id_formated_competition_name(competition, "football")[1])
+        url = get_competition_url(competition, "football", "betclic")
+        list_odds.append(parse_buteurs_betclic(url))
+    
+    if inspect.currentframe().f_back.f_code.co_name == "<module>":
+        try:
+            toaster = ToastNotifier()
+            toaster.show_toast("Sports-betting", "Fin du parsing")
+        except NameError:
+            subprocess.Popen(['notify-send', "Fin du parsing"])
+    if inspect.currentframe().f_back.f_code.co_name != "<module>":
+        return merge_dicts(list_odds)
+    sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
 
 
 def odds_match(match, sport="football"):
