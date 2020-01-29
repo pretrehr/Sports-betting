@@ -33,7 +33,6 @@ def adapt_names(odds, site, sport):
     """
     new_dict = {}
     for match in odds:
-        new_match = " - ".join(list(map(lambda x: get_formated_name(x, site, sport),
         new_match = " - ".join(list(map(lambda x: get_formated_name(x.strip(), site, sport),
                                         match.split(" - "))))
         if "UNKNOWN TEAM/PLAYER" not in new_match:
