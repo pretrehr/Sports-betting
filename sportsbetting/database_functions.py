@@ -227,10 +227,23 @@ def add_name_to_db(_id, name, site):
                         "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
                         .format(formated_name, site, name_site, name))
             if ans == 'y':
-                c.execute("""
-                INSERT INTO names (id, name, sport, name_{})
-                VALUES ({}, "{}", "{}", "{}")
-            """.format(site, _id, formated_name, sport, name))
+                if name_site:
+                    c.execute("""
+                    INSERT INTO names (id, name, sport, name_{})
+                    VALUES ({}, "{}", "{}", "{}")
+                    """.format(site, _id, formated_name, sport, name))
+                else:
+                    c.execute("""
+                    UPDATE names
+                    SET name_{0} = "{1}"
+                    WHERE _rowid_ = (
+                        SELECT _rowid_
+                        FROM names
+                        WHERE id = {2} AND name_{0} IS NULL
+                        ORDER BY _rowid_
+                        LIMIT 1
+                    );
+                    """.format(site, name, _id))
             else:
                 return False
     c.close()
