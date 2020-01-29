@@ -175,7 +175,25 @@ def get_formated_name_by_id(_id):
     c.execute("""
     SELECT name FROM names WHERE id='{}'
     """.format(_id))
-    return c.fetchone()[0]
+    try:
+        return c.fetchone()[0]
+    except TypeError:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/Angers-td"+str(_id)
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+        for line in soup.findAll("a", {"class": "otn"}):
+            if str(_id) in line["href"]:
+                print(line.text)
+                sport = line["href"].split("/")[1]
+                print(sport)
+                conn = sqlite3.connect("sportsbetting/resources/teams.db")
+                c = conn.cursor()
+                c.execute("""
+                INSERT INTO names (id, name, sport)
+                VALUES ({}, "{}", "{}")
+                """.format(_id, line.text, sport))
+                conn.commit()
+                c.close()
+                return line.text
     
 
 def add_name_to_db(_id, name, site):
