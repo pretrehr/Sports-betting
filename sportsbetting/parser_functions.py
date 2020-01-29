@@ -371,9 +371,12 @@ def parse_france_pari(url=""):
                 for i, val in enumerate(strings):
                     if i%2:
                         odds.append(float(val.replace(",", ".")))
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {"france_pari":odds}
-                match_odds_hash[match]['date'] = date_time
+                try:
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"france_pari":odds}
+                    match_odds_hash[match]['date'] = date_time
+                except UnboundLocalError:
+                    pass
     return match_odds_hash
 
 def parse_joa(url):
