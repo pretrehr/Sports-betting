@@ -34,6 +34,7 @@ def adapt_names(odds, site, sport):
     new_dict = {}
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formated_name(x, site, sport),
+        new_match = " - ".join(list(map(lambda x: get_formated_name(x.strip(), site, sport),
                                         match.split(" - "))))
         if "UNKNOWN TEAM/PLAYER" not in new_match:
             new_dict[new_match] = odds[match]
@@ -308,8 +309,8 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
         datetime_min = None
     for match in all_odds:
         if (site in all_odds[match]['odds']
-                and (not date_max or all_odds[match]['date'] <= datetime_max)
-                and (not date_min or all_odds[match]['date'] >= datetime_min)):
+                and (not date_max or all_odds[match]['date'] <= datetime_max or all_odds[match]['date'] == "undefined")
+                and (not date_min or all_odds[match]['date'] >= datetime_min or all_odds[match]['date'] == "undefined")):
             odds_site = all_odds[match]['odds'][site]
             best_odds = copy.deepcopy(odds_site)
             best_sites = [site for _ in range(n)]
