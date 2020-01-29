@@ -364,7 +364,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                 if "à" in string:
                     date_time = datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
                     try:
-                        if abs(date_time-date_match) < datetime.timedelta(days=2):
+                        if abs(date_time-date_match) < datetime.timedelta(days=0.5):
                             get_next_id = True
                     except TypeError: #live
                         pass
