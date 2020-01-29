@@ -469,10 +469,13 @@ def parse_netbet(url=""):
                 match = match.split("[")[0].strip()
         elif ("class" in line.attrs and "mainOdds" in line["class"]
               and "uk-margin-remove" in line["class"]):
-            odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
-            match_odds_hash[match] = {}
-            match_odds_hash[match]['odds'] = {"netbet":odds}
-            match_odds_hash[match]['date'] = date_time
+            try:
+                odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"netbet":odds}
+                match_odds_hash[match]['date'] = date_time
+            except ValueError: #match live (cotes non disponibles)
+                pass
     return match_odds_hash
 
 def parse_parionssport(url=""):
