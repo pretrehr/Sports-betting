@@ -142,6 +142,7 @@ def parse_betstars(url=""):
                     date_time = datetime.datetime.strptime(date+" "+hour, "%d %b %Y %H:%M")
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year+1)
+                match = match.replace("  ", " ")
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"betstars":odds}
                 match_odds_hash[match]['date'] = date_time
@@ -968,6 +969,7 @@ def parse_and_add_to_db(site, sport, competition):
         site = "netbet"
     matches = odds.keys()
     teams = list(set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches))))))
+    teams = list(map(lambda x: x.strip(), teams))
     print(teams)
     teams_not_in_db_site = []
     teams_1st_round = []
