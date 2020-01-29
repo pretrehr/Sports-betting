@@ -207,6 +207,26 @@ def promo_zebet(cotes):
     print("gain=", gains)
     return mis
 
+def mises_promo_gain_cote(cotes, mise_minimale, rang, output=False):
+    mis = []
+    gain = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    for cote in cotes:
+        mis.append((gain/cote))
+    mis[rang] = mise_minimale
+    if output:
+        print("somme mises=", sum(mis))
+        print("gain=", gain)
+    return mis
+
+def gain_promo_gain_cote(cotes, mise_minimale, rang):
+    mis = []
+    gain = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    for cote in cotes:
+        mis.append((gain/cote))
+    mis[rang] = mise_minimale
+    return gain-sum(mis)
+    
+
 def cote_boostee(cote, boost_selon_cote=True):
     """
     Calcul de cote boostee pour promotion Betclic

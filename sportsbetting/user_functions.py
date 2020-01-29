@@ -34,7 +34,8 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2,
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
-                                           cotes_combine)
+                                           cotes_combine, gain_promo_gain_cote,
+                                           mises_promo_gain_cote)
 
 def parse_competition(competition, sport="football", *sites):
     """
@@ -634,6 +635,17 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport, date_max, time_max, date_min,
                     time_min, True, nb_matches, True, one_site=True)
+
+def best_match_gain_cote(site, bet, sport, date_max=None, time_max=None, date_min=None,
+                         time_min=None, one_site=False):
+    all_odds = sportsbetting.ODDS[sport]
+    odds_function = lambda best_odds, odds_site, i: best_odds[:i]+[odds_site[i]]+best_odds[i+1:]
+    profit_function = lambda odds_to_check, i: gain_promo_gain_cote(odds_to_check, bet, i)
+    criteria = lambda odds_to_check, i: True
+    display_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds, bet, best_rank, True)
+    result_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds, bet, best_rank, False)
+    best_match_base(odds_function, profit_function, criteria, display_function, result_function,
+                    site, sport, date_max, time_max, date_min, time_min)
 
 
 def add_names_to_db(competition, sport="football", *sites):
