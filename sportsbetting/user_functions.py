@@ -685,8 +685,31 @@ def add_names_to_db(competition, sport="football", *sites):
                 print("Redémarrage de selenium")
                 selenium_init.start_selenium()
                 parse_and_add_to_db(site, sport, url)
+            except selenium.common.exceptions.TimeoutException:
+                pass
+            except urllib.error.HTTPError:
+                pass
     if selenium_required:
         selenium_init.DRIVER.quit()
+
+def update_all_database(start=""):
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    c = conn.cursor()
+    c.execute("""
+    SELECT sport, competition FROM competitions
+    """)
+    
+    if start:
+        start_found = False
+    else:
+        start_found = True
+    selenium_init.start_selenium()
+    for line in c.fetchall():
+        if start in line[1]:
+            start_found = True
+        if start_found:
+            add_names_to_db(line[1], line[0])
+    selenium_init.DRIVER.quit()
 
 
 def add_competition_to_db(sport):
