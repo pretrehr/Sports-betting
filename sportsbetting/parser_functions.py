@@ -354,11 +354,17 @@ def parse_france_pari(url=""):
             strings = list(line.stripped_strings)
             if "snc-odds-date-lib" in line["class"]:
                 hour = strings[0]
-                i = strings.index("/")
-                date_time = datetime.datetime.strptime(date+" "+hour, "%A %d %B %Y %H:%M")
-                if date_time < today:
-                    date_time = date_time.replace(year=date_time.year+1)
-                match = " ".join(strings[1:i])+" - "+" ".join(strings[i+1:])
+                try:
+                    i = strings.index("/")
+                    date_time = datetime.datetime.strptime(date+" "+hour, "%A %d %B %Y %H:%M")
+                    if date_time < today:
+                        date_time = date_time.replace(year=date_time.year+1)
+                    match = " ".join(strings[1:i])+" - "+" ".join(strings[i+1:])
+                    reg_exp = r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]'
+                    if list(re.finditer(reg_exp, match)): #match tennis live
+                        match = match.split("[")[0].strip()
+                except ValueError:
+                    pass
             else:
                 odds = []
                 for i, val in enumerate(strings):
@@ -454,6 +460,9 @@ def parse_netbet(url=""):
                 date_time = "undefined"
         elif "class" in line.attrs and "bet-libEvent" in line["class"]:
             match = list(line.stripped_strings)[0].replace("/", "-")
+            reg_exp = r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]'
+            if list(re.finditer(reg_exp, match)): #match tennis live
+                match = match.split("[")[0].strip()
         elif ("class" in line.attrs and "mainOdds" in line["class"]
               and "uk-margin-remove" in line["class"]):
             odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
@@ -825,9 +834,12 @@ def parse_unibet(url=""):
                 match = match.replace("Flensburg - Handewitt", "Flensburg-Handewitt")
                 match = match.replace("TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
                 match = match.replace("Tremblay - en - France", "Tremblay-en-France")
-                reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*\)'
+                match = match.replace("FC Vion Zlate Moravce - Vrable", "FC Vion Zlate Moravce-Vrable")
+                reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
-                    match = match.split("(")[0].strip().replace("-", " - ")
+                    match = match.split("(")[0].strip()
+                    if " - " not in match:
+                        match = match.replace("-", " - ")
             if "class" in line.attrs and "datetime" in line["class"]:
                 date_time = datetime.datetime.strptime(year+line.text, "%Y/%d/%m %H:%M")
                 if date_time < today:
