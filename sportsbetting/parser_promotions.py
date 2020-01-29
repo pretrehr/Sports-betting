@@ -6,7 +6,12 @@ Parseur pour récupérer les promotions en cours
 
 import urllib
 from pprint import pprint
+import selenium
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+from sportsbetting import selenium_init
 
 def get_promotions_france_pari():
     """
@@ -84,8 +89,6 @@ def parse_promotion_betclic(url_promo):
                     dict_infos["autres"] += "\n"+infos[0]
                 else:
                     dict_infos["autres"] = infos[0]
-#         if "class" in line.attrs:
-#             print(line["class"], line["class"])
     print("Étapes:")
     pprint(dict_steps)
     print("Infos:")
@@ -95,10 +98,31 @@ def get_promotions_pmu():
     """
     Affiche les promotions proposées sur pmu
     """
-    url = "https://www.netbet.fr/promotions"
+    url = "https://paris-sportifs.pmu.fr/promotions/3"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all():
         if "class" in line.attrs and "node-pmu-promotions" in line["class"]:
             promotion = list(line.stripped_strings)
-            print("\n".join(promotion))
+            print("\n".join(promotion).split("Conditions")[0])
             print()
+
+# def get_promotions_zebet():
+#     """
+#     Affiche les promotions proposées sur zebet
+#     """
+#     selenium_init.start_selenium()
+#     selenium_init.DRIVER.get("https://www.zebet.fr/fr/page/promotions")
+#     WebDriverWait(selenium_init.DRIVER, 15).until(
+#         EC.presence_of_all_elements_located((By.CLASS_NAME, "logo-zebet"))
+#     )
+# #     accordion_elements = selenium_init.DRIVER.findElement(By.xpath("//div[@class='accordion-image' and style='display: yes;']")
+#     for elem in accordion_elements:
+#         elem.click()
+#     inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+#     soup = BeautifulSoup(inner_html, features="lxml")
+#     for line in soup.find_all():
+#         if "class" in line.attrs and "spacer-medium" in line["class"]:
+#             promotion = list(line.stripped_strings)
+#             print(" ".join(promotion).split("Conditions")[0])
+#             print()
+#     selenium_init.DRIVER.quit()
