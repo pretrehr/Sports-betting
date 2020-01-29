@@ -757,6 +757,7 @@ def parse_pmu(url=""):
     """
     if not url:
         url = "https://paris-sportifs.pmu.fr/pari/competition/169/football/ligue-1-conforama"
+#     url = "https://paris-sportifs.pmu.fr/pari/competition/441/tennis/open-daustralie-h"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
     match = ""
@@ -813,6 +814,7 @@ def parse_page_match_pmu(url):
     _id = "-1"
     odds = []
     name = soup.find("title").text.split(" - ")[0].replace("//", "-")
+    print("\t"+name)
     for line in soup.find_all(["option", "a"]):
         if line.text in ["Vainqueur du match", "1N2 à la 60e minute"]:
             _id = line["data-market-id"]
