@@ -687,7 +687,9 @@ def add_names_to_db(competition, sport="football", *sites):
             try:
                 parse_and_add_to_db(site, sport, url)
             except KeyboardInterrupt:
-                pass
+                start = time.time()
+                while time.time()-start < 0.5:
+                    time.sleep(0.5)
             except urllib3.exceptions.MaxRetryError:
                 selenium_init.DRIVER.quit()
                 print("Redémarrage de selenium")
