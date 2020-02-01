@@ -30,7 +30,7 @@ from sportsbetting.parser_functions import parse_and_add_to_db, parse, parse_but
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets,
-                                               best_match_base)
+                                               best_match_base, generate_sites)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2,
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
@@ -758,18 +758,18 @@ def add_urls_to_db():
         try:
             url_netbet = line[0]
             url_france_pari, url_zebet = generate_sites(url_netbet)
-            c2 = conn.cursor()
-            c2.execute("""
+            c_2 = conn.cursor()
+            c_2.execute("""
             UPDATE competitions
             SET url_france_pari = "{0}" WHERE url_netbet = "{1}"
             """.format(url_france_pari, url_netbet))
-            c3 = conn.cursor()
-            c3.execute("""
+            c_3 = conn.cursor()
+            c_3.execute("""
             UPDATE competitions
             SET url_zebet = "{0}" WHERE url_netbet = "{1}"
             """.format(url_zebet, url_netbet))
-            c2.close()
-            c3.close()
+            c_2.close()
+            c_3.close()
         except TypeError:
             pass
     conn.commit()
