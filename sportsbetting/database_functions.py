@@ -170,6 +170,9 @@ def is_in_db_site(name, sport, site):
         return line
 
 def get_formated_name_by_id(_id):
+    """
+    Retourne le nom d'une équipe en fonction de son id dans la base de donbées
+    """
     conn = sqlite3.connect("sportsbetting/resources/teams.db")
     c = conn.cursor()
     c.execute("""
@@ -182,9 +185,7 @@ def get_formated_name_by_id(_id):
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         for line in soup.findAll("a", {"class": "otn"}):
             if str(_id) in line["href"]:
-                print(line.text)
                 sport = line["href"].split("/")[1]
-                print(sport)
                 conn = sqlite3.connect("sportsbetting/resources/teams.db")
                 c = conn.cursor()
                 c.execute("""
@@ -194,7 +195,7 @@ def get_formated_name_by_id(_id):
                 conn.commit()
                 c.close()
                 return line.text
-    
+
 
 def add_name_to_db(_id, name, site):
     """
@@ -204,7 +205,8 @@ def add_name_to_db(_id, name, site):
     c = conn.cursor()
     name_is_potential_double = any(x in name for x in ["-", "/", "&"])
     id_is_potential_double = "&" in get_formated_name_by_id(_id)
-    if is_id_available_for_site(_id, site) and (not (name_is_potential_double ^ id_is_potential_double)):
+    if (is_id_available_for_site(_id, site)
+            and (not name_is_potential_double ^ id_is_potential_double)):
         c.execute("""
         UPDATE names
         SET name_{0} = "{1}"

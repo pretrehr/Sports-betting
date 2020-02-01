@@ -223,19 +223,18 @@ def parse_nhl(*sites):
             toaster.show_toast("Sports-betting", "Fin du parsing")
         except NameError:
             subprocess.Popen(['notify-send', "Fin du parsing"])
-    if inspect.currentframe().f_back.f_code.co_name != "<module>":
-        return merge_dicts(list_odds)
-    sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
 
 
 def parse_buteurs():
+    """
+    Stocke les cotes des duels de buteurs disponibles sur Betclic
+    """
     competitions = ["france ligue 1", "espagne liga", "italie serie", "allemagne bundesliga"]
     list_odds = []
     for competition in competitions:
         print(get_id_formated_competition_name(competition, "football")[1])
         url = get_competition_url(competition, "football", "betclic")
         list_odds.append(parse_buteurs_betclic(url))
-    
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
         try:
             toaster = ToastNotifier()
@@ -428,8 +427,8 @@ def best_matches_combine(site, minimum_odd, bet, sport, nb_matches=2, one_site=F
                          date_max=None, time_max=None, date_min=None, time_min=None,
                          minimum_odd_selection=1.01):
     """
-    Given a bookmaker, return on which matches you should share your freebet to
-    maximize your gain
+    Retourne les meilleurs matches sur lesquels miser lorsqu'on doit miser une somme
+    donnée à une cote donnée sur un combiné
     """
     all_odds = sportsbetting.ODDS[sport]
     sportsbetting.ALL_ODDS_COMBINE = {}
@@ -641,12 +640,18 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
 
 def best_match_gain_cote(site, bet, sport, date_max=None, time_max=None, date_min=None,
                          time_min=None, one_site=False):
-    all_odds = sportsbetting.ODDS[sport]
+    """
+    Retourne le match sur lequel miser pour optimiser une promotion du type "gain de la cote gagnée"
+    """
     odds_function = lambda best_odds, odds_site, i: best_odds[:i]+[odds_site[i]]+best_odds[i+1:]
     profit_function = lambda odds_to_check, i: gain_promo_gain_cote(odds_to_check, bet, i)
     criteria = lambda odds_to_check, i: True
-    display_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds, bet, best_rank, True)
-    result_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds, bet, best_rank, False)
+    display_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds,
+                                                                                  bet, best_rank,
+                                                                                  True)
+    result_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds,
+                                                                                 bet, best_rank,
+                                                                                 False)
     best_match_base(odds_function, profit_function, criteria, display_function, result_function,
                     site, sport, date_max, time_max, date_min, time_min)
 
@@ -696,12 +701,14 @@ def add_names_to_db(competition, sport="football", *sites):
         selenium_init.DRIVER.quit()
 
 def update_all_database(start=""):
+    """
+    Ajoute les noms manquants dans toute la base de données
+    """
     conn = sqlite3.connect("sportsbetting/resources/teams.db")
     c = conn.cursor()
     c.execute("""
     SELECT sport, competition FROM competitions
     """)
-    
     if start:
         start_found = False
     else:

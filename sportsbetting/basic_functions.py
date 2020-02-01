@@ -194,38 +194,31 @@ def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False
         return
     return mis_reelles
 
-def promo_zebet(cotes):
-    """
-    Optimisation de la promotion "gain en freebet de la cote gagnee"
-    """
-    mis = []
-    maxi = max(cotes)
-    gains = maxi*2+maxi*0.77
-    for cote in cotes:
-        mis.append((gains-cote*0.77)/cote)
-    print("somme mises=", sum(mis))
-    print("gain=", gains)
-    return mis
 
 def mises_promo_gain_cote(cotes, mise_minimale, rang, output=False):
+    """
+    Calcule la répartition des mises pour la promotion "gain en freebet de la cote gagnée"
+    """
     mis = []
-    gain = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    gains = cotes[rang]*0.77+mise_minimale*cotes[rang]
     for cote in cotes:
-        mis.append((gain/cote))
+        mis.append((gains/cote))
     mis[rang] = mise_minimale
     if output:
         print("somme mises=", sum(mis))
-        print("gain=", gain)
+        print("gain=", gains)
     return mis
 
 def gain_promo_gain_cote(cotes, mise_minimale, rang):
+    """
+    Calcule le gain pour la promotion "gain en freebet de la cote gagnée"
+    """
     mis = []
-    gain = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    gains = cotes[rang]*0.77+mise_minimale*cotes[rang]
     for cote in cotes:
-        mis.append((gain/cote))
+        mis.append((gains/cote))
     mis[rang] = mise_minimale
     return gain-sum(mis)
-    
 
 def cote_boostee(cote, boost_selon_cote=True):
     """

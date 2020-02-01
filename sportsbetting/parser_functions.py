@@ -364,7 +364,8 @@ def parse_france_pari(url=""):
                     if date_time < today:
                         date_time = date_time.replace(year=date_time.year+1)
                     match = " ".join(strings[1:i])+" - "+" ".join(strings[i+1:])
-                    reg_exp = r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]'
+                    reg_exp = (r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]'
+                               r'|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]')
                     if list(re.finditer(reg_exp, match)): #match tennis live
                         match = match.split("[")[0].strip()
                 except ValueError:
@@ -404,6 +405,7 @@ def parse_joa(url):
         for line in soup.find_all():
             if "class" in line.attrs and "bet-event-name" in line["class"]:
                 match = " - ".join(line.stripped_strings)
+                match = match.replace("Nouvelle - Zélande Breakers", "Nouvelle-Zélande Breakers")
             elif "class" in line.attrs and "bet-outcomes-caption-list" in line["class"]:
                 if (["1", "2"] == list(line.stripped_strings)
                         or ["1", "X", "2"] == list(line.stripped_strings)):
@@ -451,6 +453,7 @@ def parse_netbet(url=""):
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
+    date = ""
     year = " "+str(today.year)
     for line in soup.find_all():
         if "class" in line.attrs and "nb-date-large" in line["class"]:
@@ -785,7 +788,7 @@ def parse_pmu(url=""):
                     if "Egalité" in string:
                         handicap = True
                         match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                        +line.parent["href"])
+                                                           +line.parent["href"])
                         match_odds_hash[match] = {}
                         match_odds_hash[match]['odds'] = {"pmu":odds}
                         match_odds_hash[match]['date'] = date_time
@@ -846,7 +849,10 @@ def parse_unibet(url=""):
                 match = match.replace("Flensburg - Handewitt", "Flensburg-Handewitt")
                 match = match.replace("TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
                 match = match.replace("Tremblay - en - France", "Tremblay-en-France")
-                match = match.replace("FC Vion Zlate Moravce - Vrable", "FC Vion Zlate Moravce-Vrable")
+                match = match.replace("FC Vion Zlate Moravce - Vrable",
+                                      "FC Vion Zlate Moravce-Vrable")
+                match = match.replace("Toulon St - Cyr Var (F)", "Toulon St-Cyr Var (F)")
+                match = match.replace("Châlons - Reims", "Châlons-Reims")
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
                     match = match.split("(")[0].strip()
@@ -1100,6 +1106,9 @@ def parse_and_add_to_db(site, sport, competition):
         print(9, teams_9th_round)
 
 def parse_buteurs_betclic(url):
+    """
+    Stocke les cotes des duels de buteurs disponibles sur Betclic
+    """
     options = selenium.webdriver.ChromeOptions()
     prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
     options.add_argument('log-level=3')
@@ -1108,13 +1117,13 @@ def parse_buteurs_betclic(url):
     driver.maximize_window()
     match_odds_hash = {}
     driver.get(url)
-    innerHTML = driver.execute_script("return document.body.innerHTML")
+    inner_html = driver.execute_script("return document.body.innerHTML")
     categories = driver.find_elements_by_class_name("marketTypeCodeName")
     for cat in categories:
         if "Qui marquera le plus" in cat.text or "Duel de buteurs" in cat.text:
             cat.click()
-            innerHTML = driver.execute_script("return document.body.innerHTML")
-            soup = BeautifulSoup(innerHTML, features="lxml")
+            inner_html = driver.execute_script("return document.body.innerHTML")
+            soup = BeautifulSoup(inner_html, features="lxml")
             for line in soup.find_all():
                 if line.name == "time":
                     date = line["datetime"]
@@ -1127,9 +1136,11 @@ def parse_buteurs_betclic(url):
                     except IndexError:
                         match = strings[0]
                     odds = list(map(lambda x: float(x.replace(",", ".")), strings[1::2]))
-                    if len(odds)==3:
+                    if len(odds) == 3:
                         match_odds_hash[match] = {}
                         match_odds_hash[match]['odds'] = {"betclic":odds}
-                        match_odds_hash[match]['date'] = datetime.datetime.strptime(date+" "+hour, "%Y-%m-%d %H:%M")
+                        match_odds_hash[match]['date'] = (datetime.datetime
+                                                          .strptime(date+" "+hour,
+                                                                    "%Y-%m-%d %H:%M"))
     driver.quit()
     return match_odds_hash
