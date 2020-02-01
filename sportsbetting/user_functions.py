@@ -75,6 +75,9 @@ def parse_competition(competition, sport="football", *sites):
             print("Site non accessible (délai écoulé)")
         except KeyboardInterrupt:
             res_parsing[site] = {}
+        except sportsbetting.UnavailableCompetitionException:
+            print("Compétition non disponible")
+            break
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -705,10 +708,15 @@ def update_all_database(start=""):
         start_found = True
     selenium_init.start_selenium()
     for line in c.fetchall():
-        if start in line[1]:
-            start_found = True
-        if start_found:
-            add_names_to_db(line[1], line[0])
+        try:
+            if start in line[1]:
+                start_found = True
+            if start_found:
+                add_names_to_db(line[1], line[0])
+        except KeyboardInterrupt:
+            pass
+        except sportsbetting.UnavailableCompetitionException:
+            pass
     selenium_init.DRIVER.quit()
 
 

@@ -17,6 +17,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import merge_dicts, get_future_opponents
 from sportsbetting.database_functions import (is_in_db, is_in_db_site, add_name_to_db,
@@ -45,6 +46,8 @@ def parse_betclic(url=""):
         if "Nous nous excusons pour cette interruption momentanée du site." in line.text:
             print("Betclic non accessible")
             return {}
+        if "Vous allez être redirigé sur notre page calendrier dans 5 secondes" in line.text:
+            raise sportsbetting.UnavailableCompetitionException
         if line.name == "time":
             date = line["datetime"]
         elif "class" in line.attrs and "hour" in line["class"]:
