@@ -890,6 +890,7 @@ def parse_winamax(url=""):
         tournament_id = int(ids.split("/")[2])
     except IndexError:
         tournament_id = -1
+    sport_id = int(ids.split("/")[0])
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
     for line in soup.find_all(['script']):
@@ -898,7 +899,8 @@ def parse_winamax(url=""):
                          .split(";var BETTING_CONFIGURATION")[0])
             dict_matches = json.loads(json_text)
             for match in dict_matches["matches"].values():
-                if tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0:
+                if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
+                        and match['sportId'] == sport_id):
                     try:
                         match_name = match["title"]
                         date_time = datetime.datetime.fromtimestamp(match["matchStart"])
