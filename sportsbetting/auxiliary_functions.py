@@ -355,3 +355,16 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                                one_site and freebet, best_overall_odds, second_rank)
     except UnboundLocalError:
         print("No match found")
+
+
+def generate_sites(url_netbet):
+    """
+    Génère les url France-pari et ZEbet à partir d'un url NetBet
+    """
+    if any(char.isdigit() for char in url_netbet):
+        id = url_netbet.split("/")[-1].split("-")[0]
+        name = url_netbet.split(id+"-")[1]
+        name_zebet = name.replace("-", "_")
+        url_france_pari = "https://www.france-pari.fr/competition/{}-parier-sur-{}".format(id, name)
+        url_zebet = "https://www.zebet.fr/fr/competition/{}-{}".format(id, name_zebet)
+        return url_france_pari, url_zebet

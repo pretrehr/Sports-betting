@@ -733,3 +733,36 @@ def add_competition_to_db(sport):
                 pass
     conn.commit()
     c.close()
+
+
+def add_urls_to_db():
+    """
+    Complète les url France-pari et ZEbet manquants à partir des url NetBet existants
+    """
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    c = conn.cursor()
+    c.execute("""
+    SELECT url_netbet
+    FROM competitions 
+    WHERE ((url_zebet ISNULL OR url_france_pari ISNULL) AND url_netbet IS NOT NULL)
+    """)
+    for line in c.fetchall():
+        try:
+            url_netbet = line[0]
+            url_france_pari, url_zebet = generate_sites(url_netbet)
+            c2 = conn.cursor()
+            c2.execute("""
+            UPDATE competitions
+            SET url_france_pari = "{0}" WHERE url_netbet = "{1}"
+            """.format(url_france_pari, url_netbet))
+            c3 = conn.cursor()
+            c3.execute("""
+            UPDATE competitions
+            SET url_zebet = "{0}" WHERE url_netbet = "{1}"
+            """.format(url_zebet, url_netbet))
+            c2.close()
+            c3.close()
+        except TypeError:
+            pass
+    conn.commit()
+    c.close()
