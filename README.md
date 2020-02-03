@@ -61,11 +61,11 @@ On verra plus tard qu'il est possible de récupérer de manière certaine, 80% d
 Les exemples ci-dessous sont des exemples de promotions qui reviennent régulièrement chez les différents bookmakers. Vous y trouverez une description de comment exploiter au mieux ces promotions. Bien-sûr, cette liste n'est pas exhaustive et il vous appartient d'adapter ces exemples aux conditions des promotions que vous rencontrerez à l'avenir.
 ### Exemple 1 : Bonus reçu dans tous les cas si l'on mise sur un match donné
 France-pari propose très souvent une promotion qui consiste à miser un pari de 20€ sur un match précis de Ligue 1 à une cote minimale de 2 pour recevoir un freebet de 5€.
-Par exemple, pour la 20e journée de Ligue 1 2019/2020, le match proposé était Dijon - Metz.
+Par exemple, pour la 20e journée de Ligue 1 2019/2020, le match proposé était Toulouse - Brest.
 Il suffit alors d'exécuter:
 ```python
 >>> parse_competition("ligue 1", "football") #Si non exécuté précédemment
->>> best_stakes_match("Dijon - Metz", "france_pari", 20, 2, "football")
+>>> best_stakes_match("Toulouse - Brest", "france_pari", 20, 2, "football")
 ```
 Si la plus-value minimum est supérieure à 5 × 0.8 = 4€, alors cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites.
 
@@ -115,7 +115,7 @@ Parfois, il est nécessaire de gagner un certain nombre de paris pour recevoir u
 ```python
 >>> best_match_pari_gagnant("betclic", 1.7, 5, "tennis")
 ```
-Cette fonction donnera le meilleur match sur lequel parier à un instant donné. Si la perte affichée est inférieure à (10 × 0.8)/3, alors on peut supposer que cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites. Cela constituera le premier pari gagnant. Un peu plus tard (par exemple lorsque le match en question a été joué), on peut réitérer ce procédé afin de savoir sur quel match doit on jouer pour gagner le 2ème pari de la série et ainsi de suite jusqu'à atteindre 3 paris gagnants. À noter, que dans ce cas précis, il est nécessaire de ré-exécuter la fonction `parse_tennis()` une fois qu'on a gagné un pari, car dans le cas contraire, le résultat renvoyé par la fonction `best_match_pari_gagnant` serait identique au résultat de l'exécution précédente.
+Cette fonction donnera le meilleur match sur lequel parier à un instant donné. Si la perte affichée est inférieure à (10 × 0.8)/3, alors on peut supposer que cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites. Cela constituera le premier pari gagnant. Un peu plus tard (par exemple lorsque le match en question a été joué), on peut réitérer ce procédé afin de savoir sur quel match doit on jouer pour gagner le 2ème pari de la série et ainsi de suite jusqu'à atteindre 3 paris gagnants. À noter, que dans ce cas précis, il est nécessaire de ré-exécuter la fonction `parse_tennis` une fois qu'on a gagné un pari, car dans le cas contraire, le résultat renvoyé par la fonction `best_match_pari_gagnant` serait identique au résultat de l'exécution précédente.
 
 ### Exemple 4 : Bonus reçu si un pari est perdant.
 Il s'agit d'un type de promotion très courant, notamment en ce qui concerne les offres de bienvenue, mais pas seulement.
@@ -254,13 +254,13 @@ For example, France-pari regularly offers a promotion which consists in reimburs
 If the displayed loss is less than 100 × 0.8 = €80, then this promotion is profitable and we can distribute our stakes as described.
 
 ### Example 3: Bonus received if at least *n* matches are won
-*Note Bene: From this example, we'll assume that we previously called a function to initialize the desired matches (of the type* `parse_...`*), according to the needs of the promotion.*
+*Note Bene:* From this example, we'll assume that we previously called a function to initialize the desired matches (of the type `parse_...`), according to the needs of the promotion.
 
 Sometimes it is necessary to win a certain number of bets to receive a bonus. In these cases, it is necessary to bet on the same bookmaker on each of the outcomes of the same match. For example, Betclic sometimes offers to receive a €10 freebet for 3 bets won, of €5 each, bet on odds of at least 1.7 and placed on 3 different matches. You can then execute
 ```python
 >>> best_match_pari_gagnant("betclic", 1.7, 5, "tennis")
 ```
-This feature will give you the best match to bet on at any given time. If the displayed loss is less than (10 × 0.8)/3, then we can assume that this promotion is profitable and we can distribute our stakes as described. This will be the first winning bet. A little later (e.g. when the match in question has been played), we can repeat this procedure to find out which match we need to play to win the 2nd bet in the series and so on until we reach 3 winning bets. Note that in this case, it is necessary to re-execute the `parse_tennis()` function once you have won a bet, because otherwise the result returned by the `best_match_pari_gagnant` function would be identical to the result of the previous execution.
+This feature will give you the best match to bet on at any given time. If the displayed loss is less than (10 × 0.8)/3, then we can assume that this promotion is profitable and we can distribute our stakes as described. This will be the first winning bet. A little later (e.g. when the match in question has been played), we can repeat this procedure to find out which match we need to play to win the 2nd bet in the series and so on until we reach 3 winning bets. Note that in this case, it is necessary to re-execute the `parse_tennis` function once you have won a bet, because otherwise the result returned by the `best_match_pari_gagnant` function would be identical to the result of the previous execution.
 
 ### Example 4: Bonus received if a bet is lost.
 This is a very common type of promotion, especially but not only for welcome offers.
@@ -289,7 +289,7 @@ This second method should, where possible, be the preferred method when non-frac
 
 #### Method 3: If you have non-fractionable freebets and not enough fractionable freebets
 At all bookmakers except Betclic, Unibet and Zebet, freebets have a time limit, ranging from 2-3 days for Bwin, to 1 month for France-pari. It may therefore be necessary to bet them quickly and there may not be enough fractionable freebets to be able to apply the 2nd method. In this situation, it is more efficient to bet on a single match rather than on a combination. It is also necessary to cover a freebet with real money. Furthermore, with this method, you can only play one freebet at a time. So if you have a €15 freebet at Betstars, then you can execute
-```
+```python
 >>> best_match_freebet("betstars", 15, "football")
 ```
 *Nota-Bene:* Be careful not to confuse `best_match_freebet` with `best_matches_freebet`.
