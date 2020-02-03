@@ -1,3 +1,8 @@
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+
+[![GitHub license](https://img.shields.io/github/license/pretrehr/Sports-betting.svg)](https://github.com/pretrehr/Sports-betting/blob/master/LICENSE)
+
+[![GitHub stars](https://img.shields.io/github/stars/pretrehr/Sports-betting.svg?style=social&label=Star)](https://github.com/pretrehr/Sports-betting)     [![GitHub watchers](https://img.shields.io/github/watchers/pretrehr/Sports-betting.svg?style=social&label=Watch&maxAge=2592000)](https://github.com/pretrehr/Sports-betting) 
 
 # Sports-betting
 Sports betting assistant which optimizes earnings regarding odds and offers
@@ -253,9 +258,9 @@ If the displayed loss is less than 100 × 0.8 = €80, then this promotion is pr
 
 Sometimes it is necessary to win a certain number of bets to receive a bonus. In these cases, it is necessary to bet on the same bookmaker on each of the outcomes of the same match. For example, Betclic sometimes offers to receive a €10 freebet for 3 bets won, of €5 each, bet on odds of at least 1.7 and placed on 3 different matches. You can then execute
 ```python
->>> best_match_winning_between("betclic", 1.7, 5, "tennis")
+>>> best_match_pari_gagnant("betclic", 1.7, 5, "tennis")
 ```
-This feature will give you the best match to bet on at any given time. If the displayed loss is less than (10 × 0.8)/3, then we can assume that this promotion is profitable and we can distribute our stakes as described. This will be the first winning bet. A little later (e.g. when the match in question has been played), we can repeat this procedure to find out which match we need to play to win the 2nd bet in the series and so on until we reach 3 winning bets. Note that in this case, it is necessary to re-execute the `parse_tennis()` function once you have won a bet, because otherwise the result returned by the `best_match_winning bet` function would be identical to the result of the previous execution.
+This feature will give you the best match to bet on at any given time. If the displayed loss is less than (10 × 0.8)/3, then we can assume that this promotion is profitable and we can distribute our stakes as described. This will be the first winning bet. A little later (e.g. when the match in question has been played), we can repeat this procedure to find out which match we need to play to win the 2nd bet in the series and so on until we reach 3 winning bets. Note that in this case, it is necessary to re-execute the `parse_tennis()` function once you have won a bet, because otherwise the result returned by the `best_match_pari_gagnant` function would be identical to the result of the previous execution.
 
 ### Example 4: Bonus received if a bet is lost.
 This is a very common type of promotion, especially but not only for welcome offers.
