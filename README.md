@@ -2,8 +2,6 @@
 
 [![GitHub license](https://img.shields.io/github/license/pretrehr/Sports-betting.svg)](https://github.com/pretrehr/Sports-betting/blob/master/LICENSE)
 
-[![GitHub stars](https://img.shields.io/github/stars/pretrehr/Sports-betting.svg?style=social&label=Star)](https://github.com/pretrehr/Sports-betting)     [![GitHub watchers](https://img.shields.io/github/watchers/pretrehr/Sports-betting.svg?style=social&label=Watch&maxAge=2592000)](https://github.com/pretrehr/Sports-betting) 
-
 # Sports-betting
 Sports betting assistant which optimizes earnings regarding odds and offers
 
@@ -23,10 +21,10 @@ pip install -r requirements.txt
 >>> import sportsbetting
 >>> from sportsbetting.user_functions import *
 ```
-- Vous pouvrez alors utiliser toutes les fonctions disponibles dans le fichier `user_functions.py`
+- Vous pouvrez alors utiliser toutes les fonctions disponibles dans le fichier [user_functions.py](https://github.com/pretrehr/Sports-betting/blob/master/sportsbetting/user_functions.py).
 
 ## Initialisation
-Avant de pouvoir pleinement utiliser toutes les fonctions du fichier `user_functions.py`, il est nécessaire d'initialiser la base de matches sur lesquels on peut potentiellement parier. Par exemple, si l'on veut uniquement se concentrer sur les matches de Ligue 1 Française, et que l'on veut seulement parier sur Betclic et Winamax, on écrira :
+Avant de pouvoir pleinement utiliser toutes les fonctions du fichier [user_functions.py](https://github.com/pretrehr/Sports-betting/blob/master/sportsbetting/user_functions.py), il est nécessaire d'initialiser la base de matches sur lesquels on peut potentiellement parier. Par exemple, si l'on veut uniquement se concentrer sur les matches de Ligue 1 Française, et que l'on veut seulement parier sur Betclic et Winamax, on écrira :
 ```python
 >>> parse_competition("ligue 1 france", "football", "betclic", "winamax")
 ```
@@ -109,7 +107,7 @@ Par exemple, France-pari propose régulièrement une promotion qui consiste à r
 Si la perte affichée est inférieure à 100 × 0.8 = 80€, alors cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites.
 
 ### Exemple 3 : Bonus reçu si au moins *n* matches gagnés
-*Nota Bene: À partir de cet exemple, on supposera que l'on a préalablement appelé une fonction d'initialisation des matches voulus (du type* `parse_...`*), en fonction des besoins de la promotion.*
+*Nota bene*: À partir de cet exemple, on supposera que l'on a préalablement appelé une fonction d'initialisation des matches voulus (du type `parse_...`), en fonction des besoins de la promotion.
 
 Parfois, il est nécessaire de gagner un certain nombre de paris pour recevoir un bonus. Dans ces cas-là, il faut miser sur le même bookmaker sur chacune des issues d'un même match. Betclic propose par exemple parfois de recevoir 10€ de freebet pour 3 paris gagnés, de 5€ chacun, misés sur des cotes d'au moins 1.7 et placés sur 3 matches différents. On peut alors exécuter
 ```python
@@ -148,7 +146,7 @@ Par ailleurs, chez tous les bookmakers sauf Betclic, Unibet et Zebet, les freebe
 ```python
 >>> best_match_freebet("betstars", 15, "football")
 ```
-*Nota-Bene:* Ne pas confondre `best_match_freebet` et `best_matches_freebet`.
+*Nota bene* : Ne pas confondre `best_match_freebet` et `best_matches_freebet`.
 
 On notera par ailleurs que certains sites comme NetBet ou PMU proposent parfois des freebets qui ne sont jouables que sur un unique sport. Auquel cas, il faut adapter le sport à la situation.
 Cette méthode est en moyenne beaucoup moins rentable et beaucoup plus volatile que les deux précédentes. Les deux premières méthodes assurent un taux de revient situé entre 80 et 85% de la somme de freebets engagés. Avec la 3ème méthode, il faut s'attendre à un taux de revient situé entre 55 et 70%.
@@ -166,12 +164,12 @@ pip install -r requirements.txt
 >>> import sportsbetting
 >>> from sportsbetting.user_functions import *
 ```
-- You can now use any function from `user_functions.py`
+- You can now use any function from [user_functions.py](https://github.com/pretrehr/Sports-betting/blob/master/sportsbetting/user_functions.py)
 
 
 
 ## Initialization
-Before you can fully use all the functions in the `user_functions.py` file, it is necessary to initialize the database of matches you can potentially bet on. For example, if you only want to focus on French Ligue 1 matches, and you only want to bet on Betclic and Winamax, you would write :
+Before you can fully use all the functions in the [user_functions.py](https://github.com/pretrehr/Sports-betting/blob/master/sportsbetting/user_functions.py) file, it is necessary to initialize the database of matches you can potentially bet on. For example, if you only want to focus on French Ligue 1 matches, and you only want to bet on Betclic and Winamax, you would write :
 ```python
 >>> parse_competition("ligue 1 france", "football", "betclic", "winamax")
 ```
@@ -242,8 +240,8 @@ The table below indicates which function to call for each sport.
 | Football | `parse_football()` |
 | Basketball | `parse_nba()` (short for `parse_competition("nba", "basketball")`)|
 | Tennis | `parse_tennis()` |
-| Rugby | `parse_competitions(("top 14", "champions cup", "six nations"), "rugby")` |
-| Ice Hockey | `parse_nhl()` (short for `parse_competition("nhl", "ice hockey")`) |
+| Rugby | `parse_competitions(["top 14", "champions cup", "six nations"], "rugby")` |
+| Ice Hockey | `parse_nhl()` (short for `parse_competition("nhl", "hockey-sur-glace")`) |
 
 Once you have chosen your set of matches, you can then use the `best_match_under_conditions` function.
 
@@ -254,7 +252,7 @@ For example, France-pari regularly offers a promotion which consists in reimburs
 If the displayed loss is less than 100 × 0.8 = €80, then this promotion is profitable and we can distribute our stakes as described.
 
 ### Example 3: Bonus received if at least *n* matches are won
-*Note Bene:* From this example, we'll assume that we previously called a function to initialize the desired matches (of the type `parse_...`), according to the needs of the promotion.
+Please note: From this example, we'll assume that we previously called a function to initialize the desired matches (of the type `parse_...`), according to the needs of the promotion.
 
 Sometimes it is necessary to win a certain number of bets to receive a bonus. In these cases, it is necessary to bet on the same bookmaker on each of the outcomes of the same match. For example, Betclic sometimes offers to receive a €10 freebet for 3 bets won, of €5 each, bet on odds of at least 1.7 and placed on 3 different matches. You can then execute
 ```python
@@ -292,7 +290,7 @@ At all bookmakers except Betclic, Unibet and Zebet, freebets have a time limit, 
 ```python
 >>> best_match_freebet("betstars", 15, "football")
 ```
-*Nota-Bene:* Be careful not to confuse `best_match_freebet` with `best_matches_freebet`.
+Please note: Be careful not to confuse `best_match_freebet` with `best_matches_freebet`.
 
 Note that some sites like NetBet or PMU sometimes offer freebets that are only playable on a single sport. In this case, you have to adapt the sport to the situation.
 This method is on average much less profitable and much more volatile than the first two. The first two methods ensure a return rate of between 80 and 85% of the sum of freebets placed.  With the third method, a return rate between 55 and 70% is to be expected.
