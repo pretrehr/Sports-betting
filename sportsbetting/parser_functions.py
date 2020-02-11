@@ -201,13 +201,13 @@ def parse_bwin(url=""):
         url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/france-16/ligue-1-4131"
     if url in ["europa", "ldc", "élim"]:
         return parse_bwin_coupes_europe(url)
-    options = selenium.webdriver.ChromeOptions()
-    prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
-    options.add_argument('log-level=3')
-    options.add_experimental_option("prefs", prefs)
-    if "handball" not in url:# and "hockey" not in url:
-        options.add_argument("--headless")
-    driver_bwin = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+    driver_bwin = selenium_init.DRIVER
+    if "handball" in url:
+        options = selenium.webdriver.ChromeOptions()
+        prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
+        options.add_argument('log-level=3')
+        options.add_experimental_option("prefs", prefs)
+        driver_bwin = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
     driver_bwin.get(url)
     match_odds_hash = {}
     is_1n2 = False
@@ -217,7 +217,7 @@ def parse_bwin(url=""):
     is_us = "nba" in url or "nhl" in url
     odds = []
     odds_unavailable = False
-    WebDriverWait(driver_bwin, 60).until(
+    WebDriverWait(driver_bwin, 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "participants-pair-game"))
     )
     inner_html = driver_bwin.execute_script("return document.body.innerHTML")
@@ -300,7 +300,8 @@ def parse_bwin(url=""):
         match_odds_hash[match] = {}
         match_odds_hash[match]['odds'] = {"bwin":odds}
         match_odds_hash[match]['date'] = date_time
-    driver_bwin.quit()
+    if "handball" in url:
+        driver_bwin.quit()
     return match_odds_hash
 
 
@@ -333,7 +334,7 @@ def parse_bwin_hockey(url):
     Retourne les cotes 1N2 d'un match de hockey
     """
     selenium_init.DRIVER.get(url)
-    WebDriverWait(selenium_init.DRIVER, 60).until(
+    WebDriverWait(selenium_init.DRIVER, 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "option-panel"))
     )
     inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
@@ -400,7 +401,7 @@ def parse_joa(url):
     date_time = ""
     odds_class = ""
     for _ in range(10):
-        WebDriverWait(selenium_init.DRIVER, 60).until(
+        WebDriverWait(selenium_init.DRIVER, 15).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
         )
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
@@ -414,8 +415,8 @@ def parse_joa(url):
                         or ["1", "X", "2"] == list(line.stripped_strings)):
                     odds_class = line.attrs["class"][-1]
             elif ("class" in line.attrs
-                  and "bet-outcome-list" in line["class"]
-                  and odds_class in line["class"]):
+                    and "bet-outcome-list" in line["class"]
+                    and odds_class in line["class"]):
                 odds = []
                 for odd in line.stripped_strings:
                     odds.append(float(odd.replace("-", "1")))
@@ -664,7 +665,7 @@ def parse_pasinobet_sport(sport):
     all_odds = []
     date = ""
     selenium_init.DRIVER.get("https://www.pasinobet.fr/#/sport/?type=0")
-    WebDriverWait(selenium_init.DRIVER, 30).until(
+    WebDriverWait(selenium_init.DRIVER, 15).until(
         EC.element_to_be_clickable((By.TAG_NAME, "button"))
     )
     buttons = selenium_init.DRIVER.find_elements_by_tag_name("button")
@@ -859,6 +860,7 @@ def parse_unibet(url=""):
                                       "FC Vion Zlate Moravce-Vrable")
                 match = match.replace("Toulon St - Cyr Var (F)", "Toulon St-Cyr Var (F)")
                 match = match.replace("Châlons - Reims", "Châlons-Reims")
+                match = match.replace("Colo - Colo", "Colo-Colo")
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
                     match = match.split("(")[0].strip()
