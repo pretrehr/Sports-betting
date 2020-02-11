@@ -19,13 +19,28 @@ def get_promotions_france_pari():
     """
     url = "https://www.france-pari.fr/promotions"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.find_all('a'):
+        if "href" in line.attrs and "promo/" in line["href"]:
+            if "1118" in line["href"]:
+                return
+            print(parse_promotion_france_pari("https://www.france-pari.fr"+line["href"]))
+
+def parse_promotion_france_pari(url):
+    """
+    Parsing d'une page de promotion sur france-pari.fr
+    """
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all():
-        if "class" in line.attrs and "promo" in line["class"]:
-            if "MultiBoost" not in line.text:
-                promotion = list(line.stripped_strings)
-                promotion.remove("J'en\xa0profite")
-                print("\n".join(promotion))
-                print()
+        if "class" in line.attrs and "promotion-content" in line["class"]:
+            out = ""
+            for string in list(line.stripped_strings):
+                if string == "Termes et Conditions" or string == "Exemples :":
+                    return out
+                if string[0].isupper() or string[0] in ["+"]:
+                    out += "\n"+string
+                else:
+                    out += " "+string
+
 
 def get_promotions_netbet():
     """
@@ -89,9 +104,9 @@ def parse_promotion_betclic(url_promo):
                     dict_infos["autres"] += "\n"+infos[0]
                 else:
                     dict_infos["autres"] = infos[0]
-    print("Étapes:")
+    print("Étapes :")
     pprint(dict_steps)
-    print("Infos:")
+    print("Infos :")
     pprint(dict_infos)
 
 def get_promotions_pmu():
@@ -100,11 +115,55 @@ def get_promotions_pmu():
     """
     url = "https://paris-sportifs.pmu.fr/promotions/3"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    out = ""
     for line in soup.find_all():
         if "class" in line.attrs and "node-pmu-promotions" in line["class"]:
             promotion = list(line.stripped_strings)
-            print("\n".join(promotion).split("Conditions")[0])
-            print()
+            if "PARRAINAGE" in promotion[0]:
+                if out:
+                    print(out)
+                else:
+                    print("Aucune promotion")
+            out += "\n"+promotion.pop(0)+"\n"
+            for string in promotion:
+                if "Les cotes" in string or string == "Conditions":
+                    break
+                if (string[0].isupper() and out[-1] in [".", "!", "?", "…", ":", ")", "€"]
+                        or string[0] in ["-", "*"]):
+                    out += "\n"+string
+                elif string[0] in [".", ","] or out[-1] == "\n":
+                    out += string
+                else:
+                    out += " "+string
+            out += "\n"
+
+
+def get_promotions_parionssport():
+    url = "https://www.enligne.parionssport.fdj.fr/paris-sportifs/promotions"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    urls_promo = []
+    for line in soup.findAll("div", {"class": "active"}):
+        child = line.findChildren("a", recursive=False)[0]
+        if "idop" in child["href"]:
+            urls_promo.append(child["href"])
+    for url_promo in urls_promo:
+        parse_promotion_parionssport(url_promo)
+    if not urls_promo:
+        print("Pas de promotion en cours")
+
+
+def parse_promotion_parionssport(url):
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    dict_infos = {}
+    desc = "\n".join(soup.findAll("div", {"class": "left"})[0].stripped_strings)
+    print("Description :")
+    print(desc)
+    text_list = list(soup.findAll("div", {"class": "right"})[0].stripped_strings)
+    for line in zip(text_list[::2], text_list[1::2]):
+        dict_infos[line[0]] = line[1]
+    print("\nInfos :")
+    pprint(dict_infos)
+    print("\n")
 
 # def get_promotions_zebet():
 #     """
