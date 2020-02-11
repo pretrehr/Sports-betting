@@ -639,7 +639,7 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
                     time_min, True, nb_matches, True, one_site=True)
 
 def best_match_gain_cote(site, bet, sport, date_max=None, time_max=None, date_min=None,
-                         time_min=None, one_site=False):
+                         time_min=None):
     """
     Retourne le match sur lequel miser pour optimiser une promotion du type "gain de la cote gagnée"
     """
@@ -688,6 +688,7 @@ def add_names_to_db(competition, sport="football", *sites):
                 parse_and_add_to_db(site, sport, url)
             except KeyboardInterrupt:
                 start = time.time()
+                print("Recommencez pour arrêter le parsing")
                 while time.time()-start < 0.5:
                     time.sleep(0.5)
             except urllib3.exceptions.MaxRetryError:
@@ -702,7 +703,7 @@ def add_names_to_db(competition, sport="football", *sites):
     if selenium_required:
         selenium_init.DRIVER.quit()
 
-def update_all_database(start=""):
+def update_all_database(start="", *sites):
     """
     Ajoute les noms manquants dans toute la base de données
     """
@@ -721,7 +722,7 @@ def update_all_database(start=""):
             if start in line[1]:
                 start_found = True
             if start_found:
-                add_names_to_db(line[1], line[0])
+                add_names_to_db(line[1], line[0], *sites)
         except KeyboardInterrupt:
             pass
         except sportsbetting.UnavailableCompetitionException:
