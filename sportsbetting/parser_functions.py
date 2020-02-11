@@ -67,11 +67,14 @@ def parse_betclic(url=""):
             match = strings[1]
             one_match_page = True
         elif one_match_page and "class" in line.attrs and "expand-selection-bet" in line["class"]:
-            odds = list(map(lambda x: float(x.replace(",", ".")),
-                            list(line.stripped_strings)[1::2]))
-            match_odds_hash[match] = {}
-            match_odds_hash[match]['odds'] = {"betclic":odds}
-            match_odds_hash[match]['date'] = date_time
+            try:
+                odds = list(map(lambda x: float(x.replace(",", ".")),
+                                list(line.stripped_strings)[1::2]))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"betclic":odds}
+                match_odds_hash[match]['date'] = date_time
+            except ValueError:
+                pass
             break
     return match_odds_hash
 
@@ -781,29 +784,32 @@ def parse_pmu(url=""):
                 date_time = "undefined"
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
-            if "//" in string:
-                live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
-                if not live:
-                    handicap = False
-                    if "Egalité" in string:
-                        handicap = True
-                        match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                           +line.parent["href"])
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"pmu":odds}
-                        match_odds_hash[match]['date'] = date_time
-                    elif "hockey" in url:
-                        handicap = True
-                        odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                    +line.parent["href"])[1]
-                        if "nhl" in url:
-                            odds.reverse()
-                        match = string.replace("//", "-")
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"pmu":odds}
-                        match_odds_hash[match]['date'] = date_time
-                    else:
-                        match = string.replace("//", "-")
+            try:
+                if "//" in string:
+                    live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
+                    if not live:
+                        handicap = False
+                        if "Egalité" in string:
+                            handicap = True
+                            match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                               +line.parent["href"])
+                            match_odds_hash[match] = {}
+                            match_odds_hash[match]['odds'] = {"pmu":odds}
+                            match_odds_hash[match]['date'] = date_time
+                        elif "hockey" in url:
+                            handicap = True
+                            odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                        +line.parent["href"])[1]
+                            if "nhl" in url:
+                                odds.reverse()
+                            match = string.replace("//", "-")
+                            match_odds_hash[match] = {}
+                            match_odds_hash[match]['odds'] = {"pmu":odds}
+                            match_odds_hash[match]['date'] = date_time
+                        else:
+                            match = string.replace("//", "-")
+            except TypeError:
+                pass
         elif "class" in line.attrs and "event-list-odds-list" in line["class"] and not handicap:
             if not live:
                 odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
