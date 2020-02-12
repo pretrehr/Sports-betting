@@ -5,9 +5,27 @@
 # Sports-betting
 Sports betting assistant which optimizes earnings regarding odds and offers
 
-(English version below)
+[(English version below)](#english-version)
 
 Assistant de pari sportifs avec optimisation des gains en fonction des cotes et des promotions
+
+<details>
+<summary>Sommaire</summary>
+
+* [Installation](#installation)
+* [Initialisation](#initialisation)
+* [Exemples d'utilisation](#exemples-dutilisation)
+  * [Exemple 1 : Bonus reçu dans tous les cas si l'on mise sur un match donné](#exemple-1--bonus-reçu-dans-tous-les-cas-si-lon-mise-sur-un-match-donné)
+  * [Exemple 2 : Bonus reçu dans tous les cas si l'on mise sur un match quelconque, éventuellement d'une compétition donnée / d'un sport donné](#exemple-2--bonus-reçu-dans-tous-les-cas-si-lon-mise-sur-un-match-quelconque-éventuellement-dune-compétition-donnée--dun-sport-donné)
+  * [Exemple 3 : Bonus reçu si au moins *n* matches gagnés](#exemple-3--bonus-reçu-si-au-moins-n-matches-gagnés)
+  * [Exemple 4 : Bonus reçu si un pari est perdant.](#exemple-4--bonus-reçu-si-un-pari-est-perdant)
+* [Conversion des freebets en cash](#conversion-des-freebets-en-cash)
+  * [Méthode 1 : Si l'on n'a que des freebets fractionnables](#méthode-1--si-lon-na-que-des-freebets-fractionnables)
+  * [Méthode 2 : Si l'on a quelques freebets non fractionnables et suffisamment de freebets fractionnables](#méthode-2--si-lon-a-quelques-freebets-non-fractionnables-et-suffisamment-de-freebets-fractionnables)
+  * [Méthode 3 : Si l'on dispose de freebets non fractionnables et pas assez de freebets fractionnables](#méthode-3--si-lon-dispose-de-freebets-non-fractionnables-et-pas-assez-de-freebets-fractionnables)
+
+</details>
+
 
 ## Installation
 - Téléchargez ou clonez le dépôt
@@ -28,7 +46,7 @@ Avant de pouvoir pleinement utiliser toutes les fonctions du fichier [user_funct
 ```python
 >>> parse_competition("ligue 1 france", "football", "betclic", "winamax")
 ```
-On notera que si vous ne précisez pas de bookmaker, l'algorithme récupèrera les cotes des matches de la compétition sur tous les bookmakers agréés par l'ARJEL.
+On notera que si vous ne précisez pas de bookmaker, l'algorithme récupèrera les cotes des matches de la compétition sur la plupart des bookmakers agréés par l'ARJEL.
 Si vous n'avez pas de compétition ou de sport cible, il est conseillé d'appeler
 ```python
 >>> parse_football()
@@ -48,10 +66,30 @@ ou, par exemple,
 ```
 Cette commande aura pour effet de récupérer les cotes de matches de tennis des compétitions actuellement disputées.
 
+Vous trouverez ci-dessous un tableau récapitulatif des différents bookmakers agréés par l'ARJEL avec la chaîne de caractères associée dans le package.
+
+| Bookmaker  | Chaîne de caractères |
+| ------------- | ------------- |
+| [Betclic](https://www.betclic.fr/sport/)  | `"betclic"`  |
+| [BetStars](https://www.betstars.fr/)  | `"betstars"`  |
+| [Bwin](https://sports.bwin.fr/fr/sports)  | `"bwin"`  |
+| [France Pari](https://www.france-pari.fr/)  | `"france_pari"`  |
+| [JOA](https://www.joa-online.fr/fr/sport)  | `"joa"` |
+| [NetBet](https://www.netbet.fr/)  | `"netbet"` |
+| [Parions Sport](https://www.enligne.parionssport.fdj.fr/) |`"parionssport"` |
+| [PasinoBet](https://www.pasinobet.fr/) |`"pasinobet"` |
+| [PMU](https://paris-sportifs.pmu.fr/) |`"pmu"` |
+| [Unibet](https://www.unibet.fr/sport) |`"unibet"` |
+| [Winamax](https://www.winamax.fr/paris-sportifs/sports/) |`"winamax"` |
+| [Zebet](https://www.zebet.fr/fr/) |`"zebet"` |
+
+*Nota bene*: Il n'est pour l'instant pas possible d'utiliser le package pour les bookmakers suivant :
+- [Feelingbet](https://feelingbet.fr/) qui propose très peu de promotions. Mais au besoin, les cotes disponibles sur ce site sont identiques à celles disponibles sur [France Pari](https://www.france-pari.fr/)
+- [Genybet](https://sport.genybet.fr/) qui est davantage axé sur les paris hippiques plutôt que sportifs
+- [Vbet](https://www.vbet.fr/paris-sportifs) qui propose des promotions nombreuses mais très restrictives et donc peu rentables
 
 
-
-## Exemples d'utilisation:
+## Exemples d'utilisation
 
 Les bonus reçus sont quasi systématiquement des freebets (ou paris gratuits). Un tel bonus signifie que lorsque l'on mise, par exemple, sur une cote à 3 avec un freebet de 10€, si le pari s'avère gagnant, alors on récupère 3×10-10 = 20€ (contre 30€ pour un pari standard), cela équivaut donc à miser avec un pari normal sur une cote réduite de 1.
 On verra plus tard qu'il est possible de récupérer de manière certaine, 80% de la valeur d'un freebet. Ainsi, un freebet de 10€ équivaut à 10 × 0.8 = 8€.
@@ -122,8 +160,8 @@ Par exemple, à l'été 2018, Winamax proposait à ses utilisateurs de rembourse
 >>> best_match_cashback("winamax", 1.1, 200, "football", freebet=False)
 ```
 
-### Conversion des freebets en cash
-#### Méthode 1 : Si l'on n'a que des freebets fractionnables
+## Conversion des freebets en cash
+### Méthode 1 : Si l'on n'a que des freebets fractionnables
 Chez les bookmakers suivant : Betclic, Unibet, ParionsSport et Zebet, il est possible de fractionner les freebets gagnés en plusieurs paris. Par exemple, si l'on a gagné 10€ de freebets, il est possible de miser 8€ puis 2€.
 Pour optimiser le gain, l'idée va alors être de couvrir toutes les issues avec des freebets sur un combiné de 2 matches de football (ce qui représente donc 9 issues à couvrir).
 Par exemple, si on dispose de 10€ de freebet, on va alors exécuter
@@ -131,7 +169,7 @@ Par exemple, si on dispose de 10€ de freebet, on va alors exécuter
 >>> best_matches_freebet_one_site("betclic", 10)
 ```
 
-#### Méthode 2: Si l'on a quelques freebets non fractionnables et suffisamment de freebets fractionnables
+### Méthode 2 : Si l'on a quelques freebets non fractionnables et suffisamment de freebets fractionnables
 Chez tous les bookmakers sauf Betclic, Unibet, ParionsSport et Zebet, il n'est pas possible de séparer un freebet en plusieurs paris. 
 Supposons que l'on dispose de 100€ de freebets fractionnables sur Betclic, 1 freebet de 10€ sur Winamax et 2 freebets de 5€ sur France-pari. 
 L'idée serait alors de répartir nos 100€ de freebets fractionnables sur un combiné de 2 matches comme dans la méthode 1, puis de remplacer (totalement ou en partie) certaines mises par des freebets non fractionnables des autres bookmakers. De cette manière on répartit les freebets non fractionnables sur plusieurs issues d'un combiné et on comble les différences avec des freebets fractionnables. On aura donc vraisemblablement des issues couvertes uniquement par un freebet non fractionnable, d'autres couvertes en partie par un freebet non fractionnable et un freebet fractionnable, et d'autres couvertes uniquement en freebet fractionnable. Dans cet exemple, on exécute alors
@@ -141,7 +179,7 @@ L'idée serait alors de répartir nos 100€ de freebets fractionnables sur un c
 Cette deuxième méthode doit, lorsqu'elle est possible, être celle à privilégier lorsque l'on dispose de freebets non fractionnables car c'est elle qui offre le meilleur rendement. La première méthode est elle aussi très rentable mais il est préférable de conserver les freebets fractionnables pour justement appliquer la 2e méthode lorsque l'on disposera de freebets non fractionnables.
 
 
-#### Méthode 3 : Si l'on dispose de freebets non fractionnables et pas assez de freebets fractionnables
+### Méthode 3 : Si l'on dispose de freebets non fractionnables et pas assez de freebets fractionnables
 Par ailleurs, chez tous les bookmakers sauf Betclic, Unibet et Zebet, les freebets ont une date limite d'utilisation, allant de 2-3 jours pour Bwin, à 1 mois pour France-pari. Il peut donc être nécessaire de les jouer rapidement et il se peut également que l'on n'ait pas assez de freebets fractionnables pour pouvoir appliquer la 2e méthode. Dans cette situation, il est plus efficace de parier sur un unique match plutôt que sur un combiné. Il est également nécessaire de couvrir un pari en freebet avec de l'argent réel. De plus, avec cette méthode, on ne peut jouer qu'un freebet à la fois. Ainsi si l'on dispose d'un freebet de 15€ chez Betstars, on exécute alors
 ```python
 >>> best_match_freebet("betstars", 15, "football")
@@ -153,6 +191,23 @@ Cette méthode est en moyenne beaucoup moins rentable et beaucoup plus volatile 
 
 
 ### *English version*
+
+<details>
+<summary>Table of contents</summary>
+
+- [Installation](#installation)
+- [Initialization](#initialization)
+- [Examples of use](#examples-of-use)
+  * [Example 1: Bonus received in all cases if you bet on a given match](#example-1-bonus-received-in-all-cases-if-you-bet-on-a-given-match)
+  * [Example 2: Bonus received in all cases if you bet on any match, possibly from a given competition / sport](#example-2-bonus-received-in-all-cases-if-you-bet-on-any-match-possibly-from-a-given-competition--sport)
+  * [Example 3: Bonus received if at least *n* matches are won](#example-3-bonus-received-if-at-least-n-matches-are-won)
+  * [Example 4: Bonus received if a bet is lost.](#example-4-bonus-received-if-a-bet-is-lost)
+- [Converting freebets to cash](#converting-freebets-to-cash)
+  * [Method 1: If you only have fractionable freebets](#method-1-if-you-only-have-fractionable-freebets)
+  * [Method 2: If you have a few non-fractionable freebets and enough fractionable freebets](#method-2-if-you-have-a-few-non-fractionable-freebets-and-enough-fractionable-freebets)
+  * [Method 3: If you have non-fractionable freebets and not enough fractionable freebets](#method-3-if-you-have-non-fractionable-freebets-and-not-enough-fractionable-freebets)
+</details>
+
 ## Installation
 - Download the repository
 - Go to the root of the repository
@@ -173,7 +228,7 @@ Before you can fully use all the functions in the [user_functions.py](https://gi
 ```python
 >>> parse_competition("ligue 1 france", "football", "betclic", "winamax")
 ```
-Note that if you do not specify a bookmaker, the algorithm will retrieve the odds of the matches of the competition from all bookmakers approved by the ARJEL.
+Note that if you do not specify a bookmaker, the algorithm will retrieve the odds of the matches of the competition from most of the bookmakers approved by the ARJEL (French Regulatory authority for online games).
 If you do not have a specific competition or target sport, it is advisable to call
 ```python
 >>> parse_football()
@@ -193,10 +248,30 @@ or, for example,
 ```
 This command will retrieve the odds of tennis matches from the competitions currently being played.
 
+You will find below a summary table of the different French bookmakers with the associated string in the package.
+
+| Bookmaker | String |
+| ------------- | ------------- |
+| [Betclic](https://www.betclic.fr/sport/) | ``"betclic"" |
+| [BetStars](https://www.betstars.fr/) | ``betstars"` |
+| [Bwin](https://sports.bwin.fr/fr/sports) | "bwin" |
+| [France Pari](https://www.france-pari.fr/) | `"france_pari"` |
+| [JOA](https://www.joa-online.fr/fr/sport) | "joa"` |
+| [NetBet](https://www.netbet.fr/) | `"netbet"` |
+| [Pariels Sport](https://www.enligne.parionssport.fdj.fr/) |
+| [PasinoBet](https://www.pasinobet.fr/) ||"pasinobet"` |
+| [PMU](https://paris-sportifs.pmu.fr/) |"pmu"` |
+| [Unibet](https://www.unibet.fr/sport) |
+| [Winamax](https://www.winamax.fr/paris-sportifs/sports/) |
+| [Zebet](https://www.zebet.fr/fr/) |
+
+*Note bene*: It is currently not possible to use the package for the following bookmakers:
+- [Feelingbet](https://feelingbet.fr/) which offers very few promotions. But if necessary, the odds available on this site are identical to those available on [France Pari](https://www.france-pari.fr/).
+- [Genybet](https://sport.genybet.fr/) which focuses more on horse betting rather than sports betting.
+- Vbet](https://www.vbet.fr/paris-sportifs) which offers numerous but very restrictive and therefore unprofitable promotions.
 
 
-
-## Examples of use:
+## Examples of use
 
 The bonuses received are almost always freebets (or paris gratuits). Such a bonus means that when you bet, for example, on an odds equals to 3 with a €10 freebet, if the bet turns out to be winning, then you get 3×10-10 = €20 (compared to €30 for a standard bet), so it is equivalent to betting with a normal bet on an odds reduced by 1.
 We will see later that it is possible to win back 80% of the value of a freebet with certainty. Thus, a €10 freebet is equivalent to 10 × 0.8 = €8.
@@ -267,8 +342,8 @@ For example, in the summer of 2018, Winamax offered its users to pay back in cas
 >>> best_match_cashback("winamax", 1.1, 200, "football", freebet=False)
 ```
 
-### Converting freebets to cash
-#### Method 1: If you only have fractionable freebets
+## Converting freebets to cash
+### Method 1: If you only have fractionable freebets
 At the following bookmakers: Betclic, Unibet, ParionsSport and Zebet, it is possible to split the won freebets into several bets. For example, if you have won €10 in freebets, you can bet €8 and then €2.
 To optimize the win, the idea will be to cover all the outcomes with freebets on a combination of 2 football matches (which represents 9 outcomes to cover).
 For example, if you have €10 of freebet, you will then run
@@ -276,7 +351,7 @@ For example, if you have €10 of freebet, you will then run
 >>> best_matches_freebet_one_site("betclic", 10)
 ```
 
-#### Method 2: If you have a few non-fractionable freebets and enough fractionable freebets
+### Method 2: If you have a few non-fractionable freebets and enough fractionable freebets
 At all bookmakers except Betclic, Unibet, ParionsSport and Zebet, it is not possible to split a freebet into several bets. 
 Let's suppose that you have €100 fractionable freebets on Betclic, 1 freebet of €10 on Winamax and 2 freebets of €5 on France-pari. 
 The idea would then be to spread our €100 of fractionable freebets over a combination of 2 games as in method 1, then replace (totally or partially) some stakes with non-fractionable freebets from other bookmakers. In this way we spread the non-fractionable freebets over several outcomes of a handset and compensate the differences with fractionable freebets. So you are likely to have some outcomes covered only by a non-fractionable freebet, others covered partly by a non-fractionable freebet and a fractionable freebet, and others covered only by a fractionable freebet. In this example, we then execute
@@ -285,7 +360,7 @@ The idea would then be to spread our €100 of fractionable freebets over a comb
 ```
 This second method should, where possible, be the preferred method when non-fractionable freebets are available, as it offers the best return. The first method is also very profitable but it is preferable to keep the fractionable freebets in order to apply the second method when you have non-fractionable freebets.
 
-#### Method 3: If you have non-fractionable freebets and not enough fractionable freebets
+### Method 3: If you have non-fractionable freebets and not enough fractionable freebets
 At all bookmakers except Betclic, Unibet and Zebet, freebets have a time limit, ranging from 2-3 days for Bwin, to 1 month for France-pari. It may therefore be necessary to bet them quickly and there may not be enough fractionable freebets to be able to apply the 2nd method. In this situation, it is more efficient to bet on a single match rather than on a combination. It is also necessary to cover a freebet with real money. Furthermore, with this method, you can only play one freebet at a time. So if you have a €15 freebet at Betstars, then you can execute
 ```python
 >>> best_match_freebet("betstars", 15, "football")
