@@ -21,7 +21,7 @@ def get_promotions_france_pari():
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all('a'):
         if "href" in line.attrs and "promo/" in line["href"]:
-            if "1118" in line["href"]:
+            if "1118" in line["href"] or "1375" in line["href"]:
                 return
             print(parse_promotion_france_pari("https://www.france-pari.fr"+line["href"]))
 
@@ -164,6 +164,50 @@ def parse_promotion_parionssport(url):
     print("\nInfos :")
     pprint(dict_infos)
     print("\n")
+
+def get_promotion_unibet():
+    selenium_init.start_selenium()
+    selenium_init.DRIVER.get("https://www.unibet.fr/promotions.do")
+    WebDriverWait(selenium_init.DRIVER, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "headline-item"))
+    )
+    inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    for line in soup.find_all("li", {"data-headline-display":"HAD"}):
+        child = line.findChildren("a", recursive=False)[0]
+        if "par-ami" in child["href"]:
+            break
+        parse_promotion_unibet("https://www.unibet.fr"+child["href"])
+    selenium_init.DRIVER.quit()
+
+def parse_promotion_unibet(url):
+    selenium_init.DRIVER.get(url)
+    WebDriverWait(selenium_init.DRIVER, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "steps"))
+    )
+    inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    dict_steps = {}
+    out = ""
+    step_number = "1"
+    head_html = selenium_init.DRIVER.execute_script("return document.head.innerHTML")
+    head_soup = BeautifulSoup(head_html, features="lxml")
+    print(head_soup.find("title").text)
+    for line in soup.find_all("div", {"class":"steps"}):
+        strings = list(line.stripped_strings)[1:]
+        for string in strings:
+            if string.isdigit():
+                dict_steps[step_number] = out.strip()
+                step_number = string
+                out = ""
+            elif string == ".":
+                out = out[:-1]
+                out += ". "
+            else:
+                out += string+" "
+        dict_steps[step_number] = out.strip()
+        pprint(dict_steps)
+        print()
 
 # def get_promotions_zebet():
 #     """
