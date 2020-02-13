@@ -165,7 +165,7 @@ def parse_promotion_parionssport(url):
     pprint(dict_infos)
     print("\n")
 
-def get_promotion_unibet():
+def get_promotions_unibet():
     selenium_init.start_selenium()
     selenium_init.DRIVER.get("https://www.unibet.fr/promotions.do")
     WebDriverWait(selenium_init.DRIVER, 15).until(
