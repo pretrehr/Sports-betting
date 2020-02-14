@@ -126,7 +126,7 @@ def get_promotions_pmu():
                     print("Aucune promotion")
             out += "\n"+promotion.pop(0)+"\n"
             for string in promotion:
-                if "Les cotes" in string or string == "Conditions":
+                if "Les cotes" in string or string == "Pariez":
                     break
                 if (string[0].isupper() and out[-1] in [".", "!", "?", "…", ":", ")", "€"]
                         or string[0] in ["-", "*"]):
@@ -173,11 +173,16 @@ def get_promotions_unibet():
     )
     inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
+    urls = []
     for line in soup.find_all("li", {"data-headline-display":"HAD"}):
         child = line.findChildren("a", recursive=False)[0]
         if "par-ami" in child["href"]:
             break
-        parse_promotion_unibet("https://www.unibet.fr"+child["href"])
+        urls.append("https://www.unibet.fr"+child["href"])
+    for url in urls:
+        parse_promotion_unibet(url)
+    if not urls:
+        print("Pas de promotion en cours")
     selenium_init.DRIVER.quit()
 
 def parse_promotion_unibet(url):
@@ -209,23 +214,59 @@ def parse_promotion_unibet(url):
         pprint(dict_steps)
         print()
 
-# def get_promotions_zebet():
-#     """
-#     Affiche les promotions proposées sur zebet
-#     """
-#     selenium_init.start_selenium()
-#     selenium_init.DRIVER.get("https://www.zebet.fr/fr/page/promotions")
-#     WebDriverWait(selenium_init.DRIVER, 15).until(
-#         EC.presence_of_all_elements_located((By.CLASS_NAME, "logo-zebet"))
-#     )
-# #     accordion_elements = selenium_init.DRIVER.findElement(By.xpath("//div[@class='accordion-image' and style='display: yes;']")
-#     for elem in accordion_elements:
-#         elem.click()
-#     inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
-#     soup = BeautifulSoup(inner_html, features="lxml")
-#     for line in soup.find_all():
-#         if "class" in line.attrs and "spacer-medium" in line["class"]:
-#             promotion = list(line.stripped_strings)
-#             print(" ".join(promotion).split("Conditions")[0])
-#             print()
-#     selenium_init.DRIVER.quit()
+
+
+def get_promotions_zebet():
+    """
+    Affiche les promotions proposées sur zebet
+    """
+    url = "https://www.zebet.fr/fr/page/promotions"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    url = soup.find_all("iframe")[1]["src"]
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    out = ""
+    title = ""
+    dict_table = {}
+    dict_conditions = {}
+    is_key = False
+    for line in soup.find_all(attrs={"class":"accordion-image", "style":"display: yes;"}):
+        elem = line.next_element.next_element.next_element.next_element.next_element.next_element
+        for child in elem.findChildren("table", recursive=True):
+            strings = list(child.stripped_strings)
+            title = "Tableau des {} en fonction des {}".format(strings[1].lower(),
+                                                               strings[0].lower())
+            for key, value in zip(strings[2::2], strings[3::2]):
+                dict_table[key] = value
+                
+        strings = list(elem.stripped_strings)
+        promotion = ""
+        for string in strings:
+            if "tirage au sort" in string:
+                promotion = ""
+                break
+            if "Les exemples :" in string:
+                break
+            if string in dict_table or string.lower() in title:
+                break
+            if string[-1] == ":":
+                is_key = True
+                key = string.strip(" -:")
+            elif is_key:
+                dict_conditions[key] = string.strip(" -:")
+                is_key = False
+            else:
+                promotion += string.strip(" -") + "\n"
+        print(promotion)
+        if dict_conditions:
+            print("Conditions :")
+            pprint(dict_conditions)
+            dict_conditions = {}
+        if dict_table:
+            print("\n"+title)
+            pprint(dict_table)
+            dict_table = {}
+        print("\n")
+    
+
+def get_promotions(site):
+    exec("get_promotions_{}()".format(site))
