@@ -298,3 +298,42 @@ def paris_rembourses_si_perdants(cotes, remboursement_max, freebet, taux_rembour
     x = np.linalg.solve(a, b)
     print("Bénéfice net:", x[-1]-sum(x[:-1]))
     print(x[:-1])
+
+
+def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
+    """
+    Optimisation de la promotion Zebet qui attribue un unique cashback en fonction de la plus haute
+    mise perdue
+    """
+    def aux(mise):
+        if mise > 25:
+            return 10
+        elif mise > 20:
+            return 8
+        elif mise > 15:
+            return 6
+        elif mise > 10:
+            return 4
+        elif mise > 5:
+            return 2
+        else:
+            return 0
+    sorted_cotes = sorted(cotes)
+    mise_max = 25.01
+    gain_approx = mise_max*sorted_cotes[0]
+    retour_approx = aux(gain_approx/sorted_cotes[1])
+    gains = gain_approx + retour_approx*0.8
+    while aux((gains-f(mise_max)*0.8)/sorted_cotes[1]) != retour_approx:
+        retour_approx -= 2
+        gains = gain_approx + retour_approx
+    mis_reelles = []
+    for cote in cotes:
+        mis_reelles.append((gains-aux(mise_max)*0.8)/cote)
+    mis_reelles[np.argmin(cotes)] = mise_max
+    if output:
+        mis = list(map(lambda x: round(x, 2), mis_reelles))
+        print("gain net =", gains-sum(mis))
+        print("mises arrondies =", mis)
+        return
+    return mis_reelles
+    
