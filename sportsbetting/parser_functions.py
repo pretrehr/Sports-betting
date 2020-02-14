@@ -861,6 +861,7 @@ def parse_unibet(url=""):
                 match = match.replace("Toulon St - Cyr Var (F)", "Toulon St-Cyr Var (F)")
                 match = match.replace("Châlons - Reims", "Châlons-Reims")
                 match = match.replace("Colo - Colo", "Colo-Colo")
+                match = match.replace("Bourg - en - Bresse", "Bourg-en-Bresse")
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
                     match = match.split("(")[0].strip()
