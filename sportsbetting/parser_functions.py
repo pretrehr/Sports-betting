@@ -66,8 +66,12 @@ def parse_betclic(url=""):
             date_time = datetime.datetime.strptime(strings[0], "%A %d %B %Y - %H:%M")
             match = strings[1]
             one_match_page = True
-        elif one_match_page and "class" in line.attrs and "expand-selection-bet" in line["class"]:
+        elif (one_match_page and "class" in line.attrs and "expand-selection-bet" in line["class"]
+              and " - " in match):
             try:
+                opponents = match.split(" - ")
+                if opponents[0].isnumeric() or opponents[1].isnumeric():
+                    break
                 odds = list(map(lambda x: float(x.replace(",", ".")),
                                 list(line.stripped_strings)[1::2]))
                 match_odds_hash[match] = {}
@@ -237,6 +241,8 @@ def parse_bwin(url=""):
                 match_odds_hash[match]['odds'] = {"bwin":odds}
                 match_odds_hash[match]['date'] = date_time
             strings = list(line.stripped_strings)
+            if "@" in strings and not is_us:
+                return
             if len(strings) == 4:
                 match = strings[0]+" ("+strings[1]+") - "+strings[2]+" ("+strings[3]+")"
             else:
@@ -445,7 +451,9 @@ def parse_joa(url):
                         date_time = datetime.datetime.strptime(date+" "+hour, "%d/%m/%Y %H:%M")
                     if date_time < today:
                         date_time = date_time.replace(year=date_time.year+1)
+        selenium_init.DRIVER.get("about:blank")
         return match_odds_hash
+    selenium_init.DRIVER.get("about:blank")
 
 def parse_netbet(url=""):
     """
@@ -655,7 +663,9 @@ def parse_pasinobet(url=""):
             elif "class" in line.attrs and "time-title-view-v3" in line["class"]:
                 date = line.text
         if match_odds_hash:
+            selenium_init.DRIVER.get("about:blank")
             return match_odds_hash
+    selenium_init.DRIVER.get("about:blank")
     return match_odds_hash
 
 def parse_pasinobet_sport(sport):
@@ -862,6 +872,12 @@ def parse_unibet(url=""):
                 match = match.replace("Châlons - Reims", "Châlons-Reims")
                 match = match.replace("Colo - Colo", "Colo-Colo")
                 match = match.replace("Bourg - en - Bresse", "Bourg-en-Bresse")
+                match = match.replace("Grande - Bretagne", "Grande-Bretagne")
+                match = match.replace("Rostov - Don (F)", "Rostov-Don (F)")
+                match = match.replace("CS Hammam - Lif", "CS Hammam-Lif")
+                if match.count(" - ")>1:
+                    print(match)
+                    match = input("Réentrez le nom du match :")
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
                     match = match.split("(")[0].strip()
