@@ -16,3 +16,4 @@ def start_selenium():
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless")
     DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+
