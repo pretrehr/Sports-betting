@@ -36,6 +36,10 @@ from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_fre
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
                                            cotes_combine, gain_promo_gain_cote,
                                            mises_promo_gain_cote)
+from sportsbetting.parser_promotions import (get_promotions_betclic, get_promotions_france_pari,
+                                             get_promotions_netbet, get_promotions_pmu,
+                                             get_promotions_zebet, get_promotions_unibet,
+                                             get_promotions_parionssport)
 
 def parse_competition(competition, sport="football", *sites):
     """
@@ -788,3 +792,7 @@ def add_urls_to_db():
             pass
     conn.commit()
     c.close()
+
+
+def get_promotions(site):
+    exec("get_promotions_"+site+"()")
