@@ -96,7 +96,7 @@ def parse_competition(competition, sport="football", *sites):
     sportsbetting.ODDS[sport] = out
 
 
-def parse_competitions(competitions, *sites):
+def parse_competitions(competitions, sport="football", *sites):
     """
     Retourne les cotes de plusieurs competitions
     """
@@ -107,7 +107,7 @@ def parse_competitions(competitions, *sites):
         selenium_init.start_selenium()
     list_odds = []
     for competition in competitions:
-        list_odds.append(parse_competition(competition, "football", *sites))
+        list_odds.append(parse_competition(competition, sport, *sites))
         print()
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -119,7 +119,7 @@ def parse_competitions(competitions, *sites):
             subprocess.Popen(['notify-send', "Fin du parsing"])
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return merge_dicts(list_odds)
-    sportsbetting.ODDS["football"] = merge_dicts(list_odds)
+    sportsbetting.ODDS[sport] = merge_dicts(list_odds)
 
 
 def parse_football(*sites):
@@ -134,7 +134,7 @@ def parse_football(*sites):
     competitions = ["france ligue 1", "angleterre premier league",
                     "espagne liga", "italie serie", "allemagne bundesliga"]#,
                     #"ligue des champions"]
-    sportsbetting.ODDS["football"] = parse_competitions(competitions, *sites)
+    sportsbetting.ODDS["football"] = parse_competitions(competitions, "football", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -743,7 +743,6 @@ def add_competition_to_db(sport):
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sport = soup.find("title").string.split()[-1].lower()
-    print(sport)
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
             try:
@@ -751,6 +750,7 @@ def add_competition_to_db(sport):
                 INSERT INTO competitions (id, competition, sport)
                 VALUES ({}, "{}", "{}")
                 """.format(line["href"].split("-ed")[-1], line.text.strip(), sport))
+                print(line.text.strip())
             except sqlite3.IntegrityError:
                 pass
     conn.commit()
