@@ -116,15 +116,12 @@ def parse_betstars(url=""):
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
     try:
-        WebDriverWait(selenium_init.DRIVER, 60).until(
+        WebDriverWait(selenium_init.DRIVER, 15).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
         )
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
-            if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in line.text:
-                print("Betstars inaccessible")
-                return dict()
             if "id" in line.attrs and "participants" in line["id"] and not is_12:
                 match = " - ".join(list(line.stripped_strings))
             if "class" in line.attrs and "afEvt__link" in line["class"]:
@@ -165,7 +162,10 @@ def parse_betstars(url=""):
         if match_odds_hash:
             return match_odds_hash
     except selenium.common.exceptions.TimeoutException:
-        pass
+        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
+            print("Betstars inaccessible")
+            return dict()
     return match_odds_hash
 
 def parse_sport_betstars(sport):
