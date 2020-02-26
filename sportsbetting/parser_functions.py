@@ -1115,6 +1115,8 @@ def parse_and_add_to_db(site, sport, competition):
             if not found:
                 teams_9th_round.append(team)
         print(9, teams_9th_round)
+    if teams_5th_round:
+        return site, sport, competition, teams_5th_round
 
 def parse_buteurs_betclic(url):
     """

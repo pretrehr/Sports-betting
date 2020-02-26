@@ -685,7 +685,9 @@ def add_names_to_db(competition, sport="football", *sites):
         url = get_competition_url(competition, sport, site)
         if url:
             try:
-                parse_and_add_to_db(site, sport, url)
+                teams = parse_and_add_to_db(site, sport, url)
+                if teams:
+                    sportsbetting.TEAMS_NOT_FOUND.append(teams)
             except KeyboardInterrupt:
                 start = time.time()
                 print("Recommencez pour arrêter le parsing")
@@ -695,7 +697,9 @@ def add_names_to_db(competition, sport="football", *sites):
                 selenium_init.DRIVER.quit()
                 print("Redémarrage de selenium")
                 selenium_init.start_selenium()
-                parse_and_add_to_db(site, sport, url)
+                teams = parse_and_add_to_db(site, sport, url)
+                if teams:
+                    sportsbetting.TEAMS_NOT_FOUND.append(teams)
             except selenium.common.exceptions.TimeoutException:
                 pass
             except urllib.error.HTTPError:

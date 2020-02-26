@@ -4,6 +4,7 @@ initialisation du module
 
 ALL_ODDS_COMBINE = {}
 ODDS = {}
+TEAMS_NOT_FOUND = []
 
 class UnavailableCompetitionException(Exception):
     """
