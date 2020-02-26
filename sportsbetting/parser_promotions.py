@@ -34,10 +34,14 @@ def parse_promotion_france_pari(url):
         if "class" in line.attrs and "promotion-content" in line["class"]:
             out = ""
             for string in list(line.stripped_strings):
-                if string == "Termes et Conditions" or string == "Exemples :":
+                if string == "Termes et Conditions" or string in ["Exemples :", "Exemple :"]:
                     return out
-                if string[0].isupper() or string[0] in ["+"]:
+                if out and out[-1] in [","]:
+                    out += " "+string
+                elif string[0].isupper() or string[0] in ["+"]:
                     out += "\n"+string
+                elif string[0] in ["."]:
+                    out += string
                 else:
                     out += " "+string
 
@@ -93,6 +97,11 @@ def parse_promotion_betclic(url_promo):
                 or ("class" in line.attrs and "module__title" in line["class"])):
             infos = list(line.stripped_strings)
             dict_steps[infos[0]] = infos[1]
+            for string in infos[2:]:
+                if not(string[0].isupper() or "€" in string):
+                    dict_steps[infos[0]] += " "+string
+                else:
+                    break
         if "class" in line.attrs and (any(x in line["class"] for x in ["content-bloc-event-page",
                                                                        "module__bloc--50",
                                                                        "module__bloc--100"])):
@@ -129,7 +138,8 @@ def get_promotions_pmu():
                 if "Les cotes" in string or string == "Pariez":
                     break
                 if (string[0].isupper() and out[-1] in [".", "!", "?", "…", ":", ")", "€"]
-                        or string[0] in ["-", "*"]):
+                        or string[0] in ["-", "*"]
+                        or out[-1].isnumeric()):
                     out += "\n"+string
                 elif string[0] in [".", ","] or out[-1] == "\n":
                     out += string
@@ -155,7 +165,7 @@ def get_promotions_parionssport():
 def parse_promotion_parionssport(url):
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_infos = {}
-    desc = "\n".join(soup.findAll("div", {"class": "left"})[0].stripped_strings)
+    desc = " ".join(soup.findAll("div", {"class": "left"})[0].stripped_strings)
     print("Description :")
     print(desc)
     text_list = list(soup.findAll("div", {"class": "right"})[0].stripped_strings)
@@ -240,9 +250,10 @@ def get_promotions_zebet():
                 
         strings = list(elem.stripped_strings)
         promotion = ""
+        promotion_reseau = False
         for string in strings:
-            if "tirage au sort" in string:
-                promotion = ""
+            if "tirage au sort" in string or "réseau" in string:
+                promotion_reseau = True
                 break
             if "Les exemples :" in string:
                 break
@@ -256,17 +267,15 @@ def get_promotions_zebet():
                 is_key = False
             else:
                 promotion += string.strip(" -") + "\n"
-        print(promotion)
-        if dict_conditions:
-            print("Conditions :")
-            pprint(dict_conditions)
-            dict_conditions = {}
-        if dict_table:
-            print("\n"+title)
-            pprint(dict_table)
-            dict_table = {}
-        print("\n")
-    
-
-def get_promotions(site):
-    exec("get_promotions_{}()".format(site))
+        if not promotion_reseau:
+            print(promotion)
+            if dict_conditions:
+                print("Conditions :")
+                pprint(dict_conditions)
+            if dict_table:
+                print(promotion_reseau)
+                print("\n"+title)
+                pprint(dict_table)
+            print("\n")
+        dict_conditions = {}
+        dict_table = {}
