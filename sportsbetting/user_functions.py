@@ -671,7 +671,7 @@ def add_names_to_db(competition, sport="football", *sites):
         print("Competition inconnue")
         return {}
     print(formated_name)
-    if competition == sport:
+    if competition == sport or "Tout le" in competition:
         import_teams_by_sport(sport)
     else:
         import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/"+sport+"/a-ed"

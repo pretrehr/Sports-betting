@@ -35,8 +35,8 @@ def parse_betclic(url=""):
     """
     Retourne les cotes disponibles sur betclic
     """
-    if url == "tennis":
-        return parse_sport_betclic("tennis")
+    if url in ["tennis", "rugby-a-xv", "football", "basket-ball", "hockey-sur-glace", "handball"]:
+        return parse_sport_betclic(url)
     if not url:
         url = "https://www.betclic.fr/football/ligue-1-conforama-e4"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
@@ -99,11 +99,12 @@ def parse_sport_betclic(sport):
                 odds.append(parse_betclic(link))
     return merge_dicts(odds)
 
+
 def parse_betstars(url=""):
     """
     Retourne les cotes disponibles sur betstars
     """
-    if url in ["tennis", "handball"]:
+    if url in ["tennis", "handball", "basketball", "soccer", "handball", "rugby_union", "ice_hockey"]:
         return parse_sport_betstars(url)
     if not url:
         url = "https://www.betstars.fr/#/soccer/competitions/2152298"
@@ -177,6 +178,9 @@ def parse_sport_betstars(sport):
     competitions = []
     for _ in range(100):
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
+            print("Betstars inaccessible")
+            return dict()
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and sport+"/competitions/" in line["href"]
@@ -459,6 +463,8 @@ def parse_netbet(url=""):
     """
     Retourne les cotes disponibles sur netbet
     """
+    if "http" not in url:
+        return parse_sport_netbet(url)
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
@@ -495,6 +501,20 @@ def parse_netbet(url=""):
             except ValueError: #match live (cotes non disponibles)
                 pass
     return match_odds_hash
+
+
+def parse_sport_netbet(sport):
+    url = "https://www.netbet.fr"
+    odds = []
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.find_all("a", {"data-type-event":"sport"}):
+        if sport == line.text.lower():
+            print(line.text)
+            for child in line.findParent().findChildren("a", {"data-type-event":"competition"}):
+                link = url+child["href"]
+                odds.append(parse_netbet(link))
+    return merge_dicts(odds)
+
 
 def parse_parionssport(url=""):
     """
@@ -1004,7 +1024,10 @@ def parse_and_add_to_db(site, sport, competition):
     Ajoute à la base de données les noms d'équipe/joueur pour une competition donnée et un site
     donné
     """
-    if any(sub in competition for sub in ["http", "tennis", "europa", "ldc", "élim", "handball"]):
+    if any(sub in competition for sub in ["http", "tennis", "europa", "ldc", "élim", "handball",
+                                          "basketball", "soccer", "handball", "rugby_union",
+                                          "ice_hockey", "rugby-a-xv", "football", "basket-ball",
+                                          "hockey-sur-glace", "hockey/glace", "rugby"]):
         url = competition
     else:
         return
