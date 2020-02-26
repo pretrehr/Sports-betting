@@ -225,7 +225,7 @@ def cote_boostee(cote, boost_selon_cote=True):
     Calcul de cote boostee pour promotion Betclic
     """
     if not boost_selon_cote:
-        return cote+(cote-1)*0.8
+        return cote+(cote-1)
     if cote < 2:
         return cote
     if cote < 2.51:
@@ -323,7 +323,7 @@ def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
     gain_approx = mise_max*sorted_cotes[0]
     retour_approx = aux(gain_approx/sorted_cotes[1])
     gains = gain_approx + retour_approx*0.8
-    while aux((gains-f(mise_max)*0.8)/sorted_cotes[1]) != retour_approx:
+    while aux((gains-aux(mise_max)*0.8)/sorted_cotes[1]) != retour_approx:
         retour_approx -= 2
         gains = gain_approx + retour_approx
     mis_reelles = []
