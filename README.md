@@ -7,7 +7,7 @@ Sports betting assistant which optimizes earnings regarding odds and offers
 
 [(English version below)](#english-version)
 
-Assistant de pari sportifs avec optimisation des gains en fonction des cotes et des promotions
+Assistant de paris sportifs avec optimisation des gains en fonction des cotes et des promotions
 
 <details>
 <summary>Sommaire</summary>
