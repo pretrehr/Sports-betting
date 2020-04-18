@@ -220,19 +220,20 @@ def gain_promo_gain_cote(cotes, mise_minimale, rang):
     mis[rang] = mise_minimale
     return gain-sum(mis)
 
-def cote_boostee(cote, boost_selon_cote=True):
+def cote_boostee(cote, boost_selon_cote=True, freebet=True):
     """
     Calcul de cote boostee pour promotion Betclic
     """
+    mult_freebet = 1*(not freebet)+0.8*freebet
     if not boost_selon_cote:
-        return cote+(cote-1)
+        return cote+(cote-1)*mult_freebet
     if cote < 2:
         return cote
     if cote < 2.51:
-        return cote+(cote-1)*0.25*0.8
+        return cote+(cote-1)*0.25*mult_freebet
     if cote < 3.51:
-        return cote+(cote-1)*0.5*0.8
-    return cote+(cote-1)*0.8
+        return cote+(cote-1)*0.5*mult_freebet
+    return cote+(cote-1)*mult_freebet
 
 def taux_boost(cote, boost_selon_cote=True):
     """
@@ -248,7 +249,7 @@ def taux_boost(cote, boost_selon_cote=True):
         return 0.5
     return 1
 
-def gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, output=False):
+def mises_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, output=False):
     """
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
@@ -274,13 +275,38 @@ def gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, output=False):
         print("plus-value =", round(benefice_max, 2))
     return meilleures_mises
 
+
+def gain_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True):
+    """
+    Optimisation de gain pour promotion Betclic de type "Cotes boostees"
+    """
+    new_cotes = list(map(lambda x: cote_boostee(x, boost_selon_cote), cotes))
+    benefice_max = 0
+    for i, cote in enumerate(cotes):
+        mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
+        mises_possibles = mises2(new_cotes, mise, i)
+        mises_corrigees = []
+        benefice = 0
+        for j, mis in enumerate(mises_possibles):
+            if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1:
+                mises_corrigees.append(mise*cote/cotes[j])
+            else:
+                mises_corrigees.append(mis)
+                benefice = mises_corrigees[j]*new_cotes[j]
+        benefice -= sum(mises_corrigees)
+        if benefice > benefice_max:
+            benefice_max = benefice
+            meilleures_mises = mises_corrigees
+    return benefice_max
+
+
 def paris_rembourses_si_perdants(cotes, remboursement_max, freebet, taux_remboursement):
     """
     Calcule les mises à placer lorsque tous les paris perdants sont remboursés
     """
     rg_max = np.argmax(cotes)
     n = len(cotes)
-    facteur = (1-0.23*freebet)*taux_remboursement
+    facteur = (1-0.2*freebet)*taux_remboursement
     systeme = []
     for i, cote in enumerate(cotes):
         line = [facteur for _ in range(n+1)]

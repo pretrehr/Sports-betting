@@ -660,6 +660,16 @@ def best_match_gain_cote(site, bet, sport, date_max=None, time_max=None, date_mi
                     site, sport, date_max, time_max, date_min, time_min)
 
 
+def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, time_max=None,
+                              date_min=None, time_min=None):
+    odds_function = lambda best_odds, odds_site, i: odds_site
+    profit_function = lambda odds_to_check, i : gain_gains_nets_boostes(odds_to_check, gain_max, False)
+    criteria = lambda odds_to_check, i: odds_to_check[i]>=1.5
+    display_function = lambda odds_to_check, i : mises_gains_nets_boostes(odds_to_check, gain_max, False, True)
+    result_function = lambda odds_to_check, i : mises_gains_nets_boostes(odds_to_check, gain_max, False, False)
+    best_match_base(odds_function, profit_function, criteria, display_function, result_function,
+                    site, sport, date_max, time_max, date_min, time_min)
+
 def add_names_to_db(competition, sport="football", *sites):
     """
     Ajoute à la base de données les noms d'équipe/joueur pour une competition donnée sur tous les
