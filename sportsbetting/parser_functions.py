@@ -124,7 +124,7 @@ def parse_betstars(url=""):
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "id" in line.attrs and "participants" in line["id"] and not is_12:
-                match = " - ".join(list(line.stripped_strings))
+                match = " - ".join(list(map(lambda x:x.replace(" - ", "-"), line.stripped_strings)))
             if "class" in line.attrs and "afEvt__link" in line["class"]:
                 is_12 = True
                 match = list(line.stripped_strings)[0]
@@ -401,6 +401,8 @@ def parse_joa(url):
     """
     Retourne les cotes disponibles sur joa
     """
+    if "http" not in url:
+        return parse_sport_joa(url)
     if not url:
         url = "https://www.joa-online.fr/fr/sport/paris-sportifs/844/54287323"
     selenium_init.DRIVER.get(url)
@@ -458,6 +460,8 @@ def parse_joa(url):
         selenium_init.DRIVER.get("about:blank")
         return match_odds_hash
     selenium_init.DRIVER.get("about:blank")
+
+    
 
 def parse_netbet(url=""):
     """
@@ -795,6 +799,8 @@ def parse_pmu(url=""):
     """
     Retourne les cotes disponibles sur pmu
     """
+    if "http" not in url:
+        return parse_sport_pmu(url)
     if not url:
         url = "https://paris-sportifs.pmu.fr/pari/competition/169/football/ligue-1-conforama"
 #     url = "https://paris-sportifs.pmu.fr/pari/competition/441/tennis/open-daustralie-h"
@@ -838,7 +844,8 @@ def parse_pmu(url=""):
                             match_odds_hash[match]['odds'] = {"pmu":odds}
                             match_odds_hash[match]['date'] = date_time
                         else:
-                            match = string.replace("//", "-")
+                            match = string.replace(" - ", "-")
+                            match = match.replace("//", "-")
             except TypeError:
                 pass
         elif "class" in line.attrs and "event-list-odds-list" in line["class"] and not handicap:
@@ -865,10 +872,33 @@ def parse_page_match_pmu(url):
             odds.append(float(line.text.replace(",", ".")))
     return name, odds
 
+def parse_sport_pmu(sport):
+    url = "https://paris-sportifs.pmu.fr/pari/sport/25/football"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    odds = []
+    links = []
+    competitions = []
+    for line in soup.find_all(["a"], {"class" : "tc-track-element-events"}):
+        if "/"+sport+"/" in line["href"]:
+            if "http" not in line["href"]:
+                link = "https://paris-sportifs.pmu.fr"+line["href"]
+            else:
+                link = line["href"]
+            if link not in links:
+                links.append(link)
+                competitions.append(line.text)
+    for line, competition in zip(links, competitions):
+        print("\t"+competition)
+        odds.append(parse_pmu(line))
+    return merge_dicts(odds)
+    
+
 def parse_unibet(url=""):
     """
     Retourne les cotes disponibles sur unibet
     """
+    if "http" not in url:
+        return parse_sport_unibet(url)
     if not url:
         url = "https://www.unibet.fr/sport/football/ligue-1-conforama"
     selenium_init.DRIVER.get(url)
@@ -898,6 +928,8 @@ def parse_unibet(url=""):
                 if match.count(" - ")>1:
                     print(match)
                     match = input("Réentrez le nom du match :")
+                if "-" not in match:
+                    break
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
                 if list(re.finditer(reg_exp, match)): #match tennis live
                     match = match.split("(")[0].strip()
@@ -923,11 +955,53 @@ def parse_unibet(url=""):
             return match_odds_hash
     return match_odds_hash
 
+def parse_sport_unibet(sport):
+    selenium_init.DRIVER.get("https://www.unibet.fr/sport")
+    urls = []
+    competitions = []
+    WebDriverWait(selenium_init.DRIVER, 15).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "sportsmenu"))
+    )
+    for elem in selenium_init.DRIVER.find_elements_by_class_name("SPORT_"+sport.replace("-15", "axv")
+                                                                 .replace("-", "").upper()):
+        if elem.tag_name == "li":
+            elem.click()
+    for _ in range(10):
+        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(inner_html, features="lxml")
+#         for line in soup.findAll(["span"], {"class":"SPORT_FOOTBALL"}):
+#             line.findParent().click()
+#             print(list(line.stripped_strings))
+        for line in soup.findAll(["a"], {"class":"linkaction"}):
+            if "href" in line.attrs and "sport/"+sport+"/" in line["href"]:
+                if "http" in line["href"]:
+                    url = line["href"]
+                else:
+                    url = "https://www.unibet.fr"+line["href"]
+                if url not in urls and "competition" not in url and "compétition" not in url and url.count("/")==6:
+                    urls.append(url)
+                    competition = url.split(sport+"/")[1].replace("-", " ").replace("matchs", "").replace("/", " ").title()
+                    competitions.append(competition)
+        if urls:
+            break
+    list_odds = []
+    for url, competition in zip(urls, competitions):
+        print("\t"+competition)
+        try:
+            odds = parse_unibet(url)
+            list_odds.append(odds)
+        except KeyboardInterrupt:
+            pass
+    return merge_dicts(list_odds)
+    
+
 
 def parse_winamax(url=""):
     """
     Retourne les cotes disponibles sur winamax
     """
+    if "http" not in url:
+        return parse_sport_winamax(url)
     if not url:
         url = "https://www.winamax.fr/paris-sportifs/sports/1/7/4"
     ids = url.split("/sports/")[1]
@@ -960,6 +1034,53 @@ def parse_winamax(url=""):
             return match_odds_hash
     print("Winamax non accessible")
     return {}
+
+
+def parse_sport_winamax(sport):
+    url = "https://www.winamax.fr/paris-sportifs/sports/"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    match_odds_hash = {}
+    urls = []
+    competitions = []
+    list_odds = []
+    for line in soup.find_all(['script']):
+        if "PRELOADED_STATE" in line.text:
+            json_text = (line.text.split("var PRELOADED_STATE = ")[1]
+                         .split(";var BETTING_CONFIGURATION")[0])
+            dict_data = json.loads(json_text)
+            for id_sport in dict_data["sports"]:
+                if dict_data["sports"][id_sport]["sportName"] == sport.capitalize():
+                    break
+            categories = dict_data["sports"][id_sport]["categories"]
+            for id_category in categories:
+                tournaments = dict_data["categories"][str(id_category)]["tournaments"]
+                category_name = dict_data["categories"][str(id_category)]["categoryName"]
+                for id_tournament in tournaments:
+                    url = "https://www.winamax.fr/paris-sportifs/sports/{}/{}/{}".format(id_sport,
+                                                                                         id_category,
+                                                                                         id_tournament)
+                    urls.append(url)
+                    tournament_name = dict_data["tournaments"][str(id_tournament)]["tournamentName"]
+                    competition = category_name+" - "+tournament_name
+                    competitions.append(competition)
+                    print("\t"+competition)
+                    try:
+                        odds = parse_winamax(url)
+                        list_odds.append(odds)
+                    except urllib.error.HTTPError:
+                        print("forbidden")
+                        pass
+#     list_odds = []
+#     for url, competition in zip(urls, competitions):
+#         print("\t"+competition)
+#         if "Norvège" in competition:
+#             pass
+#         try:
+#             odds = parse_winamax(url)
+#             list_odds.append(odds)
+#         except KeyboardInterrupt:
+#             pass
+    return merge_dicts(list_odds)
 
 
 def parse_zebet(url=""):
@@ -1027,7 +1148,8 @@ def parse_and_add_to_db(site, sport, competition):
     if any(sub in competition for sub in ["http", "tennis", "europa", "ldc", "élim", "handball",
                                           "basketball", "soccer", "handball", "rugby_union",
                                           "ice_hockey", "rugby-a-xv", "football", "basket-ball",
-                                          "hockey-sur-glace", "hockey/glace", "rugby"]):
+                                          "hockey-sur-glace", "hockey/glace", "rugby",
+                                          "hockey sur glace", "rugbyaxv"]):
         url = competition
     else:
         return
@@ -1195,4 +1317,22 @@ def parse_buteurs_betclic(url):
                                                           .strptime(date+" "+hour,
                                                                     "%Y-%m-%d %H:%M"))
     driver.quit()
+    return match_odds_hash
+
+
+def parse_buteurs_betclic_match(url):
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    match_odds_hash = {}
+    for line in soup.find_all():
+        if "class" in line.attrs and "time" in line["class"]:
+            date_time = datetime.datetime.strptime(list(line.stripped_strings)[0], "%A %d %B %Y - %H:%M")
+        if "data-track-bloc-title" in line.attrs and (line["data-track-bloc-title"] == "Duel de buteurs"
+                                                      or "Qui marquera le plus ?" in line["data-track-bloc-title"]):
+            for child in line.findChildren("tr", recursive=True):
+                match = " - ".join(list(child.stripped_strings)[::2])
+                match = match.replace(" - Nul", "")
+                odds = list(map(lambda x : float(x.replace(",", ".")), list(child.stripped_strings)[1::2]))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {"betclic":odds}
+                match_odds_hash[match]['date'] = date_time
     return match_odds_hash

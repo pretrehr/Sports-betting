@@ -26,7 +26,7 @@ from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formated_competition_name,
                                               get_competition_by_id, get_competition_url,
                                               import_teams_by_sport, import_teams_by_url)
-from sportsbetting.parser_functions import parse_and_add_to_db, parse, parse_buteurs_betclic
+from sportsbetting.parser_functions import parse_and_add_to_db, parse, parse_buteurs_betclic, parse_buteurs_betclic_match
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets,
@@ -248,6 +248,10 @@ def parse_buteurs():
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return merge_dicts(list_odds)
     sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
+
+def parse_buteurs_match(url):
+    sportsbetting.ODDS["buteurs"] = parse_buteurs_betclic_match(url)
+
 
 
 def odds_match(match, sport="football"):
