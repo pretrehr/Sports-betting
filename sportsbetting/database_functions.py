@@ -423,3 +423,25 @@ def get_double_team_tennis(team, site):
             compared_players = unidecode.unidecode(line[1]).lower().split(" & ")
             if are_same_double(players, compared_players):
                 return line
+
+def get_all_competitions(sport):
+    """
+    Retourne toutes les compétitions d'un sport donné
+    """
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    c = conn.cursor()
+    c.execute("""
+    SELECT competition FROM competitions WHERE sport='{}'
+    """.format(sport))
+    return sorted(list(map(lambda x:x[0], c.fetchall())))
+
+def get_all_sports():
+    """
+    Retourne toutes les sports disponibles dans la db
+    """
+    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    c = conn.cursor()
+    c.execute("""
+    SELECT sport FROM competitions
+    """)
+    return sorted(list(set(map(lambda x:x[0], c.fetchall()))))
