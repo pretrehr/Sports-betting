@@ -70,6 +70,38 @@ class Parsing(Frame):
         self.parsing_completed = Label(self, text="Récupération des cotes terminée")
         self.parsing_completed.pack()
         self.after(3000, lambda: self.parsing_completed.pack_forget())
+            
+class Best_match_under_conditions(Frame):
+    def __init__(self, fenetre, **kwargs):
+        Frame.__init__(self, fenetre, width=768, height=576, **kwargs)
+        self.pack(fill=BOTH)
+        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
+                 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+        self.sites_list = Listbox(self, exportselection=False)
+        for site in sites:
+            self.sites_list.insert(END, site)
+        self.sites_list.pack()
+        self.min_odd_entry = Entry(self)
+        self.min_odd_entry.pack()
+        self.bet_entry = Entry(self)
+        self.bet_entry.pack()
+        self.sport_list = Listbox(self, exportselection=False)
+        self.sport_list.pack()
+        sports = get_all_sports()
+        for sport in sports:
+            self.sport_list.insert(END, sport)
+        validate = Button(self, text="Calculer", command=self.calcul)
+        validate.pack()
+    
+    def calcul(self):
+        site = self.sites_list.get(self.sites_list.curselection())
+        sport = self.sport_list.get(self.sport_list.curselection())
+        minimum_odd = float(self.min_odd_entry.get())
+        bet = float(self.bet_entry.get())
+        def parse_thread():
+            best_match_under_conditions(site, minimum_odd, bet, sport)
+        thread = threading.Thread(target=parse_thread)
+        thread.start()
         
     
     
