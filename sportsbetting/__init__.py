@@ -5,6 +5,8 @@ initialisation du module
 ALL_ODDS_COMBINE = {}
 ODDS = {}
 TEAMS_NOT_FOUND = []
+PROGRESS = 0
+SUBPROGRESS_LIMIT = 1
 
 class UnavailableCompetitionException(Exception):
     """

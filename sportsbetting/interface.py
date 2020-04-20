@@ -2,9 +2,11 @@ from tkinter import *
 from tkinter import ttk
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
 from sportsbetting.user_functions import parse_competitions
+from sportsbetting.selenium_init import start_selenium
+import threading
 
 
-class Interface(Frame):
+class Parsing(Frame):
     
     """Notre fenêtre principale.
     Tous les widgets sont stockés comme attributs de cette fenêtre."""
@@ -12,11 +14,7 @@ class Interface(Frame):
     def __init__(self, fenetre, **kwargs):
         Frame.__init__(self, fenetre, width=768, height=576, **kwargs)
         self.pack(fill=BOTH)
-        self.nb_clic = 0
-        
-        # Création de nos widgets
-        self.message = Label(self, text="Vous n'avez pas cliqué sur le bouton.")
-        self.message.pack()
+
         
         self.sport_list = Listbox(self)
         self.sport_list.pack()
@@ -27,21 +25,6 @@ class Interface(Frame):
         self.bouton_valider_sport = Button(self, text="Valider sport", command=self.valider_sport)
         self.bouton_valider_sport.pack()
         self.sport_list.bind("<Double-1>", lambda x: self.valider_sport())
-        
-        self.bouton_quitter = Button(self, text="Quitter", command=fenetre.destroy)
-        self.bouton_quitter.pack(side="left")
-        
-        self.bouton_cliquer = Button(self, text="Cliquez ici", fg="red",
-                command=self.cliquer)
-        self.bouton_cliquer.pack(side="right")
-    
-    def cliquer(self):
-        """Il y a eu un clic sur le bouton.
-        
-        On change la valeur du label message."""
-        
-        self.nb_clic += 1
-        self.message["text"] = "Vous avez cliqué {} fois.".format(self.nb_clic)
     
     def valider_sport(self):
         self.sport = get_all_sports()[int(self.sport_list.curselection()[0])]
@@ -68,12 +51,46 @@ class Interface(Frame):
         for site in sites:
             self.sites_list.insert(END, site)
     
+    
     def valider_sites(self):
         self.sites = [self.sites_list.get(i) for i in self.sites_list.curselection()]
-        parse_competitions(self.selected_competitions, self.sport, *self.sites)
+        def parse_thread():
+            parse_competitions(self.selected_competitions, self.sport, *self.sites)
+        thread = threading.Thread(target=parse_thread)
+        thread.start()
+        sportsbetting.PROGRESS = 0
+        self.progress_bar = ttk.Progressbar(self, orient=HORIZONTAL,
+                                            length=100,
+                                            mode='determinate')
+        self.progress_bar.pack()
+        while sportsbetting.PROGRESS < 100:
+            self.progress_bar["value"] = sportsbetting.PROGRESS
+            self.progress_bar.update()
+        self.progress_bar.pack_forget()
+        self.parsing_completed = Label(self, text="Récupération des cotes terminée")
+        self.parsing_completed.pack()
+        self.after(3000, lambda: self.parsing_completed.pack_forget())
         
-
+    
+    
 fenetre = Tk()
-interface = Interface(fenetre)
+fenetre.title("Sports betting")
+tabControl = ttk.Notebook(fenetre)
+tab1 = ttk.Frame(tabControl)
+tab2 = ttk.Frame(tabControl)
 
-interface.mainloop()
+
+tabControl.add(tab1, text ='Récupération des cotes') 
+tabControl.add(tab2, text ='Best match under conditions') 
+tabControl.pack(expand = 1, fill ="both")
+n_tabs = tabControl.index(END)
+if not sportsbetting.ODDS:
+    for i in range(1, n_tabs):
+        tabControl.tab(i, state="disabled")
+parsing = Parsing(tab1)
+parsing.pack()
+match_under_condition = Best_match_under_conditions(tab2)
+match_under_condition.pack()
+Button(fenetre, text="Quitter", command=fenetre.destroy).pack(side="left")
+
+fenetre.mainloop()
