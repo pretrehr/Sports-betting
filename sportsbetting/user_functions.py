@@ -80,6 +80,8 @@ def parse_competition(competition, sport="football", *sites):
             print("Site non accessible (délai écoulé)")
         except KeyboardInterrupt:
             res_parsing[site] = {}
+        except selenium.common.exceptions.TimeoutException:
+            print("Element non trouvé par selenium")
         except sportsbetting.UnavailableCompetitionException:
             print("Compétition non disponible")
             break
@@ -110,7 +112,6 @@ def parse_competitions(competitions, sport="football", *sites):
     selenium_required = (inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
-        print("ok")
         selenium_init.start_selenium()
     list_odds = []
     sportsbetting.PROGRESS = 0
