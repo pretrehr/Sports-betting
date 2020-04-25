@@ -1,6 +1,11 @@
 import PySimpleGUI as sg
 import threading
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
+import sys
+import io
+
+
+
 
 sports = get_all_sports()
 sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
@@ -30,10 +35,22 @@ options_under_condition = [[sg.Text("Options")],
          [sg.Checkbox("Mise à répartir sur toutes les issues d'un même match", key="ONE_SITE_UNDER_CONDITION")]]
 
 
+column_indicators_under_condition = [[sg.Text("", size=(15, 1), key="INDICATORS_UNDER_CONDITION"+str(_), visible=False)] for _ in range(5)]
+
+column_results_under_condition = [[sg.Text("", size=(30, 1), key="RESULTS_UNDER_CONDITION"+str(_), visible=False)] for _ in range(5)]
+
+
 match_under_condition_layout = [
                                 [sg.Listbox(sites, size=(20, 12), key="SITE_UNDER_CONDITION"),
-                                sg.Column(column_under_condition), sg.Column(options_under_condition)],
-                                [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")]
+                                 sg.Column(column_under_condition),
+                                 sg.Column(options_under_condition)],
+                                [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")],
+                                [sg.Text("", size=(30, 1), key="MATCH_UNDER_CONDITION"),
+                                 sg.Text("", size=(20, 1), key="DATE_UNDER_CONDITION")],
+                                [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_UNDER_CONDITION", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+                                 sg.MLine(size=(90, 12), key="RESULT_UNDER_CONDITION", font="Consolas 10", visible=False)],
+                                [sg.Column(column_indicators_under_condition),
+                                 sg.Column(column_results_under_condition)]
                             ]
 
 column_text_stake = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -43,23 +60,56 @@ column_fields_stake = [[sg.InputText(key='BET_STAKE', size=(6,1))],
 column_stake = [[sg.Column(column_text_stake), sg.Column(column_fields_stake)],
                 [sg.Listbox(sports, size=(20, 6), key="SPORT_STAKE", enable_events=True)]]
 
+column_indicators_stake = [[sg.Text("", size=(15, 1), key="INDICATORS_STAKE"+str(_), visible=False)] for _ in range(5)]
+
+column_results_stake = [[sg.Text("", size=(30, 1), key="RESULTS_STAKE"+str(_), visible=False)] for _ in range(5)]
+
 stake_layout = [
                 [sg.Listbox(sites, size=(20, 12), key="SITE_STAKE"),
                 sg.Column(column_stake),
                 sg.Listbox([], size=(40, 12), key="MATCHES")],
-                [sg.Button("Calculer", key="BEST_STAKE")]
+                [sg.Button("Calculer", key="BEST_STAKE")],
+                [sg.Text("", size=(30, 1), key="MATCH_STAKE"),
+                sg.Text("", size=(20, 1), key="DATE_STAKE")],
+                [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+                    sg.MLine(size=(90, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)],
+                [sg.Column(column_indicators_stake),
+                    sg.Column(column_results_stake)]
             ]
+
+
+column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6,1))],
+                                [sg.Listbox(sports, size=(20, 6), key="SPORT_FREEBET")]]
+
+
+column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET"+str(_), visible=False)] for _ in range(5)]
+
+column_results_freebet = [[sg.Text("", size=(30, 1), key="RESULTS_FREEBET"+str(_), visible=False)] for _ in range(5)]
+
+
+freebet_layout = [
+                            [sg.Listbox(sites, size=(20, 12), key="SITE_FREEBET"),
+                                sg.Column(column_freebet)],
+                            [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
+                            [sg.Text("", size=(30, 1), key="MATCH_FREEBET"),
+                                sg.Text("", size=(20, 1), key="DATE_FREEBET")],
+                            [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+                                sg.MLine(size=(90, 12), key="RESULT_FREEBET", font="Consolas 10", visible=False)],
+                            [sg.Column(column_indicators_freebet),
+                                sg.Column(column_results_freebet)]
+                        ]
 
 
 
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Meilleur match pour pari simple', match_under_condition_layout),
-                         sg.Tab('Pari sur un match donné', stake_layout)]])],
+                         sg.Tab('Pari sur un match donné', stake_layout),
+                         sg.Tab('Freebet unique', freebet_layout)]])],
             [sg.Button('Quitter')]]
 
 # Create the Window
-window = sg.Window('Paris sportifs', layout)
+window = sg.Window('Paris sportifs', layout, location=(0,0))
 progress_bar = window.FindElement('progress')
 sportsbetting.PROGRESS = 0
 thread = None
@@ -107,7 +157,20 @@ while True:
                 date_max = values["DATE_MAX_UNDER_CONDITION"]
                 time_max = values["TIME_MAX_UNDER_CONDITION"].replace(":", "h")
             one_site = values["ONE_SITE_UNDER_CONDITION"]
+            old_stdout = sys.stdout # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
             best_match_under_conditions(site, minimum_odd, bet, sport, date_max, time_max, date_min, time_min, one_site)
+            sys.stdout = old_stdout # Put the old stream back in place
+            whatWasPrinted = buffer.getvalue() # Return a str containing the entire contents of the buffer.
+            match, date = infos(whatWasPrinted)
+            window["MATCH_UNDER_CONDITION"].update(match)
+            window["DATE_UNDER_CONDITION"].update(date)
+            window["ODDS_UNDER_CONDITION"].update(odds_table(whatWasPrinted), visible=True)
+            window["RESULT_UNDER_CONDITION"].update(stakes(whatWasPrinted), visible=True)
+            for i, elem in enumerate(indicators(whatWasPrinted)):
+                window["INDICATORS_UNDER_CONDITION"+str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_UNDER_CONDITION"+str(i)].update(elem[1], visible=True)
+            buffer.close()
         except IndexError:
             pass
         except ValueError:
@@ -125,10 +188,52 @@ while True:
             minimum_odd = float(values["ODD_STAKE"])
             sport = values["SPORT_STAKE"][0]
             match = values["MATCHES"][0]
+            old_stdout = sys.stdout # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
             best_stakes_match(match, site, bet, minimum_odd, sport)
+            sys.stdout = old_stdout # Put the old stream back in place
+            whatWasPrinted = buffer.getvalue() # Return a str containing the entire contents of the buffer.
+#             print(display_results(whatWasPrinted))
+            match, date = infos(whatWasPrinted)
+            window["MATCH_STAKE"].update(match)
+            window["DATE_STAKE"].update(date)
+            window["ODDS_STAKE"].update(odds_table(whatWasPrinted), visible=True)
+            window["RESULT_STAKE"].update(stakes(whatWasPrinted), visible=True)
+            for i, elem in enumerate(indicators(whatWasPrinted)):
+                window["INDICATORS_STAKE"+str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_STAKE"+str(i)].update(elem[1], visible=True)
+#             window["RESULT_UNDER_CONDITION"].set_size((400, whatWasPrinted.count("\n")))
+            buffer.close()
+        except IndexError:
+            sg.Popup("Site ou match non défini")
+        except ValueError:
+            sg.Popup("Mise ou cote invalide")
+        except KeyError:
+            sg.Popup("Match non disponible sur {}".format(site))
+    if event == "BEST_MATCH_FREEBET":
+        try:
+            site = values["SITE_FREEBET"][0]
+            freebet = float(values["BET_FREEBET"])
+            sport = values["SPORT_FREEBET"][0]
+            old_stdout = sys.stdout # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
+            best_match_freebet(site, freebet, sport)
+            sys.stdout = old_stdout # Put the old stream back in place
+            whatWasPrinted = buffer.getvalue() # Return a str containing the entire contents of the buffer.
+            match, date = infos(whatWasPrinted)
+            window["MATCH_FREEBET"].update(match)
+            window["DATE_FREEBET"].update(date)
+            window["ODDS_FREEBET"].update(odds_table(whatWasPrinted), visible=True)
+            window["RESULT_FREEBET"].update(stakes(whatWasPrinted), visible=True)
+            for i, elem in enumerate(indicators(whatWasPrinted)):
+                window["INDICATORS_FREEBET"+str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_FREEBET"+str(i)].update(elem[1], visible=True)
+            buffer.close()
         except IndexError:
             pass
         except ValueError:
+            pass
+        except KeyError:
             pass
     
 
