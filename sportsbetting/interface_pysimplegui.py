@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 import threading
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
+from sportsbetting.interface_functions import odds_table, indicators, stakes, infos
 import sys
 import io
 
@@ -46,7 +47,7 @@ match_under_condition_layout = [
                                  sg.Column(options_under_condition)],
                                 [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")],
                                 [sg.Text("", size=(30, 1), key="MATCH_UNDER_CONDITION"),
-                                 sg.Text("", size=(20, 1), key="DATE_UNDER_CONDITION")],
+                                 sg.Text("", size=(30, 1), key="DATE_UNDER_CONDITION")],
                                 [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_UNDER_CONDITION", visible=False, hide_vertical_scroll=True, size=(None, 12)),
                                  sg.MLine(size=(90, 12), key="RESULT_UNDER_CONDITION", font="Consolas 10", visible=False)],
                                 [sg.Column(column_indicators_under_condition),
@@ -70,7 +71,7 @@ stake_layout = [
                 sg.Listbox([], size=(40, 12), key="MATCHES")],
                 [sg.Button("Calculer", key="BEST_STAKE")],
                 [sg.Text("", size=(30, 1), key="MATCH_STAKE"),
-                sg.Text("", size=(20, 1), key="DATE_STAKE")],
+                sg.Text("", size=(30, 1), key="DATE_STAKE")],
                 [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, 12)),
                     sg.MLine(size=(90, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)],
                 [sg.Column(column_indicators_stake),
@@ -92,20 +93,56 @@ freebet_layout = [
                                 sg.Column(column_freebet)],
                             [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
                             [sg.Text("", size=(30, 1), key="MATCH_FREEBET"),
-                                sg.Text("", size=(20, 1), key="DATE_FREEBET")],
+                                sg.Text("", size=(30, 1), key="DATE_FREEBET")],
                             [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False, hide_vertical_scroll=True, size=(None, 12)),
                                 sg.MLine(size=(90, 12), key="RESULT_FREEBET", font="Consolas 10", visible=False)],
                             [sg.Column(column_indicators_freebet),
                                 sg.Column(column_results_freebet)]
                         ]
+                        
+column_text_cashback = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
+column_fields_cashback = [[sg.InputText(key='BET_CASHBACK', size=(6,1))],
+                                 [sg.InputText(key='ODD_CASHBACK', size=(6,1))]]
+
+column_cashback = [[sg.Column(column_text_cashback), sg.Column(column_fields_cashback)],
+                                [sg.Listbox(sports, size=(20, 6), key="SPORT_CASHBACK")]]
+
+
+options_cashback = [[sg.Text("Options", font="bold")],
+[sg.Checkbox("Remboursement en freebet", default=True, key="FREEBET_CASHBACK")],
+[sg.Text("Taux de remboursement"), sg.InputText(size=(5,1), key="RATE_CASHBACK", default_text=100), sg.Text("%")],
+[sg.Text("Bonus combiné"), sg.InputText(size=(5,1), key="COMBI_MAX_CASHBACK", default_text=0), sg.Text("%")],
+[sg.Text("Cote combiné"), sg.InputText(size=(5,1), key="COMBI_ODD_CASHBACK", default_text=1)],
+[sg.Checkbox("Date/Heure minimale ", key="DATE_MIN_CASHBACK_BOOL"), sg.InputText(tooltip="DD/MM/YYYY", size=(12,1), key="DATE_MIN_CASHBACK"), sg.InputText(tooltip="HH:MM", size=(7,1), key="TIME_MIN_CASHBACK")],
+         [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_CASHBACK_BOOL"), sg.InputText(tooltip="DD/MM/YYYY", size=(12,1), key="DATE_MAX_CASHBACK"), sg.InputText(tooltip="HH:MM", size=(7,1), key="TIME_MAX_CASHBACK")]]
+
+
+column_indicators_cashback = [[sg.Text("", size=(15, 1), key="INDICATORS_CASHBACK"+str(_), visible=False)] for _ in range(5)]
+
+column_results_cashback = [[sg.Text("", size=(30, 1), key="RESULTS_CASHBACK"+str(_), visible=False)] for _ in range(5)]
+
+
+cashback_layout = [
+                    [sg.Listbox(sites, size=(20, 12), key="SITE_CASHBACK"),
+                        sg.Column(column_cashback),
+                        sg.Column(options_cashback)],
+                    [sg.Button("Calculer", key="BEST_MATCH_CASHBACK")],
+                    [sg.Text("", size=(30, 1), key="MATCH_CASHBACK"),
+                        sg.Text("", size=(30, 1), key="DATE_CASHBACK")],
+                    [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+                        sg.MLine(size=(90, 12), key="RESULT_CASHBACK", font="Consolas 10", visible=False)],
+                    [sg.Column(column_indicators_cashback),
+                        sg.Column(column_results_cashback)]
+                ]
 
 
 
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
-                         sg.Tab('Meilleur match pour pari simple', match_under_condition_layout),
+                         sg.Tab('Pari simple', match_under_condition_layout),
                          sg.Tab('Pari sur un match donné', stake_layout),
-                         sg.Tab('Freebet unique', freebet_layout)]])],
+                         sg.Tab('Freebet unique', freebet_layout),
+                         sg.Tab('Cashback', cashback_layout)]])],
             [sg.Button('Quitter')]]
 
 # Create the Window
@@ -234,6 +271,40 @@ while True:
         except ValueError:
             pass
         except KeyError:
+            pass
+    if event == "BEST_MATCH_CASHBACK":
+        try:
+            site = values["SITE_CASHBACK"][0]
+            bet = float(values["BET_CASHBACK"])
+            minimum_odd = float(values["ODD_CASHBACK"])
+            sport = values["SPORT_CASHBACK"][0]
+            freebet = float(values["FREEBET_CASHBACK"])
+            combi_max = float(values["COMBI_MAX_CASHBACK"])/100
+            combi_odd = float(values["COMBI_ODD_CASHBACK"])
+            rate_cashback = float(values["RATE_CASHBACK"])/100
+            date_min, time_min, date_max, time_max = None, None, None, None
+            if values["DATE_MIN_CASHBACK_BOOL"]:
+                date_min = values["DATE_MIN_CASHBACK"]
+                time_min = values["TIME_MIN_CASHBACK"].replace(":", "h")
+            if values["DATE_MAX_CASHBACK_BOOL"]:
+                date_max = values["DATE_MAX_CASHBACK"]
+                time_max = values["TIME_MAX_CASHBACK"].replace(":", "h")
+            old_stdout = sys.stdout # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
+            best_match_cashback(site, minimum_odd, bet, sport, freebet, combi_max, combi_odd,
+                                rate_cashback, date_max, time_max, date_min, time_min)
+            sys.stdout = old_stdout # Put the old stream back in place
+            whatWasPrinted = buffer.getvalue() # Return a str containing the entire contents of the buffer.
+            match, date = infos(whatWasPrinted)
+            window["MATCH_CASHBACK"].update(match)
+            window["DATE_CASHBACK"].update(date)
+            window["ODDS_CASHBACK"].update(odds_table(whatWasPrinted), visible=True)
+            window["RESULT_CASHBACK"].update(stakes(whatWasPrinted), visible=True)
+            for i, elem in enumerate(indicators(whatWasPrinted)):
+                window["INDICATORS_CASHBACK"+str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_CASHBACK"+str(i)].update(elem[1], visible=True)
+            buffer.close()
+        except IndexError:
             pass
     
 

@@ -189,7 +189,7 @@ def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False
     mis_reelles[rang] = mise_max
     if output:
         mis = list(map(lambda x: round(x, 2), mis_reelles))
-        print("gain net =", gains-sum(mis))
+        print("gain net =", round(gains-sum(mis), 2))
         print("mises arrondies =", mis)
         return
     return mis_reelles
