@@ -16,7 +16,7 @@ sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parions
 parsing_layout = [  
             [
                 sg.Listbox(sports, size=(20, 6), key="SPORT", enable_events=True),
-                sg.Listbox((), size=(20, 12), key='COMPETITIONS'),
+                sg.Listbox((), size=(20, 12), key='COMPETITIONS', select_mode='multiple'),
                 sg.Column([[sg.Listbox(sites, size=(20, 12), key="SITES", select_mode='multiple')], [sg.Button("Tout sélectionner", key="SELECT_ALL")]])
             ],
             [sg.Button('Ok'), sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='progress', visible=False)]
@@ -136,13 +136,54 @@ cashback_layout = [
                 ]
 
 
+column_text_combine = [[sg.Text("Mise")],
+                       [sg.Text("Cote minimale")],
+                       [sg.Text("Nombre de matches")],
+                       [sg.Text("Cote minimale par sélection")]]
+column_fields_combine = [[sg.InputText(key='BET_COMBINE', size=(6,1))],
+                         [sg.InputText(key='ODD_COMBINE', size=(6,1))],
+                         [sg.InputText(key='NB_MATCHES_COMBINE', size=(6,1), default_text=2)],
+                         [sg.InputText(key='ODD_SELECTION_COMBINE', size=(6,1), default_text=1.01)]]
+
+column_combine = [[sg.Column(column_text_combine), sg.Column(column_fields_combine)],
+                                [sg.Listbox(sports, size=(20, 6), key="SPORT_COMBINE")]]
+
+
+options_combine = [[sg.Text("Options")],
+[sg.Checkbox("Date/Heure minimale ", key="DATE_MIN_COMBINE_BOOL"), sg.InputText(tooltip="DD/MM/YYYY", size=(12,1), key="DATE_MIN_COMBINE"), sg.InputText(tooltip="HH:MM", size=(7,1), key="TIME_MIN_COMBINE")],
+         [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_COMBINE_BOOL"), sg.InputText(tooltip="DD/MM/YYYY", size=(12,1), key="DATE_MAX_COMBINE"), sg.InputText(tooltip="HH:MM", size=(7,1), key="TIME_MAX_COMBINE")],
+         [sg.Checkbox("Mise à répartir sur toutes les issues d'un même combiné", key="ONE_SITE_COMBINE")]]
+
+
+column_indicators_combine = [[sg.Text("", size=(15, 1), key="INDICATORS_COMBINE"+str(_), visible=False)] for _ in range(5)]
+
+column_results_combine = [[sg.Text("", size=(6, 1), key="RESULTS_COMBINE"+str(_), visible=False)] for _ in range(5)]
+
+
+combine_layout = [
+                    [sg.Listbox(sites, size=(20, 12), key="SITE_COMBINE"),
+                        sg.Column(column_combine),
+                        sg.Column(options_combine)],
+                    [sg.Button("Calculer", key="BEST_MATCHES_COMBINE")],
+                    [sg.Text("", size=(100, 1), key="MATCH_COMBINE")],
+                    [sg.Text("", size=(30, 1), key="DATE_COMBINE")],
+                    [sg.Column([[sg.Button("Voir les cotes combinées", key="COTES_COMBINE", visible=False)],
+                                [sg.Column(column_indicators_combine),
+                                 sg.Column(column_results_combine)]
+                                ]),
+                     sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10", visible=False)
+                    ]
+                    
+                ]
+
 
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
                          sg.Tab('Pari sur un match donné', stake_layout),
                          sg.Tab('Freebet unique', freebet_layout),
-                         sg.Tab('Cashback', cashback_layout)]])],
+                         sg.Tab('Cashback', cashback_layout),
+                         sg.Tab('Pari combiné', combine_layout)]])],
             [sg.Button('Quitter')]]
 
 # Create the Window
@@ -150,7 +191,7 @@ window = sg.Window('Paris sportifs', layout, location=(0,0))
 progress_bar = window.FindElement('progress')
 sportsbetting.PROGRESS = 0
 thread = None
-
+window_odds_active = False
 sport = ''
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -306,6 +347,53 @@ while True:
             buffer.close()
         except IndexError:
             pass
+    if event == "BEST_MATCHES_COMBINE":
+        try:
+            site = values["SITE_COMBINE"][0]
+            bet = float(values["BET_COMBINE"])
+            minimum_odd = float(values["ODD_COMBINE"])
+            minimum_odd_selection = float(values["ODD_SELECTION_COMBINE"])
+            sport = values["SPORT_COMBINE"][0]
+            nb_matches = int(values["NB_MATCHES_COMBINE"])
+            date_min, time_min, date_max, time_max = None, None, None, None
+            if values["DATE_MIN_COMBINE_BOOL"]:
+                date_min = values["DATE_MIN_COMBINE"]
+                time_min = values["TIME_MIN_COMBINE"].replace(":", "h")
+            if values["DATE_MAX_COMBINE_BOOL"]:
+                date_max = values["DATE_MAX_COMBINE"]
+                time_max = values["TIME_MAX_COMBINE"].replace(":", "h")
+            one_site = values["ONE_SITE_COMBINE"]
+            old_stdout = sys.stdout # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
+            best_matches_combine(site, minimum_odd, bet, sport, nb_matches, one_site, date_max,
+                                    time_max, date_min, time_min, minimum_odd_selection)
+            sys.stdout = old_stdout # Put the old stream back in place
+            whatWasPrinted = buffer.getvalue() # Return a str containing the entire contents of the buffer.
+            match, date = infos(whatWasPrinted)
+            window["MATCH_COMBINE"].update(match)
+            window["DATE_COMBINE"].update(date)
+            window["COTES_COMBINE"].update(visible=True)
+            window["RESULT_COMBINE"].update(stakes(whatWasPrinted), visible=True)
+            for i, elem in enumerate(indicators(whatWasPrinted)):
+                window["INDICATORS_COMBINE"+str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_COMBINE"+str(i)].update(elem[1], visible=True)
+            whatWasPrintedCombine = whatWasPrinted
+            buffer.close()
+        except IndexError:
+            pass
+        except ValueError:
+            pass
+    if not window_odds_active and event == "COTES_COMBINE":
+        window_odds_active = True
+        table = odds_table_combine(whatWasPrintedCombine)
+        layout2 = [[sg.Text('Window 2')],
+                   [sg.Table(table[1:], headings=table[0], size=(None, 20))]]
+        win2 = sg.Window('Window 2', layout2)
+    if window_odds_active:
+        ev2, vals2 = win2.Read(timeout=100)
+        if ev2 is None or ev2 == 'Exit':
+            window_odds_active  = False
+            win2.close()
     
 
 window.close()
