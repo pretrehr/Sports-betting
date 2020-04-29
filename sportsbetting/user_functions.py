@@ -479,7 +479,7 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
                                                                        False))
     best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport, date_max, time_max, date_min,
-                    time_min, True, nb_matches)
+                    time_min, True, nb_matches, one_site=one_site)
 
 def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_selection, combi_max=0,
                                                          nb_matches=2, date_max=None, time_max=None,
