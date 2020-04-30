@@ -11,9 +11,12 @@ from sportsbetting.interface_functions import (odds_table, indicators, stakes, i
                                                odds_table_combine)
 import sys
 import io
+import pickle
 
-
-
+try:
+    sportsbetting.ODDS = pickle.load(open("data.pickle", "rb"))
+except FileNotFoundError:
+    pass
 
 sports = get_all_sports()
 sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
@@ -200,12 +203,14 @@ sportsbetting.PROGRESS = 0
 thread = None
 window_odds_active = False
 sport = ''
+
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read(timeout=100)
     progress_bar.UpdateBar(sportsbetting.PROGRESS, 100)
     try:
         if not thread.is_alive():
+            pickle.dump(sportsbetting.ODDS, open("data.pickle", "wb"))
             progress_bar.Update(visible=False)
     except AttributeError:
         pass
