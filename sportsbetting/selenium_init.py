@@ -15,5 +15,8 @@ def start_selenium():
     options.add_argument('log-level=3')
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless")
-    DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+    try:
+        DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+    except selenium.common.exceptions.WebDriverException:
+        DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver.exe", options=options)
 
