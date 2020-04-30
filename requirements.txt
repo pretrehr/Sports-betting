@@ -5,3 +5,4 @@ win10toast>=0.9
 numpy>=1.16.3
 beautifulsoup4>=4.8.2
 lxml>=4.5.0
+pysimplegui>=4.18.2
