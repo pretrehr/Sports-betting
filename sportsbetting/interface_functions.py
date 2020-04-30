@@ -26,6 +26,8 @@ def stakes(result):
 def infos(result):
     lines = result.split("\n")
     match = lines[0]
+    if match == "No match found":
+        return None, None
     for i, line in enumerate(lines):
         if "}}" in line:
             break
