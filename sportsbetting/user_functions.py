@@ -85,7 +85,7 @@ def parse_competition(competition, sport="football", *sites):
         except sportsbetting.UnavailableCompetitionException:
             print("Compétition non disponible")
             break
-        sportsbetting.PROGRESS += 100/(len(sites)*sportsbetting.SUBPROGRESS_LIMIT)
+#         sportsbetting.PROGRESS += 100/(len(sites)*sportsbetting.SUBPROGRESS_LIMIT)
     if selenium_required:
         selenium_init.DRIVER.quit()
     if inspect.currentframe().f_back.f_code.co_name == "<module>":
@@ -94,11 +94,11 @@ def parse_competition(competition, sport="football", *sites):
             toaster.show_toast("Sports-betting", "Fin du parsing")
         except NameError:
             subprocess.Popen(['notify-send', "Fin du parsing"])
-    if len(sites) > 1:
-        res = format_team_names(res_parsing, sport)
-        out = valid_odds(merge_dict_odds(res), sport)
-    else:
-        out = valid_odds(res_parsing[sites[0]], sport)
+#     if len(sites) > 1:
+    res = format_team_names(res_parsing, sport)
+    out = valid_odds(merge_dict_odds(res), sport)
+#     else:
+#         out = valid_odds(res_parsing[sites[0]], sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return out
     sportsbetting.ODDS[sport] = out
@@ -121,15 +121,50 @@ def parse_competitions(competitions, sport="football", *sites):
         print()
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
+#     if inspect.currentframe().f_back.f_code.co_name == "<module>":
+#         try:
+#             toaster = ToastNotifier()
+#             toaster.show_toast("Sports-betting", "Fin du parsing")
+#         except NameError:
+#             subprocess.Popen(['notify-send', "Fin du parsing"])
 #     if inspect.currentframe().f_back.f_code.co_name != "<module>":
 #         return merge_dicts(list_odds)
     sportsbetting.ODDS[sport] = merge_dicts(list_odds)
+
+def parse_competitions_site(competitions, sport, site):
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+    selenium_required = (inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
+                         and site in selenium_sites)
+    if selenium_required:
+        selenium_init.start_selenium()
+    list_odds = []
+    for competition in competitions:
+        list_odds.append(parse_competition(competition, sport, site))
+        sportsbetting.PROGRESS += 100/(len(competitions)*sportsbetting.SUBPROGRESS_LIMIT)
+    print()
+    if selenium_required:
+        selenium_init.DRIVER.quit()
+    return merge_dict_odds(list_odds)
+
+def parse_competitions2(competitions, sport="football", *sites):
+    if not sites:
+        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
+                    'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+    selenium_required = (inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
+                         and (selenium_sites.intersection(sites) or not sites))
+    if selenium_required:
+        selenium_init.start_selenium()
+    list_odds = []
+    sportsbetting.PROGRESS = 0
+    sportsbetting.SUBPROGRESS_LIMIT = len(sites)
+    for site in sites:
+        print(site)
+        list_odds.append(parse_competitions_site(competitions, sport, site))
+    if selenium_required:
+        selenium_init.DRIVER.quit()
+    sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
+    
 
 
 def parse_football(*sites):

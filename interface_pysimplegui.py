@@ -3,7 +3,7 @@
 import PySimpleGUI as sg
 import threading
 import sportsbetting
-from sportsbetting.user_functions import (parse_competitions, best_match_under_conditions,
+from sportsbetting.user_functions import (parse_competitions2, best_match_under_conditions,
                                           best_match_freebet, best_stakes_match,
                                           best_matches_combine, best_match_cashback)
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
@@ -229,7 +229,7 @@ while True:
         if selected_competitions and selected_sites:
             def parse_thread():
                 sportsbetting.PROGRESS = 0
-                parse_competitions(selected_competitions, sport, *selected_sites)
+                parse_competitions2(selected_competitions, sport, *selected_sites)
             thread = threading.Thread(target=parse_thread)
             thread.start()
             progress_bar.Update(visible=True)
