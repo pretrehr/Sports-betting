@@ -603,11 +603,11 @@ def best_match_stakes_to_bet(stakes,nb_matches=1, sport="football"):
     progress = 10
     start = time.time()
     for i, combine in enumerate(combis):
-        if i == 20:
-            print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
-        if i/nb_combis*100 > progress:
-            print(str(progress)+"%")
-            progress += 10
+#         if i == 20:
+#             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
+#         if i/nb_combis*100 > progress:
+#             print(str(progress)+"%")
+#             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
         main_sites_distribution = [main_sites[0] for _ in range(n)]
@@ -635,7 +635,7 @@ def best_match_stakes_to_bet(stakes,nb_matches=1, sport="football"):
                 best_profit = profit
                 best_combine = combine
                 best_bets = defined_bets_temp
-    print("Temps d'exécution =", time.time()-start)
+#     print("Temps d'exécution =", time.time()-start)
     best_match_combine = " / ".join([match[0] for match in best_combine])
     odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
     all_sites = main_sites+list(second_sites)
@@ -683,11 +683,11 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
     progress = 10
     start = time.time()
     for i, combine in enumerate(combis):
-        if i == 20:
-            print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
-        if i/nb_combis*100 > progress:
-            print(str(progress)+"%")
-            progress += 10
+#         if i == 20:
+#             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
+#         if i/nb_combis*100 > progress:
+#             print(str(progress)+"%")
+#             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine],
                                                                   freebet=True)
@@ -712,7 +712,7 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
                 best_rate = defined_bets_temp[0]/np.sum(defined_bets_temp[1])
                 best_combine = combine
                 best_bets = defined_bets_temp
-    print("Temps d'exécution =", time.time()-start)
+#     print("Temps d'exécution =", time.time()-start)
     best_match_combine = " / ".join([match[0] for match in best_combine])
     odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
     all_sites = main_sites+list(second_sites)
