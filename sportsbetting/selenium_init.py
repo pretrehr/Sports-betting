@@ -3,7 +3,10 @@ Initialisation de selenium
 """
 
 import selenium
+import sportsbetting
+import os
 
+path_driver = os.path.dirname(sportsbetting.__file__)+"\\resources\\chromedriver"
 
 def start_selenium():
     """
@@ -16,7 +19,8 @@ def start_selenium():
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless")
     try:
-        DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
-    except selenium.common.exceptions.WebDriverException:
-        DRIVER = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver.exe", options=options)
+        print(path_driver)
+        DRIVER = selenium.webdriver.Chrome(path_driver, options=options)
+    except (selenium.common.exceptions.WebDriverException, OSError):
+        DRIVER = selenium.webdriver.Chrome(path_driver+".exe", options=options)
 

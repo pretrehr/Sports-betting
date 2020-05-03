@@ -3,6 +3,7 @@ Fonctions de parsing
 """
 
 import sys
+import os
 import locale
 import urllib
 import urllib.error
@@ -25,6 +26,7 @@ from sportsbetting.database_functions import (is_in_db, is_in_db_site, add_name_
                                               get_id_by_opponent, get_double_team_tennis,
                                               get_close_name3)
 
+path_driver = os.path.dirname(sportsbetting.__file__)+"\\resources\\chromedriver"
 
 if sys.platform == "win32":
     locale.setlocale(locale.LC_TIME, "fr")
@@ -215,7 +217,7 @@ def parse_bwin(url=""):
         prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
         options.add_argument('log-level=3')
         options.add_experimental_option("prefs", prefs)
-        driver_bwin = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+        driver_bwin = selenium.webdriver.Chrome(path_driver+".exe", options=options)
     driver_bwin.get(url)
     match_odds_hash = {}
     is_1n2 = False
@@ -1287,7 +1289,7 @@ def parse_buteurs_betclic(url):
     prefs = {'profile.managed_default_content_settings.images':2, 'disk-cache-size': 4096}
     options.add_argument('log-level=3')
     options.add_experimental_option("prefs", prefs)
-    driver = selenium.webdriver.Chrome("sportsbetting/resources/chromedriver", options=options)
+    driver = selenium.webdriver.Chrome(path_driver+".exe", options=options)
     driver.maximize_window()
     match_odds_hash = {}
     driver.get(url)
