@@ -372,6 +372,11 @@ while True:
             window["PROGRESS_STAKES"].UpdateBar(sportsbetting.PROGRESS, 100)
     except AttributeError:
         pass
+    try:  # see if something has been posted to Queue
+        message = sportsbetting.QUEUE_TO_GUI.get_nowait()
+        sportsbetting.QUEUE_FROM_GUI.put(sg.popup_yes_no(message))
+    except queue.Empty:  # get_nowait() will get exception when Queue is empty
+        pass  # break from the loop if no more messages are queued up
     if event == "SPORT":
         sport = values["SPORT"][0]
         competitions = get_all_competitions(sport)

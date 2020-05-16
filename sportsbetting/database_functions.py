@@ -238,10 +238,18 @@ def add_name_to_db(_id, name, site):
         """.format(site, _id))
         sport, formated_name, name_site = c.fetchone()
         if name != name_site:
-            ans = input("Créer une nouvelle entrée pour {} sur {} "
-                        "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
-                        .format(formated_name, site, name_site, name))
-            if ans == 'y':
+            if inspect.currentframe().f_back.f_back.f_back.f_back.f_back.f_back.f_back.f_code \
+                    .co_name == "parse_thread":
+                sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
+                                               "Nouvelle donnée : {}\n"
+                                               "Donnée déjà existante : {}"
+                                               .format(formated_name, site, name, name_site))
+                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+            else:
+                ans = input("Créer une nouvelle entrée pour {} sur {} "
+                            "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
+                            .format(formated_name, site, name_site, name))
+            if ans in ['y', 'Yes']:
                 if name_site:
                     c.execute("""
                     INSERT INTO names (id, name, sport, name_{})
