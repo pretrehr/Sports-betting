@@ -391,3 +391,87 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     return what_was_printed
 
 
+def best_match_pari_gagnant_interface(window, values):
+    """
+    :param window: Fenêtre principale PySimpleGUI
+    :param values: Valeurs de la fenêtre principale
+    :return: Affiche le résultat de la fonction best_match_pari_gagnant dans l'interface
+    """
+    try:
+        site = values["SITE_GAGNANT"][0]
+        bet = float(values["BET_GAGNANT"])
+        minimum_odd = float(values["ODD_GAGNANT"])
+        sport = values["SPORT_GAGNANT"][0]
+        date_min, time_min, date_max, time_max = None, None, None, None
+        if values["DATE_MIN_GAGNANT_BOOL"]:
+            date_min = values["DATE_MIN_GAGNANT"]
+            time_min = values["TIME_MIN_GAGNANT"].replace(":", "h")
+        if values["DATE_MAX_GAGNANT_BOOL"]:
+            date_max = values["DATE_MAX_GAGNANT"]
+            time_max = values["TIME_MAX_GAGNANT"].replace(":", "h")
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = buffer = io.StringIO()
+        best_match_pari_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min,
+                                time_min)
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()
+        match, date = infos(what_was_printed)
+        if match is None:
+            window["MATCH_GAGNANT"].update("Aucun match trouvé")
+            window["DATE_GAGNANT"].update("")
+            window["ODDS_GAGNANT"].update(visible=False)
+            window["RESULT_GAGNANT"].update(visible=False)
+            for i in range(5):
+                window["INDICATORS_GAGNANT" + str(i)].update(visible=False)
+                window["RESULTS_GAGNANT" + str(i)].update(visible=False)
+        else:
+            window["MATCH_GAGNANT"].update(match)
+            window["DATE_GAGNANT"].update(date)
+            window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
+            window["RESULT_GAGNANT"].update(stakes(what_was_printed), visible=True)
+            for i, elem in enumerate(indicators(what_was_printed)):
+                window["INDICATORS_GAGNANT" + str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_GAGNANT" + str(i)].update(elem[1], visible=True)
+        buffer.close()
+    except IndexError:
+        pass
+    except ValueError:
+        pass
+
+
+def odds_match_interface(window, values):
+    """
+    :param window: Fenêtre principale PySimpleGUI
+    :param values: Valeurs de la fenêtre principale
+    :return: Affiche le résultat de la fonction odds_match dans l'interface
+    """
+    try:
+        match = values["MATCHES_ODDS"][0]
+        sport = values["SPORT_ODDS"][0]
+        _, odds_dict = odds_match(match, sport)
+        odds = odds_dict["odds"]
+        date = odds_dict["date"]
+        table = []
+        for key, value in odds.items():
+            table.append([key] + list(map(str, value)))
+        window["ODDS_ODDS"].update(table, visible=True)
+        window["DATE_ODDS"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
+        window["MATCH_ODDS"].update(match, visible=True)
+        window["DELETE_ODDS"].update(visible=True)
+    except IndexError:
+        pass
+
+
+def delete_odds_interface(window, values):
+    try:
+        match = values["MATCHES_ODDS"][0]
+        sport = values["SPORT_ODDS"][0]
+        del sportsbetting.ODDS[sport][match]
+        matches = sorted(list(sportsbetting.ODDS[sport]))
+        window['MATCHES_ODDS'].update(values=matches)
+        window["ODDS_ODDS"].update(visible=False)
+        window["DATE_ODDS"].update(visible=False)
+        window["MATCH_ODDS"].update(visible=False)
+        window["DELETE_ODDS"].update(visible=False)
+    except IndexError:
+        pass

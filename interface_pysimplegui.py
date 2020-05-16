@@ -283,20 +283,66 @@ freebets_layout = [[sg.Column(column_sites_freebets),
                              visible=False)
                     ]]
 
+column_text_gagnant = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
+column_fields_gagnant = [[sg.InputText(key='BET_GAGNANT', size=(6, 1))],
+                         [sg.InputText(key='ODD_GAGNANT', size=(6, 1))]]
+column_gagnant = [[sg.Column(column_text_gagnant), sg.Column(column_fields_gagnant)],
+                  [sg.Listbox(sports, size=(20, 6), key="SPORT_GAGNANT")]]
+options_gagnant = [[sg.Text("Options")],
+                   [sg.Checkbox("Date/Heure minimale ", key="DATE_MIN_GAGNANT_BOOL"),
+                    sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MIN_GAGNANT"),
+                    sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MIN_GAGNANT")],
+                   [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_GAGNANT_BOOL"),
+                    sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_GAGNANT"),
+                    sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")]]
+column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
+                                      visible=False)] for _ in range(5)]
+column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
+                                   visible=False)] for _ in range(5)]
+gagnant_layout = [
+    [sg.Listbox(sites, size=(20, 12), key="SITE_GAGNANT"),
+     sg.Column(column_gagnant),
+     sg.Column(options_gagnant)],
+    [sg.Button("Calculer", key="BEST_MATCH_GAGNANT")],
+    [sg.Text("", size=(30, 1), key="MATCH_GAGNANT"),
+     sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
+    [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
+              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+     sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10", visible=False)],
+    [sg.Column(column_indicators_gagnant),
+     sg.Column(column_results_gagnant)]
+]
+
+
+odds_layout = [
+    [sg.Listbox(sports, size=(20, 6), key="SPORT_ODDS", enable_events=True),
+     sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True),
+     sg.Col([[sg.Text("", size=(30, 1), key="MATCH_ODDS", visible=False)],
+             [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
+             [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                       headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
+                       hide_vertical_scroll=True, size=(None, 12))],
+             [sg.Button("Supprimer le match", key="DELETE_ODDS", visible=False)]])
+    ]
+]
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
+                         sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
                          sg.Tab('Pari sur un match donné', stake_layout),
                          sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Cashback', cashback_layout),
                          sg.Tab('Pari combiné', combine_layout),
                          sg.Tab('Paris à placer', stakes_layout),
-                         sg.Tab('Freebets à placer', freebets_layout)]])],
-            [sg.Button('Quitter')]]
+                         sg.Tab('Freebets à placer', freebets_layout),
+                         sg.Tab('Pari gagnant', gagnant_layout)
+                         ]])],
+          [sg.Button('Quitter')]]
 
 # Create the Window
-window = sg.Window('Paris sportifs', layout, location=(0,0))
-progress_bar = window.FindElement('progress')
+window = sg.Window('Paris sportifs', layout, location=(0, 0))
+event, values = window.read(timeout=0)
+progress_bar = window['progress']
 sportsbetting.PROGRESS = 0
 thread = None
 thread_stakes = None
@@ -313,6 +359,17 @@ while True:
         if not thread.is_alive():
             pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
             progress_bar.Update(visible=False)
+        else:
+            progress_bar.UpdateBar(sportsbetting.PROGRESS, 100)
+        # else:
+        #     sg.one_line_progress_meter("Test", sportsbetting.PROGRESS, 100, "key")
+    except AttributeError:
+        pass
+    try:
+        if not thread_stakes.is_alive():
+            window["PROGRESS_STAKES"].update(visible=False)
+        else:
+            window["PROGRESS_STAKES"].UpdateBar(sportsbetting.PROGRESS, 100)
     except AttributeError:
         pass
     if event == "SPORT":
@@ -390,12 +447,24 @@ while True:
             window["SITE_FREEBETS_" + str(visible_freebets)].update(visible=False)
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
     elif event == "BEST_MATCH_FREEBETS":
-        whatWasPrintedCombine = best_matches_freebet_interface(window, values, visible_freebets)
-    elif event in (None, 'Quitter'):   # if user closes window or clicks cancel
+        sportsbetting.ODDS_INTERFACE = best_matches_freebet_interface(window, values, visible_freebets)
+    elif event == "BEST_MATCH_GAGNANT":
+        best_match_pari_gagnant_interface(window, values)
+    elif event == "SPORT_ODDS":
+        try:
+            matches = sorted(list(sportsbetting.ODDS[values["SPORT_ODDS"][0]]))
+            window['MATCHES_ODDS'].update(values=matches)
+        except KeyError:
+            window['MATCHES_ODDS'].update(values=[])
+    elif event == "MATCHES_ODDS":
+        odds_match_interface(window, values)
+    elif event == "DELETE_ODDS":
+        delete_odds_interface(window, values)
+        pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+    elif event in (None, 'Quitter'):  # if user closes window or clicks cancel
         break
     else:
         pass
-    
 
 window.close()
 sys.stdout = old_stdout
