@@ -11,3 +11,7 @@ build/*
 dist/*
 debug.log
 *.pickle
+.coverage
+.idea/*
+cov_html/*
+source/*
