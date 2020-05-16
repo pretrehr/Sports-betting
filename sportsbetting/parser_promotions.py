@@ -4,14 +4,16 @@
 Parseur pour récupérer les promotions en cours
 """
 
+import re
 import urllib
+import urllib.request
 from pprint import pprint
-import selenium
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from sportsbetting import selenium_init
+
 
 def get_promotions_france_pari():
     """
@@ -23,7 +25,8 @@ def get_promotions_france_pari():
         if "href" in line.attrs and "promo/" in line["href"]:
             if "1118" in line["href"] or "1375" in line["href"]:
                 return
-            print(parse_promotion_france_pari("https://www.france-pari.fr"+line["href"]))
+            print(parse_promotion_france_pari("https://www.france-pari.fr" + line["href"]))
+
 
 def parse_promotion_france_pari(url):
     """
@@ -37,13 +40,13 @@ def parse_promotion_france_pari(url):
                 if string == "Termes et Conditions" or string in ["Exemples :", "Exemple :"]:
                     return out
                 if out and out[-1] in [","]:
-                    out += " "+string
+                    out += " " + string
                 elif string[0].isupper() or string[0] in ["+"]:
-                    out += "\n"+string
+                    out += "\n" + string
                 elif string[0] in ["."]:
                     out += string
                 else:
-                    out += " "+string
+                    out += " " + string
 
 
 def get_promotions_netbet():
@@ -58,6 +61,7 @@ def get_promotions_netbet():
             promotion.remove("En savoir plus")
             print("\n".join(promotion))
             print()
+
 
 def get_promotions_betclic():
     """
@@ -79,14 +83,11 @@ def get_promotions_betclic():
     if not urls_promo:
         print("Pas de promotion en cours")
 
+
 def parse_promotion_betclic(url_promo):
     """
     Affiche une promotion telle qu'affichée sur betclic
     """
-    url = "https://www.betclic.fr/happy-loser-10-au-12-janvier-g4161"
-    url = "https://www.betclic.fr/cashback-sports-us-g4147"
-    url = "https://www.betclic.fr/cashback-foot-g4053"
-    url = "https://www.betclic.fr/mission-us-semaine-2-g4011"
     url = url_promo
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     print(soup.find("title").text)
@@ -98,8 +99,8 @@ def parse_promotion_betclic(url_promo):
             infos = list(line.stripped_strings)
             dict_steps[infos[0]] = infos[1]
             for string in infos[2:]:
-                if not(string[0].isupper() or "€" in string):
-                    dict_steps[infos[0]] += " "+string
+                if not (string[0].isupper() or "€" in string):
+                    dict_steps[infos[0]] += " " + string
                 else:
                     break
         if "class" in line.attrs and (any(x in line["class"] for x in ["content-bloc-event-page",
@@ -110,13 +111,14 @@ def parse_promotion_betclic(url_promo):
                 dict_infos[infos[0]] = infos[1]
             except IndexError:
                 if "autres" in dict_infos:
-                    dict_infos["autres"] += "\n"+infos[0]
+                    dict_infos["autres"] += "\n" + infos[0]
                 else:
                     dict_infos["autres"] = infos[0]
     print("Étapes :")
     pprint(dict_steps)
     print("Infos :")
     pprint(dict_infos)
+
 
 def get_promotions_pmu():
     """
@@ -133,22 +135,25 @@ def get_promotions_pmu():
                     print(out)
                 else:
                     print("Aucune promotion")
-            out += "\n"+promotion.pop(0)+"\n"
+            out += "\n" + promotion.pop(0) + "\n"
             for string in promotion:
                 if "Les cotes" in string or string == "Pariez":
                     break
                 if (string[0].isupper() and out[-1] in [".", "!", "?", "…", ":", ")", "€"]
                         or string[0] in ["-", "*"]
                         or out[-1].isnumeric()):
-                    out += "\n"+string
+                    out += "\n" + string
                 elif string[0] in [".", ","] or out[-1] == "\n":
                     out += string
                 else:
-                    out += " "+string
+                    out += " " + string
             out += "\n"
 
 
 def get_promotions_parionssport():
+    """
+    Affiche les promotions proposées sur ParionsSport
+    """
     url = "https://www.enligne.parionssport.fdj.fr/paris-sportifs/promotions"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     urls_promo = []
@@ -163,6 +168,9 @@ def get_promotions_parionssport():
 
 
 def parse_promotion_parionssport(url):
+    """
+    Parsing d'une page de promotion sur ParionsSport
+    """
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_infos = {}
     desc = " ".join(soup.findAll("div", {"class": "left"})[0].stripped_strings)
@@ -175,7 +183,11 @@ def parse_promotion_parionssport(url):
     pprint(dict_infos)
     print("\n")
 
+
 def get_promotions_unibet():
+    """
+    Affiche les promotions proposées sur Unibet
+    """
     selenium_init.start_selenium()
     selenium_init.DRIVER.get("https://www.unibet.fr/promotions.do")
     WebDriverWait(selenium_init.DRIVER, 15).until(
@@ -184,18 +196,22 @@ def get_promotions_unibet():
     inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
     urls = []
-    for line in soup.find_all("li", {"data-headline-display":"HAD"}):
+    for line in soup.find_all("li", {"data-headline-display": "HAD"}):
         child = line.findChildren("a", recursive=False)[0]
         if "par-ami" in child["href"]:
             break
-        urls.append("https://www.unibet.fr"+child["href"])
+        urls.append("https://www.unibet.fr" + child["href"])
     for url in urls:
         parse_promotion_unibet(url)
     if not urls:
         print("Pas de promotion en cours")
     selenium_init.DRIVER.quit()
 
+
 def parse_promotion_unibet(url):
+    """
+    Parsing d'une page de promotion sur unibet
+    """
     selenium_init.DRIVER.get(url)
     WebDriverWait(selenium_init.DRIVER, 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "steps"))
@@ -208,7 +224,7 @@ def parse_promotion_unibet(url):
     head_html = selenium_init.DRIVER.execute_script("return document.head.innerHTML")
     head_soup = BeautifulSoup(head_html, features="lxml")
     print(head_soup.find("title").text)
-    for line in soup.find_all("div", {"class":"steps"}):
+    for line in soup.find_all("div", {"class": "steps"}):
         strings = list(line.stripped_strings)[1:]
         for string in strings:
             if string.isdigit():
@@ -219,11 +235,10 @@ def parse_promotion_unibet(url):
                 out = out[:-1]
                 out += ". "
             else:
-                out += string+" "
+                out += string + " "
         dict_steps[step_number] = out.strip()
         pprint(dict_steps)
         print()
-
 
 
 def get_promotions_zebet():
@@ -234,20 +249,18 @@ def get_promotions_zebet():
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     url = soup.find_all("iframe")[1]["src"]
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    out = ""
     title = ""
     dict_table = {}
     dict_conditions = {}
     is_key = False
-    for line in soup.find_all(attrs={"class":"accordion-image", "style":"display: yes;"}):
-        elem = line.next_element.next_element.next_element.next_element.next_element.next_element
+    key = None
+    for elem in soup.find_all(attrs={"class": "modal-body"}):
         for child in elem.findChildren("table", recursive=True):
             strings = list(child.stripped_strings)
             title = "Tableau des {} en fonction des {}".format(strings[1].lower(),
                                                                strings[0].lower())
             for key, value in zip(strings[2::2], strings[3::2]):
                 dict_table[key] = value
-                
         strings = list(elem.stripped_strings)
         promotion = ""
         promotion_reseau = False
@@ -274,8 +287,31 @@ def get_promotions_zebet():
                 pprint(dict_conditions)
             if dict_table:
                 print(promotion_reseau)
-                print("\n"+title)
+                print("\n" + title)
                 pprint(dict_table)
             print("\n")
         dict_conditions = {}
         dict_table = {}
+
+def analyse_zebet(conditions):
+    del conditions["La fin de l'offre"]
+    del conditions["Exemple"]
+    match_unique = False
+    type_pari = "Simple ou combiné"
+    resultat_pari = "Gagnant ou perdant"
+    if "combiné" in conditions["Ne sont pas concernés"]:
+        type_pari = "Simple"
+    if "simple" in conditions["Ne sont pas concernés"]:
+        type_pari = "Combiné"
+    if "gagnant" in conditions["L'Égibilité"] and "perdant" not in conditions["L'Égibilité"]:
+        type_pari = "Gagnant"
+    if "perdant" in conditions["L'Égibilité"] and "gagnant" not in conditions["L'Égibilité"]:
+        type_pari = "Perdant"
+    mise_minimum = float(re.sub("[^0-9]", "", conditions["L'Égibilité"]))
+    
+    mise_minimum = 0
+    mise_maximum = 0
+    match = ""
+    cote_minimale = 1.1
+    
+        
