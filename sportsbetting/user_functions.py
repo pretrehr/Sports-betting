@@ -307,9 +307,9 @@ def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
+    match = unidecode.unidecode(match)
     all_odds = sportsbetting.ODDS[sport]
     opponents = match.split('-')
-    match_name = ""
     for match_name in all_odds:
         if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
                 and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1]
@@ -321,7 +321,7 @@ def odds_match(match, sport="football"):
                     and opponents[1].lower().strip() in unidecode.unidecode(match_name.lower())):
                 break
         else:
-            return
+            return None, None
     print(match_name)
     return match_name, all_odds[match_name]
 
@@ -608,7 +608,6 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
         if not any([site not in new_odds[match]["odds"].keys() for site in second_sites]):
             if new_odds[match]["odds"]:
                 all_odds[match] = new_odds[match]
-    best_rate = 0
     best_profit = -sum(stake[0] for stake in stakes)
     n = 3 ** nb_matches
     nb_stakes = len(stakes)
@@ -617,7 +616,9 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
     nb_combis = len(combis)
     progress = 10
     start = time.time()
+    sportsbetting.PROGRESS = 0
     for i, combine in enumerate(combis):
+        sportsbetting.PROGRESS += 100/nb_combis
         #         if i == 20:
         #             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
         #         if i/nb_combis*100 > progress:
@@ -625,9 +626,14 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
         #             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
-        main_sites_distribution = [main_sites[0] for _ in range(n)]
-        main_site_odds = copy.deepcopy(all_odds_combine[match_combine]["odds"][main_sites[0]])
-        for main in main_sites[1:]:
+        for i, main0 in enumerate(main_sites):
+            try:
+                main_sites_distribution = [main0 for _ in range(n)]
+                main_site_odds = copy.deepcopy(all_odds_combine[match_combine]["odds"][main0])
+                break
+            except KeyError:
+                pass
+        for main in main_sites[:i] + main_sites[i + 1:]:
             try:
                 potential_odds = all_odds_combine[match_combine]["odds"][main]
                 for j, odd in enumerate(potential_odds):
@@ -640,8 +646,16 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
                        for second_site in second_sites}
         dict_combine_odds = copy.deepcopy(second_odds)
         for perm in permutations(range(n), nb_stakes):
+            valid_perm = True
             defined_second_sites = [[perm[i], stake[0], stake[1]]
                                     for i, stake in enumerate(stakes)]
+            for i, stake in enumerate(stakes):
+                if dict_combine_odds[defined_second_sites[i][2]][defined_second_sites[i][0]] < \
+                        stake[2]:
+                    valid_perm = False
+                    break
+            if not valid_perm:
+                continue
             defined_bets_temp = defined_bets(main_site_odds, dict_combine_odds,
                                              main_sites_distribution,
                                              defined_second_sites)
@@ -650,20 +664,23 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
                 best_profit = profit
                 best_combine = combine
                 best_bets = defined_bets_temp
-#     print("Temps d'exécution =", time.time()-start)
-    best_match_combine = " / ".join([match[0] for match in best_combine])
-    odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
-    all_sites = main_sites+list(second_sites)
-    for site in all_odds_combine[best_match_combine]["odds"]:
-        if site not in all_sites:
-            del odds_best_match["odds"][site]
-    print(best_match_combine)
-    pprint(odds_best_match, compact=1)
-    print("Plus-value =", best_profit)
-    print("Gain référence =", best_bets[0])
-    print("Somme des mises =", np.sum(best_bets[1]))
-    afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                           all_odds_combine[best_match_combine]["odds"], "football")
+    #     print("Temps d'exécution =", time.time()-start)
+    try:
+        best_match_combine = " / ".join([match[0] for match in best_combine])
+        odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
+        all_sites = main_sites + list(second_sites)
+        for site in all_odds_combine[best_match_combine]["odds"]:
+            if site not in all_sites:
+                del odds_best_match["odds"][site]
+        print(best_match_combine)
+        pprint(odds_best_match, compact=1)
+        print("Plus-value =", best_profit)
+        print("Gain référence =", best_bets[0])
+        print("Somme des mises =", np.sum(best_bets[1]))
+        afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
+                               all_odds_combine[best_match_combine]["odds"], "football")
+    except UnboundLocalError:
+        print("No match found")
 
 
 def best_matches_freebet(main_sites, freebets, sport="football", *matches):
