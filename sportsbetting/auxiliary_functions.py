@@ -30,12 +30,156 @@ def valid_odds(all_odds, sport):
                 del copy_all_odds[match]["odds"][site]
     return copy_all_odds
 
+
+def add_matches_to_db(odds, sport, site):
+    """
+    :param odds: Dictionnaire {match :{"date":date, "odds":cotes}}
+    :param sport: Sport
+    :param site: Nom du bookmaker
+    :return: Ajoute les équipes inconnues dans la base de données
+    """
+    matches = odds.keys()
+    teams = set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches)))))
+    teams = set(map(lambda x: x.strip(), teams))
+    teams_not_in_db_site = set()
+    teams_sets = [set() for _ in range(9)]
+    for team in teams:
+        line = is_in_db_site(team, sport, site)
+        if not line:
+            teams_not_in_db_site.add(team)
+    if not teams_not_in_db_site:
+        return
+    print(teams)
+    print(0, list(teams_not_in_db_site))
+    for team in teams_not_in_db_site:
+        line = is_in_db(team, sport, site)
+        if line:
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_sets[0].add(team)
+        else:
+            teams_sets[0].add(team)
+    print(1, list(teams_sets[0]))
+    if not teams_sets[0]:
+        return
+    for team in teams_sets[0]:
+        line = get_close_name(team, sport, site)
+        if line:
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_sets[1].add(team)
+        else:
+            teams_sets[1].add(team)
+    print(2, list(teams_sets[1]))
+    if not teams_sets[1]:
+        return
+    for team in teams_sets[1]:
+        future_opponents, future_matches = get_future_opponents(team, matches)
+        success = False
+        for future_opponent, future_match in zip(future_opponents, future_matches):
+            id_opponent = get_id_by_site(future_opponent, sport, site)
+            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+            if id_to_find:
+                success = add_name_to_db(id_to_find, team, site)
+                if success:
+                    break
+        if not success:
+            teams_sets[2].add(team)
+    print(3, list(teams_sets[2]))
+    if not teams_sets[2]:
+        return
+    for team in teams_sets[2]:
+        line = get_close_name2(team, sport, site)
+        if line:
+            success = add_name_to_db(line[0], team, site)
+            if not success:
+                teams_sets[3].add(team)
+        else:
+            teams_sets[3].add(team)
+    print(4, list(teams_sets[3]))
+    if not teams_sets[3]:
+        return
+    for team in teams_sets[3]:
+        future_opponents, future_matches = get_future_opponents(team, matches)
+        success = False
+        for future_opponent, future_match in zip(future_opponents, future_matches):
+            id_opponent = get_id_by_site(future_opponent, sport, site)
+            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+            if id_to_find:
+                success = add_name_to_db(id_to_find, team, site)
+                if success:
+                    break
+        if not success:
+            teams_sets[4].add(team)
+    print(5, list(teams_sets[4]))
+    if not teams_sets[4]:
+        return
+    if sport == "tennis":
+        for team in teams_sets[4]:
+            line = get_close_name3(team, sport, site)
+            if line:
+                success = add_name_to_db(line[0], team, site)
+                if not success:
+                    teams_sets[5].add(team)
+            else:
+                teams_sets[5].add(team)
+        print(6, list(teams_sets[5]))
+        if not teams_sets[5]:
+            return
+        for team in teams_sets[5]:
+            future_opponents, future_matches = get_future_opponents(team, matches)
+            found = False
+            for future_opponent, future_match in zip(future_opponents, future_matches):
+                id_opponent = get_id_by_site(future_opponent, sport, site)
+                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_to_find:
+                    found = True
+                    success = add_name_to_db(id_to_find, team, site)
+                    if not success:
+                        teams_sets[6].add(team)
+            if not found:
+                teams_sets[6].add(team)
+        print(7, list(teams_sets[6]))
+        if not teams_sets[6]:
+            return
+        for team in teams_sets[6]:
+            line = get_double_team_tennis(team, site)
+            if line:
+                success = add_name_to_db(line[0], team, site)
+                if not success:
+                    teams_sets[7].add(team)
+            else:
+                teams_sets[7].add(team)
+        print(8, list(teams_sets[7]))
+        if not teams_sets[7]:
+            return
+        for team in teams_sets[7]:
+            future_opponents, future_matches = get_future_opponents(team, matches)
+            found = False
+            for future_opponent, future_match in zip(future_opponents, future_matches):
+                id_opponent = get_id_by_site(future_opponent, sport, site)
+                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_to_find:
+                    success = add_name_to_db(id_to_find, team, site)
+                    if not success:
+                        teams_sets[8].add(team)
+            if not found:
+                teams_sets[8].add(team)
+        print(9, list(teams_sets[8]))
+
+
+#     if teams_sets[4]:
+#         return site, sport, competition, teams_sets[4]
+
 def adapt_names(odds, site, sport):
     """
     Uniformisation des noms d'équipe/joueur d'un site donnée conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient "Marseille - Paris SG"
     """
     new_dict = {}
+    if site == "france_pari":
+        site = "netbet"
+    add_matches_to_db(odds, sport, site)
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formated_name(x.strip(), site, sport),
                                         match.split(" - "))))
