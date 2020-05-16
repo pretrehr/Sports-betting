@@ -3,22 +3,22 @@
 Assistant de paris sportifs
 """
 
-
 from itertools import product
 import numpy as np
 
+
 def gain(cotes, mise=1):
     """
-    Calcule le gain pour une somme des mises egale a mise
+    Calcule le gain pour une somme des mises égale a mise
     """
-    return mise/sum(map(lambda x: 1/x, cotes))
+    return mise / sum(map(lambda x: 1 / x, cotes))
 
 
 def gain2(cotes, rang, mise=1):
     """
     Benefice gagne en misant mise sur la rang-ieme cote de cotes
     """
-    return cotes[rang]*mise-sum(mises2(cotes, mise, rang))
+    return cotes[rang] * mise - sum(mises2(cotes, mise, rang))
 
 
 def mises(cotes, mise=1, output=False):
@@ -27,17 +27,17 @@ def mises(cotes, mise=1, output=False):
     avec une mise totale egale a mise
     """
     gains = gain(cotes, mise)
-    mises_reelles = list(map(lambda x: gains/x, cotes))
+    mises_reelles = list(map(lambda x: gains / x, cotes))
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
         print("somme des mises =", round(sum(mis), 2))
-        print("gain min =", min([round(mis[i]*cotes[i], 2)
+        print("gain min =", min([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))
-        print("gain max =", max([round(mis[i]*cotes[i], 2)
+        print("gain max =", max([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))
         print("plus-value max =",
-              round(min([round(mis[i]*cotes[i], 2)
-                         for i in range(len(mis))])-sum(mis), 2))
+              round(min([round(mis[i] * cotes[i], 2)
+                         for i in range(len(mis))]) - sum(mis), 2))
         print("mises arrondies =", mis)
         return
     return mises_reelles
@@ -50,30 +50,32 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
     """
     if choix == -1:
         choix = np.argmin(cotes)
-    gains = mise_requise*cotes[choix]
-    mises_reelles = list(map(lambda x: gains/x, cotes))
+    gains = mise_requise * cotes[choix]
+    mises_reelles = list(map(lambda x: gains / x, cotes))
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
         print("somme des mises =", round(sum(mis), 2))
-        print("gain min =", min([round(mis[i]*cotes[i], 2)
+        print("gain min =", min([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))
-        print("gain max =", max([round(mis[i]*cotes[i], 2)
+        print("gain max =", max([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))
         print("plus-value min =",
-              round(min([round(mis[i]*cotes[i], 2)
-                         for i in range(len(mis))])-sum(mis), 2))
+              round(min([round(mis[i] * cotes[i], 2)
+                         for i in range(len(mis))]) - sum(mis), 2))
         print("plus-value max =",
-              round(max([round(mis[i]*cotes[i], 2)
-                         for i in range(len(mis))])-sum(mis), 2))
+              round(max([round(mis[i] * cotes[i], 2)
+                         for i in range(len(mis))]) - sum(mis), 2))
         print("mises arrondies =", mis)
         return
     return mises_reelles
+
 
 def cotes_freebet(cotes):
     """
     Calcule les cotes d'un match joue avec des paris gratuits
     """
-    return list(map(lambda x: (x-1 if x > 1 else 0.01), cotes))
+    return list(map(lambda x: (x - 1 if x > 1 else 0.01), cotes))
+
 
 def mises_freebets(cotes, mise):
     """
@@ -90,14 +92,14 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
     """
     if issue == -1:
         issue = np.argmax(cotes)
-    mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
-    gains = mises_reelles[issue]*(cotes[issue]-1)
+    mises_reelles = mises2(cotes[:issue] + [cotes[issue] - 1] + cotes[issue + 1:], freebet, issue)
+    gains = mises_reelles[issue] * (cotes[issue] - 1)
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
-        print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
-        print("gain sur freebet / mise freebet =", round(gains+freebet-sum(mis), 2)/freebet)
+        print("gain sur freebet =", round(gains + freebet - sum(mis), 2))
+        print("gain sur freebet / mise freebet =", round(gains + freebet - sum(mis), 2) / freebet)
         print("gain =", round(gains, 2))
-        print("mise totale (hors freebet) =", round(sum(mis)-freebet, 2))
+        print("mise totale (hors freebet) =", round(sum(mis) - freebet, 2))
         print("mises arrondies =", mis)
         return
     return mises_reelles
@@ -111,20 +113,20 @@ def mises_freebet2(cotes, freebet, issue=-1, output=False):
     i_max = np.argmax(cotes)
     if issue == -1:
         issue = i_max
-    mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
-    gains = mises_reelles[issue]*(cotes[issue]-1)
-    issue2 = np.argmax(cotes[:i_max]+[0]+cotes[i_max+1:]) if issue == i_max else i_max
+    mises_reelles = mises2(cotes[:issue] + [cotes[issue] - 1] + cotes[issue + 1:], freebet, issue)
+    gains = mises_reelles[issue] * (cotes[issue] - 1)
+    issue2 = int(np.argmax(cotes[:i_max] + [0] + cotes[i_max + 1:]) if issue == i_max else i_max)
     mis = list(map(lambda x: round(x, 2), mises_reelles))
-    rapport_gain = (gains+freebet-sum(mis))/freebet
-    if rapport_gain < (cotes[issue2]-1)/cotes[issue2]:
-        mises_reelles[issue2] = round(gains/(cotes[issue2]-1), 2)
+    rapport_gain = (gains + freebet - sum(mis)) / freebet
+    if rapport_gain < (cotes[issue2] - 1) / cotes[issue2]:
+        mises_reelles[issue2] = round(gains / (cotes[issue2] - 1), 2)
         mis = list(map(lambda x: round(x, 2), mises_reelles))
         freebet += mis[issue2]
     if output:
-        print("gain sur freebet =", round(gains+freebet-sum(mis), 2))
-        print("gain sur freebet / mise freebet =", round(gains+freebet-sum(mis), 2)/freebet)
+        print("gain sur freebet =", round(gains + freebet - sum(mis), 2))
+        print("gain sur freebet / mise freebet =", round(gains + freebet - sum(mis), 2) / freebet)
         print("gain =", round(gains, 2))
-        print("mise totale (hors freebet) =", round(sum(mis)-freebet, 2))
+        print("mise totale (hors freebet) =", round(sum(mis) - freebet, 2))
         print("mises arrondies =", mis)
         return issue2
     return mises_reelles
@@ -137,15 +139,16 @@ def gain_freebet2(cotes, freebet, issue=-1):
     i_max = np.argmax(cotes)
     if issue == -1:
         issue = i_max
-    mises_reelles = mises2(cotes[:issue]+[cotes[issue]-1]+cotes[issue+1:], freebet, issue)
-    gains = mises_reelles[issue]*(cotes[issue]-1)
-    issue2 = np.argmax(cotes[:i_max]+cotes[i_max+1:]) if issue == i_max else i_max
+    mises_reelles = mises2(cotes[:issue] + [cotes[issue] - 1] + cotes[issue + 1:], freebet, issue)
+    gains = mises_reelles[issue] * (cotes[issue] - 1)
+    issue2 = int(np.argmax(cotes[:i_max] + cotes[i_max + 1:]) if issue == i_max else i_max)
     mis = list(map(lambda x: round(x, 2), mises_reelles))
-    rapport_gain = (gains+freebet-sum(mis))/freebet
-    if rapport_gain < (cotes[issue2]-1)/cotes[issue2]:
-        mis[issue2] = round(gains/(cotes[issue2]-1), 2)
+    rapport_gain = (gains + freebet - sum(mis)) / freebet
+    if rapport_gain < (cotes[issue2] - 1) / cotes[issue2]:
+        mis[issue2] = round(gains / (cotes[issue2] - 1), 2)
         freebet += mis[issue2]
-    return (gains+freebet-sum(mis))/freebet
+    return (gains + freebet - sum(mis)) / freebet
+
 
 def cotes_combine(cotes):
     """
@@ -154,7 +157,7 @@ def cotes_combine(cotes):
     out = []
     res = list(product(*cotes))
     for i in res:
-        out.append(round(np.prod(i), 4))
+        out.append(round(float(np.prod(i)), 4))
     return out
 
 
@@ -165,13 +168,13 @@ def gain_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
     defaut, la mise remboursee est placee sur la cote la plus haute et le
     remboursement est effectue en argent reel
     """
-    taux = ((not remb_freebet) + 0.77*remb_freebet)*taux_remboursement
+    taux = ((not remb_freebet) + 0.77 * remb_freebet) * taux_remboursement
     if rang == -1:
         rang = np.argmax(cotes)
-    gains = mise_max*cotes[rang]
-    mis = list(map(lambda x: (gains-mise_max*taux)/x, cotes))
+    gains = mise_max * cotes[rang]
+    mis = list(map(lambda x: (gains - mise_max * taux) / x, cotes))
     mis[rang] = mise_max
-    return gains-sum(mis)
+    return gains - sum(mis)
 
 
 def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,
@@ -181,15 +184,15 @@ def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False
     defaut, la mise remboursee est placee sur la cote la plus haute et le
     remboursement est effectue en argent reel
     """
-    taux = ((not remb_freebet) + 0.77*remb_freebet)*taux_remboursement
+    taux = ((not remb_freebet) + 0.77 * remb_freebet) * taux_remboursement
     if rang == -1:
         rang = np.argmax(cotes)
-    gains = mise_max*cotes[rang]
-    mis_reelles = list(map(lambda x: (gains-mise_max*taux)/x, cotes))
+    gains = mise_max * cotes[rang]
+    mis_reelles = list(map(lambda x: (gains - mise_max * taux) / x, cotes))
     mis_reelles[rang] = mise_max
     if output:
         mis = list(map(lambda x: round(x, 2), mis_reelles))
-        print("gain net =", round(gains-sum(mis), 2))
+        print("gain net =", round(gains - sum(mis), 2))
         print("mises arrondies =", mis)
         return
     return mis_reelles
@@ -200,40 +203,43 @@ def mises_promo_gain_cote(cotes, mise_minimale, rang, output=False):
     Calcule la répartition des mises pour la promotion "gain en freebet de la cote gagnée"
     """
     mis = []
-    gains = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    gains = cotes[rang] * 0.77 + mise_minimale * cotes[rang]
     for cote in cotes:
-        mis.append((gains/cote))
+        mis.append((gains / cote))
     mis[rang] = mise_minimale
     if output:
         print("somme mises=", sum(mis))
         print("gain=", gains)
     return mis
 
+
 def gain_promo_gain_cote(cotes, mise_minimale, rang):
     """
     Calcule le gain pour la promotion "gain en freebet de la cote gagnée"
     """
     mis = []
-    gains = cotes[rang]*0.77+mise_minimale*cotes[rang]
+    gains = cotes[rang] * 0.77 + mise_minimale * cotes[rang]
     for cote in cotes:
-        mis.append((gains/cote))
+        mis.append((gains / cote))
     mis[rang] = mise_minimale
-    return gain-sum(mis)
+    return gains - sum(mis)
+
 
 def cote_boostee(cote, boost_selon_cote=True, freebet=True):
     """
     Calcul de cote boostee pour promotion Betclic
     """
-    mult_freebet = 1*(not freebet)+0.8*freebet
+    mult_freebet = 1 * (not freebet) + 0.8 * freebet
     if not boost_selon_cote:
-        return cote+(cote-1)*mult_freebet
+        return cote + (cote - 1) * mult_freebet
     if cote < 2:
         return cote
     if cote < 2.51:
-        return cote+(cote-1)*0.25*mult_freebet
+        return cote + (cote - 1) * 0.25 * mult_freebet
     if cote < 3.51:
-        return cote+(cote-1)*0.5*mult_freebet
-    return cote+(cote-1)*mult_freebet
+        return cote + (cote - 1) * 0.5 * mult_freebet
+    return cote + (cote - 1) * mult_freebet
+
 
 def taux_boost(cote, boost_selon_cote=True):
     """
@@ -249,23 +255,25 @@ def taux_boost(cote, boost_selon_cote=True):
         return 0.5
     return 1
 
+
 def mises_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, output=False):
     """
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(lambda x: cote_boostee(x, boost_selon_cote), cotes))
     benefice_max = 0
+    meilleures_mises = []
     for i, cote in enumerate(cotes):
-        mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
+        mise = gain_max / ((cotes[i] - 1) * taux_boost(cote, boost_selon_cote))
         mises_possibles = mises2(new_cotes, mise, i)
         mises_corrigees = []
         benefice = 0
         for j, mis in enumerate(mises_possibles):
-            if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1:
-                mises_corrigees.append(mise*cote/cotes[j])
+            if mis * ((cotes[j] - 1) * taux_boost(cotes[j], boost_selon_cote)) > gain_max + 0.1:
+                mises_corrigees.append(mise * cote / cotes[j])
             else:
                 mises_corrigees.append(mis)
-                benefice = mises_corrigees[j]*new_cotes[j]
+                benefice = mises_corrigees[j] * new_cotes[j]
         benefice -= sum(mises_corrigees)
         if benefice > benefice_max:
             benefice_max = benefice
@@ -283,20 +291,19 @@ def gain_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True):
     new_cotes = list(map(lambda x: cote_boostee(x, boost_selon_cote), cotes))
     benefice_max = 0
     for i, cote in enumerate(cotes):
-        mise = gain_max/((cotes[i]-1)*taux_boost(cote, boost_selon_cote))
+        mise = gain_max / ((cotes[i] - 1) * taux_boost(cote, boost_selon_cote))
         mises_possibles = mises2(new_cotes, mise, i)
         mises_corrigees = []
         benefice = 0
         for j, mis in enumerate(mises_possibles):
-            if mis*((cotes[j]-1)*taux_boost(cotes[j], boost_selon_cote)) > gain_max+0.1:
-                mises_corrigees.append(mise*cote/cotes[j])
+            if mis * ((cotes[j] - 1) * taux_boost(cotes[j], boost_selon_cote)) > gain_max + 0.1:
+                mises_corrigees.append(mise * cote / cotes[j])
             else:
                 mises_corrigees.append(mis)
-                benefice = mises_corrigees[j]*new_cotes[j]
+                benefice = mises_corrigees[j] * new_cotes[j]
         benefice -= sum(mises_corrigees)
         if benefice > benefice_max:
             benefice_max = benefice
-            meilleures_mises = mises_corrigees
     return benefice_max
 
 
@@ -304,25 +311,25 @@ def paris_rembourses_si_perdants(cotes, remboursement_max, freebet, taux_rembour
     """
     Calcule les mises à placer lorsque tous les paris perdants sont remboursés
     """
-    rg_max = np.argmax(cotes)
+    rg_max = int(np.argmax(cotes))
     n = len(cotes)
-    facteur = (1-0.2*freebet)*taux_remboursement
+    facteur = (1 - 0.2 * freebet) * taux_remboursement
     systeme = []
     for i, cote in enumerate(cotes):
-        line = [facteur for _ in range(n+1)]
+        line = [facteur for _ in range(n + 1)]
         line[-1] = -1
         line[i] = cote
         systeme.append(line)
-    line = [taux_remboursement for _ in range(n+1)]
+    line = [taux_remboursement for _ in range(n + 1)]
     line[rg_max] = 0
     line[-1] = 0
     systeme.append(line)
     a = np.array(systeme)
-    values = [0 for _ in range(n+1)]
+    values = [0 for _ in range(n + 1)]
     values[-1] = remboursement_max
     b = np.array(values)
     x = np.linalg.solve(a, b)
-    print("Bénéfice net:", x[-1]-sum(x[:-1]))
+    print("Bénéfice net:", x[-1] - sum(x[:-1]))
     print(x[:-1])
 
 
@@ -331,6 +338,7 @@ def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
     Optimisation de la promotion Zebet qui attribue un unique cashback en fonction de la plus haute
     mise perdue
     """
+
     def aux(mise):
         if mise > 25:
             return 10
@@ -344,22 +352,22 @@ def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
             return 2
         else:
             return 0
+
     sorted_cotes = sorted(cotes)
     mise_max = 25.01
-    gain_approx = mise_max*sorted_cotes[0]
-    retour_approx = aux(gain_approx/sorted_cotes[1])
-    gains = gain_approx + retour_approx*0.8
-    while aux((gains-aux(mise_max)*0.8)/sorted_cotes[1]) != retour_approx:
+    gain_approx = mise_max * sorted_cotes[0]
+    retour_approx = aux(gain_approx / sorted_cotes[1])
+    gains = gain_approx + retour_approx * 0.8
+    while aux((gains - aux(mise_max) * 0.8) / sorted_cotes[1]) != retour_approx:
         retour_approx -= 2
         gains = gain_approx + retour_approx
     mis_reelles = []
     for cote in cotes:
-        mis_reelles.append((gains-aux(mise_max)*0.8)/cote)
-    mis_reelles[np.argmin(cotes)] = mise_max
+        mis_reelles.append((gains - aux(mise_max) * 0.8) / cote)
+    mis_reelles[int(np.argmin(cotes))] = mise_max
     if output:
         mis = list(map(lambda x: round(x, 2), mis_reelles))
-        print("gain net =", gains-sum(mis))
+        print("gain net =", gains - sum(mis))
         print("mises arrondies =", mis)
         return
     return mis_reelles
-    

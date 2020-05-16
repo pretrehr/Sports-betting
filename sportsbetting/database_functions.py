@@ -1,24 +1,28 @@
 """
 Fonctions de gestion de la base de données des noms d'équipe/joueur/compétition
 """
-
+import os
+import inspect
 import sqlite3
 import urllib
+import urllib.request
+import urllib.error
 import datetime
 import re
 import unidecode
-import os
-import sportsbetting
 from bs4 import BeautifulSoup
+import sportsbetting
 
-path_db = os.path.dirname(sportsbetting.__file__)+"\\resources\\teams.db"
+
+PATH_DB = os.path.dirname(sportsbetting.__file__) + "\\resources\\teams.db"
+
 
 def get_id_formated_competition_name(competition, sport):
     """
     Retourne l'id et le nom tel qu'affiché sur comparateur-de-cotes.fr. Par
     exemple, "Ligue 1" devient "France - Ligue 1"
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, competition FROM competitions WHERE sport='{}'
@@ -33,23 +37,25 @@ def get_id_formated_competition_name(competition, sport):
         if possible:
             return line[0], line[1]
 
+
 def get_competition_by_id(_id, site):
     """
     Retourne l'url d'une competition donnée sur un site donné
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT url_{} FROM competitions WHERE id='{}'
     """.format(str(site), _id))
     return c.fetchone()[0]
 
+
 def get_formated_name(name, site, sport):
     """
     Uniformisation d'un nom d'équipe/joueur d'un site donné conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, "OM" devient "Marseille"
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     res = list(c.execute("""
     SELECT name FROM names WHERE sport="{}" AND name_{}="{}"
@@ -59,14 +65,14 @@ def get_formated_name(name, site, sport):
         return res[0][0]
     except IndexError:
         print(name, site)
-        return "unknown team/player ".upper()+name
+        return "unknown team/player ".upper() + name
 
 
 def get_competition_id(name, sport):
     """
     Retourne l'id d'une compétition
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, competition FROM competitions WHERE sport='{}'
@@ -86,7 +92,7 @@ def get_competition_url(name, sport, site):
     """
     Retourne l'url d'une compétition sur un site donné
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT competition, url_{} FROM competitions WHERE sport='{}'
@@ -107,7 +113,7 @@ def import_teams_by_url(url):
     Ajout dans la base de données de toutes les équipes/joueurs d'une même compétition (url) ayant
     un match prévu sur comparateur-de-cotes.fr
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sport = soup.find("title").string.split()[-1].lower()
@@ -128,19 +134,19 @@ def import_teams_by_sport(sport):
     Ajout dans la base de données de toutes les équipes/joueurs d'un même sport ayant un match prévu
     sur comparateur-de-cotes.fr
     """
-    url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
+    url = "http://www.comparateur-de-cotes.fr/comparateur/" + sport
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "-ed" in line["href"] and line.text and sport in line["href"]:
             import_teams_by_url(unidecode.unidecode("http://www.comparateur-de-cotes.fr/"
-                                                    +line["href"]))
+                                                    + line["href"]))
 
 
 def is_id_in_db(_id):
     """
     Vérifie si l'id est dans la base de données
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE id="{}"
@@ -148,11 +154,12 @@ def is_id_in_db(_id):
     for line in c.fetchall():
         return line
 
+
 def is_in_db(name, sport, site):
     """
     Vérifie si le nom uniformisé de l'équipe est dans la base de données
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE sport="{}" AND name="{}" and name_{} IS NULL
@@ -160,12 +167,13 @@ def is_in_db(name, sport, site):
     for line in c.fetchall():
         return line
 
+
 def is_in_db_site(name, sport, site):
     """
     Vérifie si le nom de l'équipe/joueur tel qu'il est affiché sur un site est dans la base de
     données
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE sport="{}" AND name_{}="{}"
@@ -173,11 +181,12 @@ def is_in_db_site(name, sport, site):
     for line in c.fetchall():
         return line
 
+
 def get_formated_name_by_id(_id):
     """
     Retourne le nom d'une équipe en fonction de son id dans la base de donbées
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT name FROM names WHERE id='{}'
@@ -185,12 +194,12 @@ def get_formated_name_by_id(_id):
     try:
         return c.fetchone()[0]
     except TypeError:
-        url = "http://www.comparateur-de-cotes.fr/comparateur/football/Angers-td"+str(_id)
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/Angers-td" + str(_id)
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         for line in soup.findAll("a", {"class": "otn"}):
             if str(_id) in line["href"]:
                 sport = line["href"].split("/")[1]
-                conn = sqlite3.connect(path_db)
+                conn = sqlite3.connect(PATH_DB)
                 c = conn.cursor()
                 c.execute("""
                 INSERT INTO names (id, name, sport)
@@ -205,7 +214,7 @@ def add_name_to_db(_id, name, site):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     name_is_potential_double = any(x in name for x in ["-", "/", "&"])
     id_is_potential_double = "&" in get_formated_name_by_id(_id)
@@ -256,12 +265,13 @@ def add_name_to_db(_id, name, site):
     conn.commit()
     return True
 
+
 def is_id_available_for_site(_id, site):
     """
     Vérifie s'il est possible d'ajouter un nom associé à un site et à un id sans créer de nouvelle
     entrée
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT name_{} FROM names WHERE id = {}
@@ -276,7 +286,7 @@ def get_close_name(name, sport, site):
     """
     Cherche un nom similaire dans la base de données
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
@@ -296,7 +306,7 @@ def get_close_name2(name, sport, site):
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
     set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
@@ -325,7 +335,7 @@ def get_close_name3(name, sport, site):
             init_first_name = splitted_name[0]
             last_name = splitted_name[1].strip()
             reg_exp = r'{}[a-z]+\s{}'.format(init_first_name, last_name)
-            conn = sqlite3.connect(path_db)
+            conn = sqlite3.connect(PATH_DB)
             c = conn.cursor()
             c.execute("""
             SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
@@ -339,7 +349,7 @@ def get_id_by_site(name, sport, site):
     """
     Retourne l'id d'une équipe/joueur sur un site donné
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE name_{}="{}" AND sport='{}'
@@ -354,7 +364,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
     """
     Trouve l'id d'une équipe/joueur grâce à l'id de ses futurs adversaires
     """
-    url = "http://www.comparateur-de-cotes.fr/comparateur/football/Nice-td"+str(id_opponent)
+    url = "http://www.comparateur-de-cotes.fr/comparateur/football/Nice-td" + str(id_opponent)
     date_match = matches[name_site_match]["date"]
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
@@ -370,9 +380,9 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                 if "à" in string:
                     date_time = datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
                     try:
-                        if abs(date_time-date_match) < datetime.timedelta(days=0.5):
+                        if abs(date_time - date_match) < datetime.timedelta(days=0.5):
                             get_next_id = True
-                    except TypeError: #live
+                    except TypeError:  # live
                         pass
     return
 
@@ -397,7 +407,7 @@ def get_double_team_tennis(team, site):
         separator_team = " / "
     elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
-    elif site in ["betstars"]:
+    else:  # if site in ["betstars"]:
         separator_team = " & "
     if separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
@@ -416,9 +426,9 @@ def get_double_team_tennis(team, site):
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["betclic"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
-        elif site in ["zebet"]:
+        else:  # if site in ["zebet"]:
             players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
-        conn = sqlite3.connect(path_db)
+        conn = sqlite3.connect(PATH_DB)
         c = conn.cursor()
         c.execute("""
         SELECT id, name FROM names WHERE sport='tennis' AND name LIKE '% & %'
@@ -428,24 +438,27 @@ def get_double_team_tennis(team, site):
             if are_same_double(players, compared_players):
                 return line
 
+
 def get_all_competitions(sport):
     """
     Retourne toutes les compétitions d'un sport donné
     """
-    conn = sqlite3.connect(path_db)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT competition FROM competitions WHERE sport='{}'
     """.format(sport))
-    return sorted(list(map(lambda x:x[0], c.fetchall())))
+    return sorted(list(map(lambda x: x[0], c.fetchall())))
+
 
 def get_all_sports():
     """
     Retourne toutes les sports disponibles dans la db
     """
-    conn = sqlite3.connect(path_db)
+    print(PATH_DB)
+    conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT sport FROM competitions
     """)
-    return sorted(list(set(map(lambda x:x[0], c.fetchall()))))
+    return sorted(list(set(map(lambda x: x[0], c.fetchall()))))
