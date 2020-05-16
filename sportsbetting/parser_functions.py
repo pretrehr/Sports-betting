@@ -115,6 +115,7 @@ def parse_betstars(url=""):
         return parse_sport_betstars(url)
     if not url:
         url = "https://www.betstars.fr/#/soccer/competitions/2152298"
+    selenium_init.DRIVER.get("about:blank")
     selenium_init.DRIVER.get(url)
     match_odds_hash = {}
     match = ""
@@ -421,6 +422,7 @@ def parse_joa(url):
     """
     if not url:
         url = "https://www.joa-online.fr/fr/sport/paris-sportifs/844/54287323"
+    selenium_init.DRIVER.get("about:blank")
     selenium_init.DRIVER.get(url)
     match_odds_hash = {}
     today = datetime.datetime.today()
@@ -474,10 +476,8 @@ def parse_joa(url):
                         hour = strings[0]
                         date_time = datetime.datetime.strptime(date + " " + hour, "%d/%m/%Y %H:%M")
                     if date_time < today:
-        selenium_init.DRIVER.get("about:blank")
                         date_time = date_time.replace(year=date_time.year + 1)
         return match_odds_hash
-    selenium_init.DRIVER.get("about:blank")
 
 
 def parse_netbet(url=""):
@@ -657,6 +657,7 @@ def parse_pasinobet(url=""):
         url = "https://www.pasinobet.fr/#/sport/?type=0&competition=20896&sport=1&region=830001"
     if "http" not in url:
         return parse_pasinobet_sport(url)
+    selenium_init.DRIVER.get("about:blank")
     selenium_init.DRIVER.get(url)
     is_basketball = "sport=3" in url
     is_us = "region=5000" in url
@@ -715,9 +716,7 @@ def parse_pasinobet(url=""):
             elif "class" in line.attrs and "time-title-view-v3" in line["class"]:
                 date = line.text
         if match_odds_hash:
-            selenium_init.DRIVER.get("about:blank")
             return match_odds_hash
-    selenium_init.DRIVER.get("about:blank")
     return match_odds_hash
 
 
