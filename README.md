@@ -34,6 +34,16 @@ Assistant de paris sportifs avec optimisation des gains en fonction des cotes et
 ```bash
 pip install -r requirements.txt
 ```
+
+Si vous choisissez d'utiliser l'interface utilisateur, il suffit alors de lancer la commande
+```bash
+python interface_pysimplegui.py
+```
+
+Vous obtenez alors cette fenêtre :
+![image](https://user-images.githubusercontent.com/43851883/82161447-08042c00-989d-11ea-96c9-5c2fb978ee4d.png)
+
+Sinon, vous pouvez aussi utiliser le package en ligne de commande
 - Lancez python3
 ```python
 >>> import sportsbetting
@@ -88,6 +98,9 @@ Vous trouverez ci-dessous un tableau récapitulatif des différents bookmakers a
 - [Genybet](https://sport.genybet.fr/) qui est davantage axé sur les paris hippiques plutôt que sportifs
 - [Vbet](https://www.vbet.fr/paris-sportifs) qui propose des promotions nombreuses mais très restrictives et donc peu rentables
 
+La récupération des cotes peut être facilement utilisée depuis l'interface sur l'onglet "Récupération des cotes". Il suffit alors de choisir le sport, le (ou les) championnat(s) et le (ou les) bookmaker(s) souhaités. Une barre de chargement apparaît alors, la récupération des cotes est terminée lorsque la barre disparaît.
+
+![image](https://user-images.githubusercontent.com/43851883/82161583-5534cd80-989e-11ea-928d-c94c821cd873.png)
 
 ## Exemples d'utilisation
 
