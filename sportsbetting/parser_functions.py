@@ -97,6 +97,7 @@ def parse_sport_betclic(sport):
     odds = []
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "/" + sport + "/" in line["href"]:
+            print(line.text)
             if "https://" in line["href"]:
                 link = line["href"]
             else:
@@ -115,7 +116,6 @@ def parse_betstars(url=""):
         return parse_sport_betstars(url)
     if not url:
         url = "https://www.betstars.fr/#/soccer/competitions/2152298"
-    selenium_init.DRIVER.get("about:blank")
     selenium_init.DRIVER.get(url)
     match_odds_hash = {}
     match = ""
@@ -175,7 +175,8 @@ def parse_betstars(url=""):
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         if "Nous procédons à une mise à jour" in inner_html:
             print("Betstars inaccessible")
-            return dict()
+        else:
+            print("Aucun pari prématch disponible")
     return match_odds_hash
 
 
@@ -241,6 +242,8 @@ def parse_bwin(url=""):
     )
     inner_html = driver_bwin.execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
+    if driver_bwin.current_url != url:
+        raise sportsbetting.UnavailableCompetitionException
     i = 0
     date_time = "undefined"
     for line in soup.findAll():
@@ -413,6 +416,8 @@ def parse_france_pari(url=""):
                         match_odds_hash[match]['date'] = date_time
                 except UnboundLocalError:
                     pass
+    if not match_odds_hash:
+        raise sportsbetting.UnavailableCompetitionException
     return match_odds_hash
 
 
@@ -432,9 +437,12 @@ def parse_joa(url):
     odds_class = ""
     match = ""
     for _ in range(10):
-        WebDriverWait(selenium_init.DRIVER, 15).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
-        )
+        try:
+            WebDriverWait(selenium_init.DRIVER, 7).until(
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
+            )
+        except selenium.common.exceptions.TimeoutException:
+            raise sportsbetting.UnavailableCompetitionException
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.find_all():
@@ -489,6 +497,8 @@ def parse_netbet(url=""):
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    if soup.find(attrs={"class": "none"}):
+        raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -549,6 +559,8 @@ def parse_parionssport(url=""):
     if not url:
         url = "https://www.enligne.parionssport.fdj.fr/paris-football/france/ligue-1-conforama"
     selenium_init.DRIVER.get(url)
+    if selenium_init.DRIVER.current_url != url:
+        raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     if "basket" in url:
         return parse_parionssport_nba(url)
@@ -687,6 +699,9 @@ def parse_pasinobet(url=""):
     for _ in range(100):
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
+        if (url.split("competition=")[1].split("&")[0]
+                != selenium_init.DRIVER.current_url.split("competition=")[1].split("&")[0]):
+            raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if ("class" in line.attrs and "game-events-view-v3" in line["class"]
                     and "vs" in line.text):
@@ -703,7 +718,6 @@ def parse_pasinobet(url=""):
                     elif next_odd:
                         odds.append(float(string))
                         next_odd = False
-                match_odds_hash[match] = {}
                 if is_basketball:
                     try:
                         odds = next(iter_odds)
@@ -711,8 +725,10 @@ def parse_pasinobet(url=""):
                         pass
                 if is_us:
                     odds.reverse()
-                match_odds_hash[match]['odds'] = {"pasinobet": odds}
-                match_odds_hash[match]['date'] = date_time
+                if odds:
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"pasinobet": odds}
+                    match_odds_hash[match]['date'] = date_time
             elif "class" in line.attrs and "time-title-view-v3" in line["class"]:
                 date = line.text
         if match_odds_hash:
@@ -886,6 +902,8 @@ def parse_pmu(url=""):
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"pmu": odds}
                 match_odds_hash[match]['date'] = date_time
+    if not match_odds_hash:
+        raise sportsbetting.UnavailableCompetitionException
     return match_odds_hash
 
 
@@ -948,6 +966,8 @@ def parse_unibet(url=""):
     for _ in range(10):
         inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
+        if "Aucun marché trouvé." in str(soup):
+            raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
                 match = line.text.strip().replace("Bordeaux - Bègles", "Bordeaux-Bègles")
@@ -1070,6 +1090,8 @@ def parse_winamax(url=""):
                         match_odds_hash[match_name]['date'] = date_time
                     except KeyError:
                         pass
+            if not match_odds_hash:
+                raise sportsbetting.UnavailableCompetitionException
             return match_odds_hash
     print("Winamax non accessible")
     return {}
@@ -1121,7 +1143,10 @@ def parse_zebet(url=""):
         url = "https://www.zebet.fr/fr/competition/96-ligue_1_conforama"
     if "http" not in url:
         return parse_sport_zebet(url)
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    try:
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    except urllib.error.URLError:
+        raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
