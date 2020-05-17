@@ -232,7 +232,10 @@ stakes_layout = [
     [sg.Col([[sg.Combo(sites, key="SITE_STAKES_0")]]),
      sg.Col([[sg.Input(key="STAKE_STAKES_0", size=(6, 1))]]),
      sg.Col([[sg.Input(key="ODD_STAKES_0", size=(6, 1))]]),
-     sg.Button("Ajouter mise", key="ADD_STAKES")],
+     sg.Button("Ajouter mise", key="ADD_STAKES"),
+     sg.Checkbox("Date/Heure maximale", key="DATE_MAX_STAKES_BOOL"),
+     sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_STAKES"),
+     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_STAKES")],
     *([sg.Col([[sg.Combo(sites, key="SITE_STAKES_" + str(i), visible=False)]]),
        sg.Col([[sg.Input(key="STAKE_STAKES_" + str(i), size=(6, 1), visible=False)]]),
        sg.Col([[sg.Input(key="ODD_STAKES_" + str(i), size=(6, 1), visible=False)]])]
@@ -313,7 +316,6 @@ gagnant_layout = [
      sg.Column(column_results_gagnant)]
 ]
 
-
 odds_layout = [
     [sg.Listbox(sports, size=(20, 6), key="SPORT_ODDS", enable_events=True),
      sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True),
@@ -323,7 +325,7 @@ odds_layout = [
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
                        hide_vertical_scroll=True, size=(None, 12))],
              [sg.Button("Supprimer le match", key="DELETE_ODDS", visible=False)]])
-    ]
+     ]
 ]
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
@@ -393,6 +395,8 @@ while True:
                 """
                 sportsbetting.PROGRESS = 0
                 parse_competitions2(selected_competitions, sport, *selected_sites)
+
+
             thread = threading.Thread(target=parse_thread)
             thread.start()
             progress_bar.Update(visible=True)
@@ -438,6 +442,8 @@ while True:
     elif event == "BEST_MATCH_STAKES":
         def stakes_thread():
             best_match_stakes_to_bet_interface(window, values, visible_stakes)
+
+
         thread_stakes = threading.Thread(target=stakes_thread)
         thread_stakes.start()
         window["PROGRESS_STAKES"].Update(visible=True)
@@ -452,7 +458,8 @@ while True:
             window["SITE_FREEBETS_" + str(visible_freebets)].update(visible=False)
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
     elif event == "BEST_MATCH_FREEBETS":
-        sportsbetting.ODDS_INTERFACE = best_matches_freebet_interface(window, values, visible_freebets)
+        sportsbetting.ODDS_INTERFACE = best_matches_freebet_interface(window, values,
+                                                                      visible_freebets)
     elif event == "BEST_MATCH_GAGNANT":
         best_match_pari_gagnant_interface(window, values)
     elif event == "SPORT_ODDS":

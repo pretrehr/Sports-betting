@@ -4,6 +4,7 @@ Fonctions principales d'assistant de paris
 """
 
 import copy
+import datetime
 import inspect
 import sqlite3
 import time
@@ -85,7 +86,6 @@ def parse_competition(competition, sport="football", *sites):
             print("Element non trouvé par selenium")
         except sportsbetting.UnavailableCompetitionException:
             print("Compétition non disponible")
-            break
     #         sportsbetting.PROGRESS += 100/(len(sites)*sportsbetting.SUBPROGRESS_LIMIT)
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -111,8 +111,8 @@ def parse_competitions(competitions, sport="football", *sites):
     """
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (
-                inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
-                and (selenium_sites.intersection(sites) or not sites))
+            inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
+            and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
         selenium_init.start_selenium()
     list_odds = []
@@ -137,8 +137,8 @@ def parse_competitions(competitions, sport="football", *sites):
 def parse_competitions_site(competitions, sport, site):
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = (
-                inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
-                and site in selenium_sites)
+            inspect.currentframe().f_back.f_code.co_name in ["<module>", "parse_thread"]
+            and site in selenium_sites)
     if selenium_required:
         selenium_init.start_selenium()
     list_odds = []
@@ -313,7 +313,7 @@ def odds_match(match, sport="football"):
     for match_name in all_odds:
         if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
                 and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1]
-                                                                        .lower())):
+                                                                                .lower())):
             break
     else:
         for match_name in all_odds:
@@ -474,7 +474,7 @@ def best_match_cashback(site, minimum_odd, bet, sport="football", freebet=True,
                                                                               freebet,
                                                                               rate_cashback)
     criteria = lambda odds_to_check, i: (odds_to_check[i] + combi_max) / (
-                1 + combi_max) >= minimum_odd
+            1 + combi_max) >= minimum_odd
     display_function = lambda x, i: mises_pari_rembourse_si_perdant(x, bet, i, freebet,
                                                                     rate_cashback, True)
     result_function = lambda x, i: mises_pari_rembourse_si_perdant(x, bet, i, freebet,
@@ -588,7 +588,7 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
                                                                               freebet,
                                                                               rate_cashback)
     criteria = lambda odds_to_check, i: (odds_to_check[i] + combi_max) / (
-                1 + combi_max) >= minimum_odd
+            1 + combi_max) >= minimum_odd
     display_function = lambda x, i: mises_pari_rembourse_si_perdant(x, bet, i, freebet,
                                                                     rate_cashback, True)
     return_function = lambda x, i: mises_pari_rembourse_si_perdant(x, bet, i, freebet,
@@ -598,14 +598,27 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
                     time_min, True, nb_matches)
 
 
-def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
+def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=None, time_max=None):
     second_sites = {stake[1] for stake in stakes}
     main_sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                   'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
     new_odds = sportsbetting.ODDS[sport]
     all_odds = {}
+    hour_max, minute_max = 0, 0
+    if time_max:
+        if time_max[-1] == 'h':
+            hour_max = int(time_max[:-1])
+        else:
+            hour_max, minute_max = (int(_) for _ in time_max.split('h'))
+    if date_max:
+        day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
+        datetime_max = datetime.datetime(year_max, month_max, day_max,
+                                         hour_max, minute_max)
+    else:
+        datetime_max = None
     for match in new_odds:
-        if not any([site not in new_odds[match]["odds"].keys() for site in second_sites]):
+        if (new_odds[match]["date"] <= datetime_max
+                and not any([site not in new_odds[match]["odds"].keys() for site in second_sites])):
             if new_odds[match]["odds"]:
                 all_odds[match] = new_odds[match]
     best_profit = -sum(stake[0] for stake in stakes)
@@ -618,7 +631,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football"):
     start = time.time()
     sportsbetting.PROGRESS = 0
     for i, combine in enumerate(combis):
-        sportsbetting.PROGRESS += 100/nb_combis
+        sportsbetting.PROGRESS += 100 / nb_combis
         #         if i == 20:
         #             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
         #         if i/nb_combis*100 > progress:
@@ -771,10 +784,10 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         (sportsbetting
-         .ALL_ODDS_COMBINE[" / ".join([match[0] for match
-                                       in combine])]) = cotes_combine_all_sites(*[match[1]
-                                                                                  for match
-                                                                                  in combine])
+            .ALL_ODDS_COMBINE[" / ".join([match[0] for match
+                                          in combine])]) = cotes_combine_all_sites(*[match[1]
+                                                                                     for match
+                                                                                     in combine])
     odds_function = lambda best_odds, odds_site, i: cotes_freebet(odds_site)
     profit_function = lambda odds_to_check, i: gain(odds_to_check, freebet) - freebet
     criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
