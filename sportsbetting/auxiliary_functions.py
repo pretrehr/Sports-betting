@@ -49,7 +49,7 @@ def add_matches_to_db(odds, sport, site):
             teams_not_in_db_site.add(team)
     if not teams_not_in_db_site:
         return
-    print(teams)
+    print(list(teams))
     print(0, list(teams_not_in_db_site))
     for team in teams_not_in_db_site:
         line = is_in_db(team, sport, site)

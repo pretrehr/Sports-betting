@@ -13,7 +13,6 @@ import unidecode
 from bs4 import BeautifulSoup
 import sportsbetting
 
-
 PATH_DB = os.path.dirname(sportsbetting.__file__) + "\\resources\\teams.db"
 
 
@@ -210,13 +209,28 @@ def get_formated_name_by_id(_id):
                 return line.text
 
 
+def get_sport_by_id(_id):
+    """
+    Retourne le sport associé à un id d'équipe/joueur dans la base de données
+    """
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT sport FROM names WHERE id='{}'
+    """.format(_id))
+    sport = c.fetchone()[0]
+    c.close()
+    return sport
+
+
 def add_name_to_db(_id, name, site):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
-    name_is_potential_double = any(x in name for x in ["-", "/", "&"])
+    sport = get_sport_by_id(_id)
+    name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
     id_is_potential_double = "&" in get_formated_name_by_id(_id)
     if (is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
@@ -325,7 +339,7 @@ def get_close_name2(name, sport, site):
                                                                     or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
                 or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
-                                                                                   .lower())):
+                                                                                           .lower())):
             return line
         set_line = set(map(lambda x: unidecode.unidecode(x.lower()), split_line))
         if set_line.issubset(set_name):
