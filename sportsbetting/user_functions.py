@@ -407,18 +407,24 @@ def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
     Retourne le meilleur match sur lequel miser lorsqu'on doit gagner un pari à
     une cote donnée sur un site donné.
     """
-    odds_function = lambda best_odds, odds_site, i: odds_site
-    profit_function = lambda odds_to_check, i: gain2(odds_to_check, np.argmax(odds_to_check), bet)
-    criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
-    display_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
-                                                                   np.argmax(best_overall_odds),
-                                                                   True)
-    result_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
-                                                                  np.argmax(best_overall_odds),
-                                                                  False)
-    best_match_base(odds_function, profit_function, criteria, display_function,
-                    result_function, site, sport, date_max, time_max, date_min,
-                    time_min, one_site=True)
+    stakes = []
+    n = 2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])
+    for _ in range(n):
+        stakes.append([bet, site, minimum_odd])
+    best_match_stakes_to_bet(stakes, 1, sport, date_max, time_max)
+
+    # odds_function = lambda best_odds, odds_site, i: odds_site
+    # profit_function = lambda odds_to_check, i: gain2(odds_to_check, np.argmax(odds_to_check), bet)
+    # criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
+    # display_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
+    #                                                                np.argmax(best_overall_odds),
+    #                                                                True)
+    # result_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
+    #                                                               np.argmax(best_overall_odds),
+    #                                                               False)
+    # best_match_base(odds_function, profit_function, criteria, display_function,
+    #                 result_function, site, sport, date_max, time_max, date_min,
+    #                 time_min, one_site=True)
 
 
 def best_match_freebet(site, freebet, sport="football", live=False, date_max=None, time_max=None,
@@ -617,7 +623,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     else:
         datetime_max = None
     for match in new_odds:
-        if (new_odds[match]["date"] <= datetime_max
+        if (((datetime_max and new_odds[match]["date"] <= datetime_max) or not datetime_max)
                 and not any([site not in new_odds[match]["odds"].keys() for site in second_sites])):
             if new_odds[match]["odds"]:
                 all_odds[match] = new_odds[match]
