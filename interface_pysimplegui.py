@@ -33,7 +33,6 @@ try:
 except FileNotFoundError:
     pass
 
-
 sports = get_all_sports()
 sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
          'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
@@ -87,8 +86,10 @@ match_under_condition_layout = [[sg.Listbox(sites, size=(20, 12), key="SITE_UNDE
                                           key="ODDS_UNDER_CONDITION",
                                           visible=False, hide_vertical_scroll=True,
                                           size=(None, 12)),
-                                 sg.MLine(size=(90, 12), key="RESULT_UNDER_CONDITION",
-                                          font="Consolas 10", visible=False)],
+                                 sg.Column([[sg.Text(
+                                     "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_UNDER_CONDITION", visible=False)],
+                                            [sg.MLine(size=(90, 12), key="RESULT_UNDER_CONDITION",
+                                                      font="Consolas 10", visible=False)]])],
                                 [sg.Column(column_indicators_under_condition),
                                  sg.Column(column_results_under_condition)]
                                 ]
@@ -111,7 +112,9 @@ stake_layout = [
      sg.Text("", size=(30, 1), key="DATE_STAKE")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
               key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, 12)),
-     sg.MLine(size=(90, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)],
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_STAKE", visible=False)],
+                [sg.MLine(size=(90, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])],
     [sg.Column(column_indicators_stake),
      sg.Column(column_results_stake)]
 ]
@@ -131,9 +134,10 @@ freebet_layout = [
     [sg.Table([["parionssport", "0000", "0000", "0000"]],
               headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
               hide_vertical_scroll=True, size=(None, 12)),
-     sg.MLine(size=(90, 12), key="RESULT_FREEBET", font="Consolas 10",
-              visible=False)
-     ],
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_FREEBET", visible=False)],
+                [sg.MLine(size=(90, 12), key="RESULT_FREEBET", font="Consolas 10",
+                          visible=False)]])],
     [sg.Column(column_indicators_freebet), sg.Column(column_results_freebet)]
 ]
 
@@ -171,7 +175,10 @@ cashback_layout = [
     [sg.Table([["parionssport", "0000", "0000", "0000"]],
               headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False,
               hide_vertical_scroll=True, size=(None, 12)),
-     sg.MLine(size=(90, 12), key="RESULT_CASHBACK", font="Consolas 10", visible=False)],
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_CASHBACK", visible=False)],
+                [sg.MLine(size=(90, 12), key="RESULT_CASHBACK", font="Consolas 10",
+                          visible=False)]])],
     [sg.Column(column_indicators_cashback), sg.Column(column_results_cashback)]
 ]
 
@@ -208,7 +215,10 @@ combine_layout = [[sg.Listbox(sites, size=(20, 12), key="SITE_COMBINE"), sg.Colu
                                          visible=False)],
                               [sg.Column(column_indicators_combine),
                                sg.Column(column_results_combine)]]),
-                   sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10", visible=False)
+                   sg.Column([[sg.Text(
+                       "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_COMBINE", visible=False)],
+                              [sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10",
+                                        visible=False)]])
                    ]]
 
 column_stakes = [[sg.Text("Site"), sg.Text("Mises")],
@@ -248,7 +258,9 @@ stakes_layout = [
                 [sg.Column(column_indicators_stakes),
                  sg.Column(column_results_stakes)]
                 ]),
-     sg.MLine(size=(120, 12), key="RESULT_STAKES", font="Consolas 10", visible=False)
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_STAKES", visible=False)],
+                [sg.MLine(size=(120, 12), key="RESULT_STAKES", font="Consolas 10", visible=False)]])
      ]]
 
 column_sites_freebets = [[sg.Text("Site")],
@@ -282,8 +294,10 @@ freebets_layout = [[sg.Column(column_sites_freebets),
                                [sg.Column(column_indicators_freebets),
                                 sg.Column(column_results_freebets)]
                                ]),
-                    sg.MLine(size=(120, 12), key="RESULT_FREEBETS", font="Consolas 10",
-                             visible=False)
+                    sg.Column([[sg.Text(
+                        "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_FREEBETS", visible=False)],
+                               [sg.MLine(size=(120, 12), key="RESULT_FREEBETS", font="Consolas 10",
+                                         visible=False)]])
                     ]]
 
 column_text_gagnant = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -311,7 +325,10 @@ gagnant_layout = [
      sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
               key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12)),
-     sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10", visible=False)],
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_GAGNANT", visible=False)],
+                [sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10",
+                          visible=False)]])],
     [sg.Column(column_indicators_gagnant),
      sg.Column(column_results_gagnant)]
 ]

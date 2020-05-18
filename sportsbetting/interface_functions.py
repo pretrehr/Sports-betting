@@ -2,7 +2,6 @@
 .. module::interface_functions
 :synopsis: Fonctions d'intéraction entre l'interface et les fonctions du package sportsbetting
 """
-import ast
 import sys
 import io
 import numpy as np
@@ -57,7 +56,9 @@ def stakes(result):
     sportsbetting
     :return: Dictionnaire des mises
     """
-    return result.split("\n\n")[-1]
+    return result.split(
+        "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):\n")[
+        1]
 
 
 def infos(result):
@@ -135,6 +136,7 @@ def best_match_under_conditions_interface(window, values):
             window["DATE_UNDER_CONDITION"].update("")
             window["ODDS_UNDER_CONDITION"].update(visible=False)
             window["RESULT_UNDER_CONDITION"].update(visible=False)
+            window["TEXT_UNDER_CONDITION"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_UNDER_CONDITION" + str(i)].update(visible=False)
                 window["RESULTS_UNDER_CONDITION" + str(i)].update(visible=False)
@@ -143,6 +145,7 @@ def best_match_under_conditions_interface(window, values):
             window["DATE_UNDER_CONDITION"].update(date)
             window["ODDS_UNDER_CONDITION"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_UNDER_CONDITION"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_UNDER_CONDITION"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_UNDER_CONDITION" + str(i)].update(elem[0].capitalize(),
                                                                      visible=True)
@@ -178,6 +181,7 @@ def best_stakes_match_interface(window, values):
             window["DATE_STAKE"].update("")
             window["ODDS_STAKE"].update(visible=False)
             window["RESULT_STAKE"].update(visible=False)
+            window["TEXT_STAKE"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_STAKE" + str(i)].update(visible=False)
                 window["RESULTS_STAKE" + str(i)].update(visible=False)
@@ -186,6 +190,7 @@ def best_stakes_match_interface(window, values):
             window["DATE_STAKE"].update(date)
             window["ODDS_STAKE"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_STAKE"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_STAKE"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_STAKE" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_STAKE" + str(i)].update(elem[1], visible=True)
@@ -218,6 +223,7 @@ def best_match_freebet_interface(window, values):
         window["DATE_FREEBET"].update(date)
         window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=True)
         window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
+        window["TEXT_FREEBET"].update(visible=True)
         for i, elem in enumerate(indicators(what_was_printed)):
             window["INDICATORS_FREEBET" + str(i)].update(elem[0].capitalize(), visible=True)
             window["RESULTS_FREEBET" + str(i)].update(elem[1], visible=True)
@@ -264,6 +270,7 @@ def best_match_cashback_interface(window, values):
             window["DATE_CASHBACK"].update("")
             window["ODDS_CASHBACK"].update(visible=False)
             window["RESULT_CASHBACK"].update(visible=False)
+            window["TEXT_CASHBACK"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_CASHBACK" + str(i)].update(visible=False)
                 window["RESULTS_CASHBACK" + str(i)].update(visible=False)
@@ -272,6 +279,7 @@ def best_match_cashback_interface(window, values):
             window["DATE_CASHBACK"].update(date)
             window["ODDS_CASHBACK"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_CASHBACK"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_CASHBACK"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_CASHBACK" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_CASHBACK" + str(i)].update(elem[1], visible=True)
@@ -313,6 +321,7 @@ def best_matches_combine_interface(window, values):
             window["DATE_COMBINE"].update("")
             window["ODDS_COMBINE"].update(visible=False)
             window["RESULT_COMBINE"].update(visible=False)
+            window["TEXT_COMBINE"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_COMBINE" + str(i)].update(visible=False)
                 window["RESULTS_COMBINE" + str(i)].update(visible=False)
@@ -321,6 +330,7 @@ def best_matches_combine_interface(window, values):
             window["DATE_COMBINE"].update(date)
             window["ODDS_COMBINE"].update(visible=True)
             window["RESULT_COMBINE"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_COMBINE"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_COMBINE" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_COMBINE" + str(i)].update(elem[1], visible=True)
@@ -360,6 +370,7 @@ def best_match_stakes_to_bet_interface(window, values, visible_stakes):
     window["DATE_STAKES"].update(date)
     window["ODDS_STAKES"].update(visible=True)
     window["RESULT_STAKES"].update(stakes(what_was_printed), visible=True)
+    window["TEXT_STAKES"].update(visible=True)
     for i, elem in enumerate(indicators(what_was_printed)):
         window["INDICATORS_STAKES" + str(i)].update(elem[0].capitalize(), visible=True)
         window["RESULTS_STAKES" + str(i)].update(elem[1], visible=True)
@@ -389,6 +400,7 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     window["DATE_FREEBETS"].update(date)
     window["ODDS_FREEBETS"].update(visible=True)
     window["RESULT_FREEBETS"].update(stakes(what_was_printed), visible=True)
+    window["TEXT_FREEBETS"].update(visible=True)
     for i, elem in enumerate(indicators(what_was_printed)):
         window["INDICATORS_FREEBETS" + str(i)].update(elem[0].capitalize(), visible=True)
         window["RESULTS_FREEBETS" + str(i)].update(elem[1], visible=True)
@@ -426,6 +438,7 @@ def best_match_pari_gagnant_interface(window, values):
             window["DATE_GAGNANT"].update("")
             window["ODDS_GAGNANT"].update(visible=False)
             window["RESULT_GAGNANT"].update(visible=False)
+            window["TEXT_GAGNANT"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_GAGNANT" + str(i)].update(visible=False)
                 window["RESULTS_GAGNANT" + str(i)].update(visible=False)
@@ -434,6 +447,7 @@ def best_match_pari_gagnant_interface(window, values):
             window["DATE_GAGNANT"].update(date)
             window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_GAGNANT"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_GAGNANT"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_GAGNANT" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_GAGNANT" + str(i)].update(elem[1], visible=True)
