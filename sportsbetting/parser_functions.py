@@ -1075,6 +1075,8 @@ def parse_winamax(url=""):
         if "PRELOADED_STATE" in line.text:
             json_text = (line.text.split("var PRELOADED_STATE = ")[1]
                          .split(";var BETTING_CONFIGURATION")[0])
+            if json_text[-1] == ";":
+                json_text = json_text[:-1]
             dict_matches = json.loads(json_text)
             for match in dict_matches["matches"].values():
                 if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
