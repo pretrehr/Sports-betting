@@ -34,6 +34,16 @@ Assistant de paris sportifs avec optimisation des gains en fonction des cotes et
 ```bash
 pip install -r requirements.txt
 ```
+
+Si vous choisissez d'utiliser l'interface utilisateur, il suffit alors de lancer la commande
+```bash
+python interface_pysimplegui.py
+```
+
+Vous obtenez alors cette fenêtre :
+![image](https://user-images.githubusercontent.com/43851883/82161447-08042c00-989d-11ea-96c9-5c2fb978ee4d.png)
+
+Sinon, vous pouvez aussi utiliser le package en ligne de commande
 - Lancez python3
 ```python
 >>> import sportsbetting
@@ -88,6 +98,13 @@ Vous trouverez ci-dessous un tableau récapitulatif des différents bookmakers a
 - [Genybet](https://sport.genybet.fr/) qui est davantage axé sur les paris hippiques plutôt que sportifs
 - [Vbet](https://www.vbet.fr/paris-sportifs) qui propose des promotions nombreuses mais très restrictives et donc peu rentables
 
+La récupération des cotes peut être facilement utilisée depuis l'interface sur l'onglet "Récupération des cotes". Il suffit alors de choisir le sport, le (ou les) championnat(s) et le (ou les) bookmaker(s) souhaités. Une barre de chargement apparaît alors, la récupération des cotes est terminée lorsque la barre disparaît.
+
+![image](https://user-images.githubusercontent.com/43851883/82161583-5534cd80-989e-11ea-928d-c94c821cd873.png)
+
+À titre informatif, toutes les cotes récupérées sont consultables depuis l'onglet "Cotes" de l'interface. Dans cet onglet vous pouvez ainsi facilement comparer les cotes d'un même match entre les différents bookmakers. Vous avez également la possibilité de supprimer un match que vous ne souhaitez pas prendre en compte dans les calculs futurs.
+
+![image](https://user-images.githubusercontent.com/43851883/82209315-5e10b800-990d-11ea-9b5a-db1065d316eb.png)
 
 ## Exemples d'utilisation
 
@@ -95,6 +112,8 @@ Les bonus reçus sont quasi systématiquement des freebets (ou paris gratuits). 
 On verra plus tard qu'il est possible de récupérer de manière certaine, 80% de la valeur d'un freebet. Ainsi, un freebet de 10€ équivaut à 10 × 0.8 = 8€.
 
 Les exemples ci-dessous sont des exemples de promotions qui reviennent régulièrement chez les différents bookmakers. Vous y trouverez une description de comment exploiter au mieux ces promotions. Bien-sûr, cette liste n'est pas exhaustive et il vous appartient d'adapter ces exemples aux conditions des promotions que vous rencontrerez à l'avenir.
+Pour chacun des exemples, vous trouverez une explication de comment rentabiliser une promotion similaire en ligne de commande ou à l'aide de l'interface.
+
 ### Exemple 1 : Bonus reçu dans tous les cas si l'on mise sur un match donné
 France-pari propose très souvent une promotion qui consiste à miser un pari de 20€ sur un match précis de Ligue 1 à une cote minimale de 2 pour recevoir un freebet de 5€.
 Par exemple, pour la 20e journée de Ligue 1 2019/2020, le match proposé était Toulouse - Brest.
@@ -105,6 +124,8 @@ Il suffit alors d'exécuter:
 ```
 Si la plus-value minimum est supérieure à 5 × 0.8 = 4€, alors cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites.
 
+Pour effectuer ce calcul depuis l'interface, il suffit de vous rendre sur l'onglet "Pari sur un match donné" et de sélectionner les paramètres souhaités.
+![image](https://user-images.githubusercontent.com/43851883/82214782-a1bbef80-9916-11ea-8c4e-62f8187a09b5.png)
 
 ### Exemple 2 : Bonus reçu dans tous les cas si l'on mise sur un match quelconque, éventuellement d'une compétition donnée / d'un sport donné
 S'il n'y a aucune condition sur le match à jouer, on peut éxécuter
@@ -144,6 +165,10 @@ Par exemple, France-pari propose régulièrement une promotion qui consiste à r
 ```
 Si la perte affichée est inférieure à 100 × 0.8 = 80€, alors cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites.
 
+Depuis l'interface, cela revient à se rendre sur l'onglet "Pari simple" et rentrer les paramètres adéquats.
+![image](https://user-images.githubusercontent.com/43851883/82214951-e21b6d80-9916-11ea-8c95-2c3daf1a5b03.png)
+
+
 ### Exemple 3 : Bonus reçu si au moins *n* matches gagnés
 *Nota bene*: À partir de cet exemple, on supposera que l'on a préalablement appelé une fonction d'initialisation des matches voulus (du type `parse_...`), en fonction des besoins de la promotion.
 
@@ -153,12 +178,24 @@ Parfois, il est nécessaire de gagner un certain nombre de paris pour recevoir u
 ```
 Cette fonction donnera le meilleur match sur lequel parier à un instant donné. Si la perte affichée est inférieure à (10 × 0.8)/3, alors on peut supposer que cette promotion est rentable et on peut répartir nos mises telles qu'elles sont décrites. Cela constituera le premier pari gagnant. Un peu plus tard (par exemple lorsque le match en question a été joué), on peut réitérer ce procédé afin de savoir sur quel match doit on jouer pour gagner le 2ème pari de la série et ainsi de suite jusqu'à atteindre 3 paris gagnants. À noter, que dans ce cas précis, il est nécessaire de ré-exécuter la fonction `parse_tennis` une fois qu'on a gagné un pari, car dans le cas contraire, le résultat renvoyé par la fonction `best_match_pari_gagnant` serait identique au résultat de l'exécution précédente.
 
+Depuis l'interface, il vous suffit de vous rendre sur l'onglet "Pari gagnant" et de rentrer les paramètres voulus.
+![image](https://user-images.githubusercontent.com/43851883/82216530-5a832e00-9919-11ea-9e62-5e0eeb10fe3d.png)
+
+Une fois le pari placé, vous avez la possibilité de supprimer le match obtenu de la base de données depuis l'onglet "Cotes".
+De cette manière, vous obtienez un résultat différent lorsque vous réexécutez le calcul depuis l'onglet "Pari gagnant".
+![image](https://user-images.githubusercontent.com/43851883/82234278-7bf01400-9931-11ea-836b-e0a53a31deb6.png)
+
+
 ### Exemple 4 : Bonus reçu si un pari est perdant.
 Il s'agit d'un type de promotion très courant, notamment en ce qui concerne les offres de bienvenue, mais pas seulement.
 Par exemple, à l'été 2018, Winamax proposait à ses utilisateurs de rembourser en cash (donc pas en freebet) 100% leur premier pari de 200€ maximum si celui-ci est perdant. On notera par ailleurs que sur Winamax (comme sur la plupart des autres bookmakers), on ne peut parier que sur des cotes supérieures (ou égales) à 1.10. On peut alors exécuter
 ```python
 >>> best_match_cashback("winamax", 1.1, 200, "football", freebet=False)
 ```
+
+Ce calcul est également accessible depuis l'interface, dans l'onglet "Cashback".
+![image](https://user-images.githubusercontent.com/43851883/82234484-c6719080-9931-11ea-8357-191bd9f58a78.png)
+
 
 ## Conversion des freebets en cash
 ### Méthode 1 : Si l'on n'a que des freebets fractionnables
@@ -169,6 +206,8 @@ Par exemple, si on dispose de 10€ de freebet, on va alors exécuter
 >>> best_matches_freebet_one_site("betclic", 10)
 ```
 
+
+
 ### Méthode 2 : Si l'on a quelques freebets non fractionnables et suffisamment de freebets fractionnables
 Chez tous les bookmakers sauf Betclic, Unibet, ParionsSport et Zebet, il n'est pas possible de séparer un freebet en plusieurs paris. 
 Supposons que l'on dispose de 100€ de freebets fractionnables sur Betclic, 1 freebet de 10€ sur Winamax et 2 freebets de 5€ sur France-pari. 
@@ -176,7 +215,13 @@ L'idée serait alors de répartir nos 100€ de freebets fractionnables sur un c
 ```python
 >>> best_matches_freebet(["betclic"], [[10, "winamax"], [5, "france_pari"], [5, "france_pari"]])
 ```
+
+Depuis l'interface, l'onglet "Freebets à placer" effectue le même calcul, on obtient alors:
+![image](https://user-images.githubusercontent.com/43851883/82235094-924a9f80-9932-11ea-95d9-e6c49d25fc00.png)
+
+
 Cette deuxième méthode doit, lorsqu'elle est possible, être celle à privilégier lorsque l'on dispose de freebets non fractionnables car c'est elle qui offre le meilleur rendement. La première méthode est elle aussi très rentable mais il est préférable de conserver les freebets fractionnables pour justement appliquer la 2e méthode lorsque l'on disposera de freebets non fractionnables.
+
 
 
 ### Méthode 3 : Si l'on dispose de freebets non fractionnables et pas assez de freebets fractionnables
@@ -187,7 +232,14 @@ Par ailleurs, chez tous les bookmakers sauf Betclic, Unibet et Zebet, les freebe
 *Nota bene* : Ne pas confondre `best_match_freebet` et `best_matches_freebet`.
 
 On notera par ailleurs que certains sites comme NetBet ou PMU proposent parfois des freebets qui ne sont jouables que sur un unique sport. Auquel cas, il faut adapter le sport à la situation.
-Cette méthode est en moyenne beaucoup moins rentable et beaucoup plus volatile que les deux précédentes. Les deux premières méthodes assurent un taux de revient situé entre 80 et 85% de la somme de freebets engagés. Avec la 3ème méthode, il faut s'attendre à un taux de revient situé entre 55 et 70%.
+
+
+On peut appliquer cette méthode depuis l'interface dans l'onglet "Freebet unique".
+![image](https://user-images.githubusercontent.com/43851883/82234834-3122cc00-9932-11ea-8709-6dec63176058.png)
+
+
+
+Cette méthode est en moyenne beaucoup moins rentable et beaucoup plus volatile que les deux précédentes. Les deux premières méthodes assurent un taux de revient situé entre 77 et 85% de la somme de freebets engagés. Avec la 3ème méthode, il faut s'attendre à un taux de revient situé entre 55 et 70%.
 
 
 ### *English version*
@@ -368,4 +420,4 @@ At all bookmakers except Betclic, Unibet and Zebet, freebets have a time limit, 
 Please note: Be careful not to confuse `best_match_freebet` with `best_matches_freebet`.
 
 Note that some sites like NetBet or PMU sometimes offer freebets that are only playable on a single sport. In this case, you have to adapt the sport to the situation.
-This method is on average much less profitable and much more volatile than the first two. The first two methods ensure a return rate of between 80 and 85% of the sum of freebets placed.  With the third method, a return rate between 55 and 70% is to be expected.
+This method is on average much less profitable and much more volatile than the first two. The first two methods ensure a return rate of between 77 and 85% of the sum of freebets placed.  With the third method, a return rate between 55 and 70% is to be expected.
