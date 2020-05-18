@@ -377,7 +377,7 @@ def defined_bets(odds_main, odds_second, main_sites, second_sites):
             bets = mises2(odds_adapted, bet[1], bet[0])
             gain_freebets = bet[1] * odds_adapted[bet[0]]
             for bet2 in second_sites:
-                if bets[bet2[0]] > bet2[1]:
+                if bets[bet2[0]] - bet2[1] > 1e-6: # Si on mise plus que ce qu'il n'y a de disponible
                     valid = False
                     break
             if valid:
