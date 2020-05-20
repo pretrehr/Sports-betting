@@ -438,7 +438,7 @@ def parse_joa(url):
     match = ""
     for _ in range(10):
         try:
-            WebDriverWait(selenium_init.DRIVER, 7).until(
+            WebDriverWait(selenium_init.DRIVER, 5).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
             )
         except selenium.common.exceptions.TimeoutException:
@@ -1069,11 +1069,13 @@ def parse_winamax(url=""):
     except IndexError:
         tournament_id = -1
     sport_id = int(ids.split("/")[0])
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    req = urllib.request.Request(url, headers={'User-Agent': sportsbetting.USER_AGENT})
+    webpage = urllib.request.urlopen(req, timeout=10).read()
+    soup = BeautifulSoup(webpage, features="lxml")
     match_odds_hash = {}
     for line in soup.find_all(['script']):
-        if "PRELOADED_STATE" in line.text:
-            json_text = (line.text.split("var PRELOADED_STATE = ")[1]
+        if "PRELOADED_STATE" in str(line.string):
+            json_text = (line.string.split("var PRELOADED_STATE = ")[1]
                          .split(";var BETTING_CONFIGURATION")[0])
             if json_text[-1] == ";":
                 json_text = json_text[:-1]
