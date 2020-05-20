@@ -193,20 +193,33 @@ def get_formatted_name_by_id(_id):
     try:
         return c.fetchone()[0]
     except TypeError:
-        url = "http://www.comparateur-de-cotes.fr/comparateur/football/Angers-td" + str(_id)
-        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-        for line in soup.findAll("a", {"class": "otn"}):
-            if str(_id) in line["href"]:
-                sport = line["href"].split("/")[1]
-                conn = sqlite3.connect(PATH_DB)
-                c = conn.cursor()
-                c.execute("""
-                INSERT INTO names (id, name, sport)
-                VALUES ({}, "{}", "{}")
-                """.format(_id, line.text, sport))
-                conn.commit()
-                c.close()
-                return line.text
+        add_id_to_db(_id)
+        c.execute("""
+        SELECT name FROM names WHERE id='{}'
+        """.format(_id))
+        return c.fetchone()[0]
+
+
+def add_id_to_db(_id):
+    """
+    Ajoute l'id d'une équipe/joueur inconnu à la base de données
+    """
+    if is_id_in_db(_id):  # Pour éviter les ajouts intempestifs (précaution)
+        return
+    url = "http://www.comparateur-de-cotes.fr/comparateur/football/Angers-td" + str(_id)
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.findAll("a", {"class": "otn"}):
+        if str(_id) in line["href"]:
+            sport = line["href"].split("/")[1]
+            conn = sqlite3.connect(PATH_DB)
+            c = conn.cursor()
+            c.execute("""
+            INSERT INTO names (id, name, sport)
+            VALUES ({}, "{}", "{}")
+            """.format(_id, line.text, sport))
+            conn.commit()
+            c.close()
+            break
 
 
 def get_sport_by_id(_id):
@@ -218,9 +231,14 @@ def get_sport_by_id(_id):
     c.execute("""
     SELECT sport FROM names WHERE id='{}'
     """.format(_id))
-    sport = c.fetchone()[0]
-    c.close()
-    return sport
+    try:
+        return c.fetchone()[0]
+    except TypeError:
+        add_id_to_db(_id)
+        c.execute("""
+        SELECT sport FROM names WHERE id='{}'
+        """.format(_id))
+        return c.fetchone()[0]
 
 
 def add_name_to_db(_id, name, site):
