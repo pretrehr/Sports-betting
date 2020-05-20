@@ -8,7 +8,7 @@ from pprint import pprint
 import datetime
 import copy
 import sportsbetting
-from sportsbetting.database_functions import (get_formated_name, is_in_db_site, is_in_db,
+from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
                                               get_close_name3, get_double_team_tennis)
@@ -42,7 +42,7 @@ def add_matches_to_db(odds, sport, site):
     teams = set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches)))))
     teams = set(map(lambda x: x.strip(), teams))
     teams_not_in_db_site = set()
-    teams_sets = [set() for _ in range(9)]
+    teams_sets = []
     for team in teams:
         line = is_in_db_site(team, sport, site)
         if not line:
@@ -50,126 +50,146 @@ def add_matches_to_db(odds, sport, site):
     if not teams_not_in_db_site:
         return
     print(list(teams))
-    print(0, list(teams_not_in_db_site))
+    print(list(teams_not_in_db_site))
+    i = 0
+    teams_sets.append(set())
     for team in teams_not_in_db_site:
         line = is_in_db(team, sport, site)
         if line:
             success = add_name_to_db(line[0], team, site)
             if not success:
-                teams_sets[0].add(team)
+                teams_sets[i].add(team)
         else:
-            teams_sets[0].add(team)
-    print(1, list(teams_sets[0]))
-    if not teams_sets[0]:
+            teams_sets[i].add(team)
+    print(i, list(teams_sets[i]))
+    if not teams_sets[i]:
         return
-    for team in teams_sets[0]:
-        line = get_close_name(team, sport, site)
-        if line:
-            success = add_name_to_db(line[0], team, site)
-            if not success:
-                teams_sets[1].add(team)
-        else:
-            teams_sets[1].add(team)
-    print(2, list(teams_sets[1]))
-    if not teams_sets[1]:
-        return
-    for team in teams_sets[1]:
-        future_opponents, future_matches = get_future_opponents(team, matches)
-        success = False
-        for future_opponent, future_match in zip(future_opponents, future_matches):
-            id_opponent = get_id_by_site(future_opponent, sport, site)
-            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-            if id_to_find:
-                success = add_name_to_db(id_to_find, team, site)
-                if success:
-                    break
-        if not success:
-            teams_sets[2].add(team)
-    print(3, list(teams_sets[2]))
-    if not teams_sets[2]:
-        return
-    for team in teams_sets[2]:
-        line = get_close_name2(team, sport, site)
-        if line:
-            success = add_name_to_db(line[0], team, site)
-            if not success:
-                teams_sets[3].add(team)
-        else:
-            teams_sets[3].add(team)
-    print(4, list(teams_sets[3]))
-    if not teams_sets[3]:
-        return
-    for team in teams_sets[3]:
-        future_opponents, future_matches = get_future_opponents(team, matches)
-        success = False
-        for future_opponent, future_match in zip(future_opponents, future_matches):
-            id_opponent = get_id_by_site(future_opponent, sport, site)
-            id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-            if id_to_find:
-                success = add_name_to_db(id_to_find, team, site)
-                if success:
-                    break
-        if not success:
-            teams_sets[4].add(team)
-    print(5, list(teams_sets[4]))
-    if not teams_sets[4]:
-        return
-    if sport == "tennis":
-        for team in teams_sets[4]:
-            line = get_close_name3(team, sport, site)
+    i += 1
+    teams_sets.append(set())
+    for only_null in [True, False]:
+        for team in teams_sets[i - 1]:
+            line = get_close_name(team, sport, site, only_null)
             if line:
                 success = add_name_to_db(line[0], team, site)
                 if not success:
-                    teams_sets[5].add(team)
+                    teams_sets[i].add(team)
             else:
-                teams_sets[5].add(team)
-        print(6, list(teams_sets[5]))
-        if not teams_sets[5]:
+                teams_sets[i].add(team)
+        print(i, list(teams_sets[i]))
+        if not teams_sets[i]:
             return
-        for team in teams_sets[5]:
+        i += 1
+        teams_sets.append(set())
+        for team in teams_sets[i - 1]:
             future_opponents, future_matches = get_future_opponents(team, matches)
-            found = False
-            for future_opponent, future_match in zip(future_opponents, future_matches):
-                id_opponent = get_id_by_site(future_opponent, sport, site)
-                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                if id_to_find:
-                    found = True
-                    success = add_name_to_db(id_to_find, team, site)
-                    if not success:
-                        teams_sets[6].add(team)
-            if not found:
-                teams_sets[6].add(team)
-        print(7, list(teams_sets[6]))
-        if not teams_sets[6]:
-            return
-        for team in teams_sets[6]:
-            line = get_double_team_tennis(team, site)
-            if line:
-                success = add_name_to_db(line[0], team, site)
-                if not success:
-                    teams_sets[7].add(team)
-            else:
-                teams_sets[7].add(team)
-        print(8, list(teams_sets[7]))
-        if not teams_sets[7]:
-            return
-        for team in teams_sets[7]:
-            future_opponents, future_matches = get_future_opponents(team, matches)
-            found = False
+            success = False
             for future_opponent, future_match in zip(future_opponents, future_matches):
                 id_opponent = get_id_by_site(future_opponent, sport, site)
                 id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                 if id_to_find:
                     success = add_name_to_db(id_to_find, team, site)
+                    if success:
+                        break
+            if not success:
+                teams_sets[i].add(team)
+        print(i, list(teams_sets[i]))
+        if not teams_sets[i]:
+            return
+        i += 1
+        teams_sets.append(set())
+        for team in teams_sets[i - 1]:
+            line = get_close_name2(team, sport, site, only_null)
+            if line:
+                success = add_name_to_db(line[0], team, site)
+                if not success:
+                    teams_sets[i].add(team)
+            else:
+                teams_sets[i].add(team)
+        print(i, list(teams_sets[i]))
+        if not teams_sets[i]:
+            return
+        i += 1
+        teams_sets.append(set())
+        for team in teams_sets[i - 1]:
+            future_opponents, future_matches = get_future_opponents(team, matches)
+            success = False
+            for future_opponent, future_match in zip(future_opponents, future_matches):
+                id_opponent = get_id_by_site(future_opponent, sport, site)
+                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_to_find:
+                    success = add_name_to_db(id_to_find, team, site)
+                    if success:
+                        break
+            if not success:
+                teams_sets[i].add(team)
+        print(i, list(teams_sets[i]))
+        if not teams_sets[i]:
+            return
+        i += 1
+        teams_sets.append(set())
+        if sport == "tennis":
+            for team in teams_sets[i - 1]:
+                line = get_close_name3(team, sport, site, only_null)
+                if line:
+                    success = add_name_to_db(line[0], team, site)
                     if not success:
-                        teams_sets[8].add(team)
-            if not found:
-                teams_sets[8].add(team)
-        print(9, list(teams_sets[8]))
+                        teams_sets[i].add(team)
+                else:
+                    teams_sets[i].add(team)
+            print(i, list(teams_sets[i]))
+            if not teams_sets[i]:
+                return
+            i += 1
+            teams_sets.append(set())
+            for team in teams_sets[i - 1]:
+                future_opponents, future_matches = get_future_opponents(team, matches)
+                found = False
+                for future_opponent, future_match in zip(future_opponents, future_matches):
+                    id_opponent = get_id_by_site(future_opponent, sport, site)
+                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                    if id_to_find:
+                        found = True
+                        success = add_name_to_db(id_to_find, team, site)
+                        if not success:
+                            teams_sets[i].add(team)
+                if not found:
+                    teams_sets[i].add(team)
+            print(i, list(teams_sets[i]))
+            if not teams_sets[i]:
+                return
+            i += 1
+            teams_sets.append(set())
+            for team in teams_sets[i - 1]:
+                line = get_double_team_tennis(team, site)
+                if line:
+                    success = add_name_to_db(line[0], team, site)
+                    if not success:
+                        teams_sets[i].add(team)
+                else:
+                    teams_sets[i].add(team)
+            print(i, list(teams_sets[i]))
+            if not teams_sets[i]:
+                return
+            i += 1
+            teams_sets.append(set())
+            for team in teams_sets[i - 1]:
+                future_opponents, future_matches = get_future_opponents(team, matches)
+                found = False
+                for future_opponent, future_match in zip(future_opponents, future_matches):
+                    id_opponent = get_id_by_site(future_opponent, sport, site)
+                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                    if id_to_find:
+                        success = add_name_to_db(id_to_find, team, site)
+                        if not success:
+                            teams_sets[i].add(team)
+                if not found:
+                    teams_sets[i].add(team)
+            print(i, list(teams_sets[i]))
+            if not teams_sets[i]:
+                return
+            i += 1
+            teams_sets.append(set())
 
-
-#     if teams_sets[4]:
-#         return site, sport, competition, teams_sets[4]
 
 def adapt_names(odds, site, sport):
     """
@@ -181,7 +201,7 @@ def adapt_names(odds, site, sport):
         site = "netbet"
     add_matches_to_db(odds, sport, site)
     for match in odds:
-        new_match = " - ".join(list(map(lambda x: get_formated_name(x.strip(), site, sport),
+        new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
                                         match.split(" - "))))
         if "UNKNOWN TEAM/PLAYER" not in new_match:
             new_dict[new_match] = odds[match]
@@ -366,6 +386,8 @@ def defined_bets(odds_main, odds_second, main_sites, second_sites):
     """
     second_sites type : [[rank, bet, site],...]
     """
+    gain = 0
+    bets = []
     if second_sites:
         sites = copy.deepcopy(main_sites)
         odds_adapted = copy.deepcopy(odds_main)
@@ -375,20 +397,22 @@ def defined_bets(odds_main, odds_second, main_sites, second_sites):
         for bet in second_sites:
             valid = True
             bets = mises2(odds_adapted, bet[1], bet[0])
-            gain_freebets = bet[1] * odds_adapted[bet[0]]
+            gain = bet[1] * odds_adapted[bet[0]]
             for bet2 in second_sites:
-                if bets[bet2[0]] - bet2[1] > 1e-6: # Si on mise plus que ce qu'il n'y a de disponible
+                if bets[bet2[0]] - bet2[1] > 1e-6:  # Si on mise plus que ce qui est disponible
                     valid = False
                     break
             if valid:
                 break
+        index_to_del = []
         for i, elem in enumerate(second_sites):
             second_sites[i][1] -= bets[elem[0]]
             if elem[1] < 1e-6:
-                i_0 = i
-        del second_sites[i_0]
+                index_to_del.append(i)
+        for i in index_to_del[::-1]:
+            del second_sites[i]
         res = defined_bets(odds_main, odds_second, main_sites, second_sites)
-        return [gain_freebets + res[0], [bets] + res[1], [sites] + res[2]]
+        return [gain + res[0], [bets] + res[1], [sites] + res[2]]
     return [0, [], []]
 
 
