@@ -16,7 +16,7 @@ import sportsbetting
 PATH_DB = os.path.dirname(sportsbetting.__file__) + "\\resources\\teams.db"
 
 
-def get_id_formated_competition_name(competition, sport):
+def get_id_formatted_competition_name(competition, sport):
     """
     Retourne l'id et le nom tel qu'affiché sur comparateur-de-cotes.fr. Par
     exemple, "Ligue 1" devient "France - Ligue 1"
@@ -49,7 +49,7 @@ def get_competition_by_id(_id, site):
     return c.fetchone()[0]
 
 
-def get_formated_name(name, site, sport):
+def get_formatted_name(name, site, sport):
     """
     Uniformisation d'un nom d'équipe/joueur d'un site donné conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, "OM" devient "Marseille"
@@ -181,7 +181,7 @@ def is_in_db_site(name, sport, site):
         return line
 
 
-def get_formated_name_by_id(_id):
+def get_formatted_name_by_id(_id):
     """
     Retourne le nom d'une équipe en fonction de son id dans la base de donbées
     """
@@ -231,7 +231,7 @@ def add_name_to_db(_id, name, site):
     c = conn.cursor()
     sport = get_sport_by_id(_id)
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
-    id_is_potential_double = "&" in get_formated_name_by_id(_id)
+    id_is_potential_double = "&" in get_formatted_name_by_id(_id)
     if (is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
         c.execute("""
@@ -250,25 +250,25 @@ def add_name_to_db(_id, name, site):
         SELECT sport, name, name_{} FROM names
         WHERE id = {}
         """.format(site, _id))
-        sport, formated_name, name_site = c.fetchone()
+        sport, formatted_name, name_site = c.fetchone()
         if name != name_site:
             if inspect.currentframe().f_back.f_back.f_back.f_back.f_back.f_back.f_back.f_code \
                     .co_name == "parse_thread":
                 sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
                                                "Nouvelle donnée : {}\n"
                                                "Donnée déjà existante : {}"
-                                               .format(formated_name, site, name, name_site))
+                                               .format(formatted_name, site, name, name_site))
                 ans = sportsbetting.QUEUE_FROM_GUI.get(True)
             else:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
                             "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
-                            .format(formated_name, site, name_site, name))
+                            .format(formatted_name, site, name_site, name))
             if ans in ['y', 'Yes']:
                 if name_site:
                     c.execute("""
                     INSERT INTO names (id, name, sport, name_{})
                     VALUES ({}, "{}", "{}", "{}")
-                    """.format(site, _id, formated_name, sport, name))
+                    """.format(site, _id, formatted_name, sport, name))
                 else:
                     c.execute("""
                     UPDATE names
@@ -304,22 +304,27 @@ def is_id_available_for_site(_id, site):
     return False
 
 
-def get_close_name(name, sport, site):
+def get_close_name(name, sport, site, only_null=True):
     """
     Cherche un nom similaire dans la base de données
     """
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
-    c.execute("""
-    SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
-    """.format(sport, site))
+    if only_null:
+        c.execute("""
+        SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
+        """.format(sport, site))
+    else:
+        c.execute("""
+        SELECT id, name FROM names WHERE sport='{}'
+        """.format(sport))
     for line in c.fetchall():
         if (unidecode.unidecode(name.lower()) in unidecode.unidecode(line[1].lower())
                 or unidecode.unidecode(line[1].lower()) in unidecode.unidecode(name.lower())):
             return line
 
 
-def get_close_name2(name, sport, site):
+def get_close_name2(name, sport, site, only_null=True):
     """
     Cherche un nom similaire dans la base de données en ignorant tous les sigles. Par exemple,
     "Paris SG" devient "Paris"
@@ -330,9 +335,14 @@ def get_close_name2(name, sport, site):
     set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
-    c.execute("""
-    SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
-    """.format(sport, site))
+    if only_null:
+        c.execute("""
+        SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
+        """.format(sport, site))
+    else:
+        c.execute("""
+        SELECT id, name FROM names WHERE sport='{}'
+        """.format(sport))
     for line in c.fetchall():
         split_line = re.split(' |\\.|-|,', line[1])
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
@@ -346,22 +356,27 @@ def get_close_name2(name, sport, site):
             return line
 
 
-def get_close_name3(name, sport, site):
+def get_close_name3(name, sport, site, only_null=True):
     """
     Cherche un nom proche dans la base de données si le nom est de la forme "Initiale prénom + Nom"
     Par exemple "R. Nadal" renverra "Rafael Nadal"
     """
     if "." in name:
-        splitted_name = name.split("(")[0].split(".")
-        if len(splitted_name) == 2 and len(splitted_name[0]) == 1:
-            init_first_name = splitted_name[0]
-            last_name = splitted_name[1].strip()
+        split_name = name.split("(")[0].split(".")
+        if len(split_name) == 2 and len(split_name[0]) == 1:
+            init_first_name = split_name[0]
+            last_name = split_name[1].strip()
             reg_exp = r'{}[a-z]+\s{}'.format(init_first_name, last_name)
             conn = sqlite3.connect(PATH_DB)
             c = conn.cursor()
-            c.execute("""
-            SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
-            """.format(sport, site))
+            if only_null:
+                c.execute("""
+                SELECT id, name FROM names WHERE sport='{}' AND name_{} IS NULL
+                """.format(sport, site))
+            else:
+                c.execute("""
+                SELECT id, name FROM names WHERE sport='{}'
+                """.format(sport))
             for line in c.fetchall():
                 if re.match(reg_exp, line[1]):
                     return line
