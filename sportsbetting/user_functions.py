@@ -21,13 +21,9 @@ import unidecode
 import urllib3
 from bs4 import BeautifulSoup
 
-try:
-    from win10toast import ToastNotifier
-except ImportError:
-    import subprocess
 import sportsbetting
 from sportsbetting import selenium_init
-from sportsbetting.database_functions import (get_id_formated_competition_name,
+from sportsbetting.database_functions import (get_id_formatted_competition_name,
                                               get_competition_by_id, get_competition_url,
                                               import_teams_by_sport, import_teams_by_url)
 from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_buteurs_betclic,
@@ -51,7 +47,7 @@ def parse_competition(competition, sport="football", *sites):
     bookmakers reconnus par l'ARJEL
     """
     try:
-        _id, formatted_name = get_id_formated_competition_name(competition, sport)
+        _id, formatted_name = get_id_formatted_competition_name(competition, sport)
     except TypeError:
         print("Competition inconnue")
         return
@@ -89,12 +85,6 @@ def parse_competition(competition, sport="football", *sites):
     #         sportsbetting.PROGRESS += 100/(len(sites)*sportsbetting.SUBPROGRESS_LIMIT)
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
     #     if len(sites) > 1:
     res = format_team_names(res_parsing, sport)
     out = valid_odds(merge_dict_odds(res), sport)
@@ -123,12 +113,6 @@ def parse_competitions(competitions, sport="football", *sites):
         print()
     if selenium_required:
         selenium_init.DRIVER.quit()
-    #     if inspect.currentframe().f_back.f_code.co_name == "<module>":
-    #         try:
-    #             toaster = ToastNotifier()
-    #             toaster.show_toast("Sports-betting", "Fin du parsing")
-    #         except NameError:
-    #             subprocess.Popen(['notify-send', "Fin du parsing"])
     #     if inspect.currentframe().f_back.f_code.co_name != "<module>":
     #         return merge_dicts(list_odds)
     sportsbetting.ODDS[sport] = merge_dicts(list_odds)
@@ -188,12 +172,6 @@ def parse_football(*sites):
     parse_competitions(competitions, "football", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def parse_tennis(*sites):
@@ -208,12 +186,6 @@ def parse_tennis(*sites):
     sportsbetting.ODDS["tennis"] = parse_competition("tennis", "tennis", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def parse_nba(*sites):
@@ -229,12 +201,6 @@ def parse_nba(*sites):
     sportsbetting.ODDS["basketball"] = sportsbetting.ODDS["nba"]
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def parse_handball(*sites):
@@ -249,12 +215,6 @@ def parse_handball(*sites):
     sportsbetting.ODDS["handball"] = parse_competition("champions", "handball", *sites)
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def parse_nhl(*sites):
@@ -270,12 +230,6 @@ def parse_nhl(*sites):
     sportsbetting.ODDS["hockey-sur-glace"] = sportsbetting.ODDS["nhl"]
     if selenium_required:
         selenium_init.DRIVER.quit()
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
 
 
 def parse_buteurs():
@@ -285,15 +239,9 @@ def parse_buteurs():
     competitions = ["france ligue 1", "espagne liga", "italie serie", "allemagne bundesliga"]
     list_odds = []
     for competition in competitions:
-        print(get_id_formated_competition_name(competition, "football")[1])
+        print(get_id_formatted_competition_name(competition, "football")[1])
         url = get_competition_url(competition, "football", "betclic")
         list_odds.append(parse_buteurs_betclic(url))
-    if inspect.currentframe().f_back.f_code.co_name == "<module>":
-        try:
-            toaster = ToastNotifier()
-            toaster.show_toast("Sports-betting", "Fin du parsing")
-        except NameError:
-            subprocess.Popen(['notify-send', "Fin du parsing"])
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return merge_dicts(list_odds)
     sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
@@ -843,11 +791,11 @@ def add_names_to_db(competition, sport="football", *sites):
     sites
     """
     try:
-        id_competition, formated_name = get_id_formated_competition_name(competition, sport)
+        id_competition, formatted_name = get_id_formatted_competition_name(competition, sport)
     except TypeError:
         print("Competition inconnue")
         return {}
-    print(formated_name)
+    print(formatted_name)
     if competition == sport or "Tout le" in competition:
         import_teams_by_sport(sport)
     else:
