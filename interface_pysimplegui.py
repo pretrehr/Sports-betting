@@ -11,6 +11,8 @@ import threading
 import pickle
 import os
 import sys
+from math import ceil
+
 import PySimpleGUI as sg
 import sportsbetting
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
@@ -41,12 +43,17 @@ sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parions
 parsing_layout = [
     [
         sg.Listbox(sports, size=(20, 6), key="SPORT", enable_events=True),
-        sg.Listbox((), size=(20, 12), key='COMPETITIONS', select_mode='multiple'),
+        sg.Column([[sg.Listbox((), size=(20, 12), key='COMPETITIONS', select_mode='multiple')],
+                   [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")]]),
         sg.Column([[sg.Listbox(sites, size=(20, 12), key="SITES", select_mode='multiple')],
-                   [sg.Button("Tout sélectionner", key="SELECT_ALL")]])
+                   [sg.Button("Tout sélectionner", key="SELECT_ALL"),
+                    sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
-    [sg.Button('Ok'), sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='progress',
-                                     visible=False)]
+    [sg.Button('Démarrer', key="START_PARSING"),
+     sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
+                             visible=False)]]),
+     sg.Col([[sg.Text("Temps restant", key="TEXT_PARSING", visible=False)]]),
+     sg.Col([[sg.Text("8:88:88", key="REMAINING_TIME_PARSING", visible=False)]])]
 ]
 
 column_text_under_condition = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -87,9 +94,11 @@ match_under_condition_layout = [[sg.Listbox(sites, size=(20, 12), key="SITE_UNDE
                                           visible=False, hide_vertical_scroll=True,
                                           size=(None, 12)),
                                  sg.Column([[sg.Text(
-                                     "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_UNDER_CONDITION", visible=False)],
-                                            [sg.MLine(size=(90, 12), key="RESULT_UNDER_CONDITION",
-                                                      font="Consolas 10", visible=False)]])],
+                                     "Répartition des mises (les totaux affichés prennent en "
+                                     "compte les éventuels freebets) :",
+                                     key="TEXT_UNDER_CONDITION", visible=False)],
+                                     [sg.MLine(size=(100, 12), key="RESULT_UNDER_CONDITION",
+                                               font="Consolas 10", visible=False)]])],
                                 [sg.Column(column_indicators_under_condition),
                                  sg.Column(column_results_under_condition)]
                                 ]
@@ -113,8 +122,9 @@ stake_layout = [
     [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
               key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, 12)),
      sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_STAKE", visible=False)],
-                [sg.MLine(size=(90, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])],
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_STAKE", visible=False)],
+         [sg.MLine(size=(100, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])],
     [sg.Column(column_indicators_stake),
      sg.Column(column_results_stake)]
 ]
@@ -135,9 +145,10 @@ freebet_layout = [
               headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
               hide_vertical_scroll=True, size=(None, 12)),
      sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_FREEBET", visible=False)],
-                [sg.MLine(size=(90, 12), key="RESULT_FREEBET", font="Consolas 10",
-                          visible=False)]])],
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_FREEBET", visible=False)],
+         [sg.MLine(size=(100, 12), key="RESULT_FREEBET", font="Consolas 10",
+                   visible=False)]])],
     [sg.Column(column_indicators_freebet), sg.Column(column_results_freebet)]
 ]
 
@@ -176,9 +187,10 @@ cashback_layout = [
               headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False,
               hide_vertical_scroll=True, size=(None, 12)),
      sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_CASHBACK", visible=False)],
-                [sg.MLine(size=(90, 12), key="RESULT_CASHBACK", font="Consolas 10",
-                          visible=False)]])],
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_CASHBACK", visible=False)],
+         [sg.MLine(size=(100, 12), key="RESULT_CASHBACK", font="Consolas 10",
+                   visible=False)]])],
     [sg.Column(column_indicators_cashback), sg.Column(column_results_cashback)]
 ]
 
@@ -216,9 +228,11 @@ combine_layout = [[sg.Listbox(sites, size=(20, 12), key="SITE_COMBINE"), sg.Colu
                               [sg.Column(column_indicators_combine),
                                sg.Column(column_results_combine)]]),
                    sg.Column([[sg.Text(
-                       "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_COMBINE", visible=False)],
-                              [sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10",
-                                        visible=False)]])
+                       "Répartition des mises (les totaux affichés prennent en compte les "
+                       "éventuels freebets) :",
+                       key="TEXT_COMBINE", visible=False)],
+                       [sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10",
+                                 visible=False)]])
                    ]]
 
 column_stakes = [[sg.Text("Site"), sg.Text("Mises")],
@@ -259,8 +273,9 @@ stakes_layout = [
                  sg.Column(column_results_stakes)]
                 ]),
      sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_STAKES", visible=False)],
-                [sg.MLine(size=(120, 12), key="RESULT_STAKES", font="Consolas 10", visible=False)]])
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_STAKES", visible=False)],
+         [sg.MLine(size=(120, 12), key="RESULT_STAKES", font="Consolas 10", visible=False)]])
      ]]
 
 column_sites_freebets = [[sg.Text("Site")],
@@ -295,9 +310,11 @@ freebets_layout = [[sg.Column(column_sites_freebets),
                                 sg.Column(column_results_freebets)]
                                ]),
                     sg.Column([[sg.Text(
-                        "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_FREEBETS", visible=False)],
-                               [sg.MLine(size=(120, 12), key="RESULT_FREEBETS", font="Consolas 10",
-                                         visible=False)]])
+                        "Répartition des mises (les totaux affichés prennent en compte les "
+                        "éventuels freebets) :",
+                        key="TEXT_FREEBETS", visible=False)],
+                        [sg.MLine(size=(120, 12), key="RESULT_FREEBETS", font="Consolas 10",
+                                  visible=False)]])
                     ]]
 
 column_text_gagnant = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -326,9 +343,10 @@ gagnant_layout = [
     [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
               key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12)),
      sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :", key="TEXT_GAGNANT", visible=False)],
-                [sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10",
-                          visible=False)]])],
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_GAGNANT", visible=False)],
+         [sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10",
+                   visible=False)]])],
     [sg.Column(column_indicators_gagnant),
      sg.Column(column_results_gagnant)]
 ]
@@ -349,19 +367,18 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
                          sg.Tab('Pari sur un match donné', stake_layout),
-                         sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Cashback', cashback_layout),
+                         sg.Tab('Pari gagnant', gagnant_layout),
                          sg.Tab('Pari combiné', combine_layout),
                          sg.Tab('Paris à placer', stakes_layout),
-                         sg.Tab('Freebets à placer', freebets_layout),
-                         sg.Tab('Pari gagnant', gagnant_layout)
+                         sg.Tab('Freebet unique', freebet_layout),
+                         sg.Tab('Freebets à placer', freebets_layout)
                          ]])],
           [sg.Button('Quitter')]]
 
 # Create the Window
 window = sg.Window('Paris sportifs', layout, location=(0, 0))
 event, values = window.read(timeout=0)
-progress_bar = window['progress']
 sportsbetting.PROGRESS = 0
 thread = None
 thread_stakes = None
@@ -373,22 +390,27 @@ window_odds = None
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read(timeout=100)
-
     try:
         if not thread.is_alive():
             pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
-            progress_bar.Update(visible=False)
+            window['PROGRESS_PARSING'].Update(visible=False)
+            window["TEXT_PARSING"].update(visible=False)
+            window["REMAINING_TIME_PARSING"].update(visible=False)
+            sg.SystemTray.notify('Sports-betting', 'Fin du parsing')
+            thread = None
         else:
-            progress_bar.UpdateBar(sportsbetting.PROGRESS, 100)
-        # else:
-        #     sg.one_line_progress_meter("Test", sportsbetting.PROGRESS, 100, "key")
+            window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
+            sportsbetting.EXPECTED_TIME = max(0, sportsbetting.EXPECTED_TIME - 0.1)
+            m, s = divmod(sportsbetting.EXPECTED_TIME, 60)
+            window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
     except AttributeError:
         pass
     try:
         if not thread_stakes.is_alive():
             window["PROGRESS_STAKES"].update(visible=False)
+            thread_stakes = None
         else:
-            window["PROGRESS_STAKES"].UpdateBar(sportsbetting.PROGRESS, 100)
+            window["PROGRESS_STAKES"].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
     except AttributeError:
         pass
     try:  # see if something has been posted to Queue
@@ -400,11 +422,17 @@ while True:
         sport = values["SPORT"][0]
         competitions = get_all_competitions(sport)
         window['COMPETITIONS'].update(values=competitions)
+    elif event == "SELECT_NONE_COMPETITION":
+        window['COMPETITIONS'].update(set_to_index=[])
     elif event == "SELECT_ALL":
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sites)])
-    elif event == 'Ok':
+    elif event == "SELECT_NONE_SITE":
+        window['SITES'].update(set_to_index=[])
+    elif event == 'START_PARSING':
         selected_competitions = values["COMPETITIONS"]
         selected_sites = values["SITES"]
+        window["MATCHES_ODDS"].update([])
+        window["MATCHES"].update([])
         if selected_competitions and selected_sites:
             def parse_thread():
                 """
@@ -416,8 +444,9 @@ while True:
 
             thread = threading.Thread(target=parse_thread)
             thread.start()
-            progress_bar.Update(visible=True)
-            # sg.one_line_progress_meter("Test", sportsbetting.PROGRESS, 100, "key")
+            window['PROGRESS_PARSING'].Update(visible=True)
+            window["TEXT_PARSING"].update(visible=True)
+            window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME, visible=True)
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
     elif event == "SPORT_STAKE":
