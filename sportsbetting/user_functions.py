@@ -171,6 +171,13 @@ def parse_competitions2(competitions, sport="football", *sites):
     list_odds = []
     sportsbetting.PROGRESS = 0
     sportsbetting.SUBPROGRESS_LIMIT = len(sites)
+    for competition in competitions:
+        if competition == sport or "Tout le" in competition:
+            import_teams_by_sport(sport)
+        else:
+            id_competition = get_id_formatted_competition_name(competition, sport)[0]
+            import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport + "/a-ed"
+                                + str(id_competition))
     for site in sites:
         print(site)
         list_odds.append(parse_competitions_site(competitions, sport, site))
