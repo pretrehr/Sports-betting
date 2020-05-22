@@ -11,7 +11,8 @@ import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
-                                              get_close_name3, get_double_team_tennis)
+                                              get_close_name3, get_double_team_tennis,
+                                              get_id_by_opponent_thesportsdb)
 
 from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises
 
@@ -85,7 +86,10 @@ def add_matches_to_db(odds, sport, site):
             success = False
             for future_opponent, future_match in zip(future_opponents, future_matches):
                 id_opponent = get_id_by_site(future_opponent, sport, site)
-                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_opponent < 0:
+                    id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
+                else:
+                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                 if id_to_find:
                     success = add_name_to_db(id_to_find, team, site)
                     if success:
@@ -115,7 +119,10 @@ def add_matches_to_db(odds, sport, site):
             success = False
             for future_opponent, future_match in zip(future_opponents, future_matches):
                 id_opponent = get_id_by_site(future_opponent, sport, site)
-                id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_opponent < 0:
+                    id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
+                else:
+                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                 if id_to_find:
                     success = add_name_to_db(id_to_find, team, site)
                     if success:
@@ -146,7 +153,10 @@ def add_matches_to_db(odds, sport, site):
                 found = False
                 for future_opponent, future_match in zip(future_opponents, future_matches):
                     id_opponent = get_id_by_site(future_opponent, sport, site)
-                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                    if id_opponent < 0:
+                        id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
+                    else:
+                        id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                     if id_to_find:
                         found = True
                         success = add_name_to_db(id_to_find, team, site)
@@ -177,7 +187,10 @@ def add_matches_to_db(odds, sport, site):
                 found = False
                 for future_opponent, future_match in zip(future_opponents, future_matches):
                     id_opponent = get_id_by_site(future_opponent, sport, site)
-                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                    if id_opponent < 0:
+                        id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
+                    else:
+                        id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                     if id_to_find:
                         success = add_name_to_db(id_to_find, team, site)
                         if not success:
@@ -193,7 +206,7 @@ def add_matches_to_db(odds, sport, site):
 
 def adapt_names(odds, site, sport):
     """
-    Uniformisation des noms d'équipe/joueur d'un site donnée conformément aux noms disponibles sur
+    Uniformisation des noms d'équipe/joueur d'un site donné conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient "Marseille - Paris SG"
     """
     new_dict = {}
@@ -484,6 +497,9 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                                          hour_min, minute_min)
     else:
         datetime_min = None
+    best_match = None
+    best_overall_odds = None
+    sites = None
     for match in all_odds:
         if (site in all_odds[match]['odds']
                 and (not date_max or all_odds[match]['date'] <= datetime_max
@@ -516,7 +532,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                                 sites = best_sites[:i] + [site] + best_sites[i + 1:]
                     except ZeroDivisionError:  # Si calcul freebet avec cote de 1
                         pass
-    try:
+    if best_match:
         print(best_match)
         pprint(all_odds[best_match], compact=True)
         if recalcul:
@@ -533,7 +549,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                                [result_function(best_overall_odds, best_rank)],
                                all_odds[best_match]["odds"], sport, best_rank if freebet else None,
                                one_site and freebet, best_overall_odds, second_rank)
-    except UnboundLocalError:
+    else:
         print("No match found")
 
 

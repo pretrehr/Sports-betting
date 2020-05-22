@@ -1,6 +1,7 @@
 """
 Fonctions de gestion de la base de données des noms d'équipe/joueur/compétition
 """
+import json
 import os
 import inspect
 import sqlite3
@@ -141,6 +142,18 @@ def import_teams_by_sport(sport):
                                                     + line["href"]))
 
 
+def import_teams_by_id_thesportsdb(_id):
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-_id)
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    dict_competition = json.loads(soup.text)
+    for event in dict_competition["events"]:
+        for _id in [event["idHomeTeam"], event["idAwayTeam"]]:
+            add_id_to_db_thesportsdb(-int(_id))
+    
+    
+
 def is_id_in_db(_id):
     """
     Vérifie si l'id est dans la base de données
@@ -220,6 +233,24 @@ def add_id_to_db(_id):
             conn.commit()
             c.close()
             break
+
+def add_id_to_db_thesportsdb(_id):
+    if is_id_in_db(_id):  # Pour éviter les ajouts intempestifs (précaution)
+        return
+    url = "https://www.thesportsdb.com/api/v1/json/1/lookupteam.php?id=" + str(-_id)
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    dict_team = json.loads(soup.text)
+    name = dict_team["teams"][0]["strTeam"]
+    sport = dict_team["teams"][0]["strSport"].replace("Soccer", "football")
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    INSERT INTO names (id, name, sport)
+    VALUES ({}, "{}", "{}")
+    """.format(_id, name, sport))
+    conn.commit()
+    c.close()
+    
 
 
 def get_sport_by_id(_id):
@@ -347,7 +378,7 @@ def get_close_name2(name, sport, site, only_null=True):
     Cherche un nom similaire dans la base de données en ignorant tous les sigles. Par exemple,
     "Paris SG" devient "Paris"
     """
-    split_name = re.split(' |\\.|-|,', name)
+    split_name = re.split('[ .\-,]', name)
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
     set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
@@ -362,7 +393,7 @@ def get_close_name2(name, sport, site, only_null=True):
         SELECT id, name FROM names WHERE sport='{}'
         """.format(sport))
     for line in c.fetchall():
-        split_line = re.split(' |\\.|-|,', line[1])
+        split_line = re.split('[ .\-,]', line[1])
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
                                                                     or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
@@ -441,6 +472,29 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                         pass
     return
 
+def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
+    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id=" + str(-id_opponent)
+    date_match = matches[name_site_match]["date"]
+    try:
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    except urllib.error.HTTPError:
+        return
+    dict_events = json.loads(soup.text)
+    for event in dict_events["events"]:
+        date_time = (datetime.datetime(*(map(int, event["dateEvent"].split("-"))),
+                                       *(map(int, event["strTime"].split(":"))))
+                     + datetime.timedelta(hours=2))
+        if abs(date_time - date_match) < datetime.timedelta(days=0.5):
+            id_home = -int(event["idHomeTeam"])
+            id_away = -int(event["idAwayTeam"])
+            if id_home == id_opponent:
+                return id_away
+            elif id_away == id_opponent:
+                return id_home
+            else:
+                return
+    return
+
 
 def are_same_double(team1, team2):
     """
@@ -517,3 +571,4 @@ def get_all_sports():
     SELECT sport FROM competitions
     """)
     return sorted(list(set(map(lambda x: x[0], c.fetchall()))))
+

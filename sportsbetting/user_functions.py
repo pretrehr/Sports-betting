@@ -25,7 +25,8 @@ import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formatted_competition_name,
                                               get_competition_by_id, get_competition_url,
-                                              import_teams_by_sport, import_teams_by_url)
+                                              import_teams_by_sport, import_teams_by_url,
+                                              import_teams_by_id_thesportsdb)
 from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_buteurs_betclic,
                                             parse_buteurs_betclic_match)
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
@@ -107,7 +108,7 @@ def parse_competitions(competitions, sport="football", *sites):
         selenium_init.start_selenium()
     list_odds = []
     sportsbetting.PROGRESS = 0
-    sportsbetting.SUBPROGRESS_LIMIT = len(competitions)
+    sportsbetting.SUB_PROGRESS_LIMIT = len(competitions)
     for competition in competitions:
         list_odds.append(parse_competition(competition, sport, *sites))
         print()
@@ -133,7 +134,7 @@ def parse_competitions_site(competitions, sport, site):
         # now = time.time()
         # print(now - before, now - start)
         # before = now
-        sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUBPROGRESS_LIMIT)
+        sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUB_PROGRESS_LIMIT)
     print()
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -170,14 +171,17 @@ def parse_competitions2(competitions, sport="football", *sites):
         selenium_init.start_selenium()
     list_odds = []
     sportsbetting.PROGRESS = 0
-    sportsbetting.SUBPROGRESS_LIMIT = len(sites)
+    sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
         if competition == sport or "Tout le" in competition:
             import_teams_by_sport(sport)
         else:
             id_competition = get_id_formatted_competition_name(competition, sport)[0]
-            import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport + "/a-ed"
-                                + str(id_competition))
+            if id_competition < 0:
+                import_teams_by_id_thesportsdb(id_competition)
+            else:
+                import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
+                                    + "/a-ed" + str(id_competition))
     for site in sites:
         print(site)
         list_odds.append(parse_competitions_site(competitions, sport, site))
@@ -322,6 +326,9 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
     n = len(all_odds['odds'][site])
     best_sites = [site for _ in range(n)]
     best_i = 0
+    best_overall_odds = None
+    bets = None
+    sites = None
     for odds in all_odds['odds'].items():
         for i in range(n):
             if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
@@ -337,10 +344,10 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
                 sites = best_sites[:i] + [site] + best_sites[i + 1:]
                 bets = mises2(odds_to_check, bet, i)
                 best_i = i
-    try:
+    if best_overall_odds:
         mises2(best_overall_odds, bet, best_i, True)
         afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport)
-    except UnboundLocalError:
+    else:
         print("No match found")
 
 
@@ -613,6 +620,10 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     all_odds_combine = {}
     combis = list(combinations(all_odds.items(), nb_matches))
     nb_combis = len(combis)
+    best_combine = None
+    best_bets = None
+    main_site_odds = []
+    main_sites_distribution = []
     progress = 10
     start = time.time()
     sportsbetting.PROGRESS = 0
@@ -625,7 +636,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         #             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
-        for i, main0 in enumerate(main_sites):
+        for main0 in main_sites:
             try:
                 main_sites_distribution = [main0 for _ in range(n)]
                 main_site_odds = copy.deepcopy(all_odds_combine[match_combine]["odds"][main0])
@@ -646,10 +657,10 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         dict_combine_odds = copy.deepcopy(second_odds)
         for perm in permutations(range(n), nb_stakes):
             valid_perm = True
-            defined_second_sites = [[perm[i], stake[0], stake[1]]
-                                    for i, stake in enumerate(stakes)]
-            for i, stake in enumerate(stakes):
-                if dict_combine_odds[defined_second_sites[i][2]][defined_second_sites[i][0]] < \
+            defined_second_sites = [[perm[j], stake[0], stake[1]]
+                                    for j, stake in enumerate(stakes)]
+            for j, stake in enumerate(stakes):
+                if dict_combine_odds[defined_second_sites[j][2]][defined_second_sites[j][0]] < \
                         stake[2]:
                     valid_perm = False
                     break
@@ -664,7 +675,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                 best_combine = combine
                 best_bets = defined_bets_temp
     #     print("Temps d'exécution =", time.time()-start)
-    try:
+    if best_combine:
         best_match_combine = " / ".join([match[0] for match in best_combine])
         odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
         all_sites = main_sites + list(second_sites)
@@ -678,7 +689,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         print("Somme des mises =", np.sum(best_bets[1]))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
                                all_odds_combine[best_match_combine]["odds"], "football")
-    except UnboundLocalError:
+    else:
         print("No match found")
 
 

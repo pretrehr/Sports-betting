@@ -4,9 +4,9 @@
 """
 import sys
 import io
+import datetime
 import numpy as np
 import PySimpleGUI as sg
-import datetime
 
 import sportsbetting
 from sportsbetting.user_functions import (best_match_under_conditions,
@@ -491,6 +491,7 @@ def delete_odds_interface(window, values):
         del sportsbetting.ODDS[sport][match]
         matches = sorted(list(sportsbetting.ODDS[sport]))
         window['MATCHES_ODDS'].update(values=matches)
+        window["MATCHES"].update(values=matches)
         window["ODDS_ODDS"].update(visible=False)
         window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(visible=False)
