@@ -15,3 +15,6 @@ debug.log
 .idea/*
 cov_html/*
 source/*
+sportsbetting/resources/*.png
+sportsbetting/resources/*.jpg
+sportsbetting/resources/*.pub
