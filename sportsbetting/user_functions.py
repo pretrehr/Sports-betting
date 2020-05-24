@@ -26,7 +26,7 @@ from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formatted_competition_name,
                                               get_competition_by_id, get_competition_url,
                                               import_teams_by_sport, import_teams_by_url,
-                                              import_teams_by_id_thesportsdb)
+                                              import_teams_by_competition_id_thesportsdb)
 from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_buteurs_betclic,
                                             parse_buteurs_betclic_match)
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
@@ -178,7 +178,7 @@ def parse_competitions2(competitions, sport="football", *sites):
         else:
             id_competition = get_id_formatted_competition_name(competition, sport)[0]
             if id_competition < 0:
-                import_teams_by_id_thesportsdb(id_competition)
+                import_teams_by_competition_id_thesportsdb(id_competition)
             else:
                 import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
                                     + "/a-ed" + str(id_competition))

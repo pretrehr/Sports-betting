@@ -396,7 +396,8 @@ while True:
             window['PROGRESS_PARSING'].Update(visible=False)
             window["TEXT_PARSING"].update(visible=False)
             window["REMAINING_TIME_PARSING"].update(visible=False)
-            sg.SystemTray.notify('Sports-betting', 'Fin du parsing')
+            sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
+                                 fade_in_duration=125)
             thread = None
         else:
             window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)

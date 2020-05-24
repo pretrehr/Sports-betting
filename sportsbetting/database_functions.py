@@ -142,17 +142,14 @@ def import_teams_by_sport(sport):
                                                     + line["href"]))
 
 
-def import_teams_by_id_thesportsdb(_id):
-    conn = sqlite3.connect(PATH_DB)
-    c = conn.cursor()
+def import_teams_by_competition_id_thesportsdb(_id):
     url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-_id)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_competition = json.loads(soup.text)
     for event in dict_competition["events"]:
         for _id in [event["idHomeTeam"], event["idAwayTeam"]]:
             add_id_to_db_thesportsdb(-int(_id))
-    
-    
+
 
 def is_id_in_db(_id):
     """
@@ -234,6 +231,7 @@ def add_id_to_db(_id):
             c.close()
             break
 
+
 def add_id_to_db_thesportsdb(_id):
     if is_id_in_db(_id):  # Pour éviter les ajouts intempestifs (précaution)
         return
@@ -241,7 +239,8 @@ def add_id_to_db_thesportsdb(_id):
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_team = json.loads(soup.text)
     name = dict_team["teams"][0]["strTeam"]
-    sport = dict_team["teams"][0]["strSport"].replace("Soccer", "football")
+    sport = (dict_team["teams"][0]["strSport"].lower().replace("soccer", "football")
+             .replace("ice_hockey", "hockey-sur-glace"))
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
@@ -250,7 +249,6 @@ def add_id_to_db_thesportsdb(_id):
     """.format(_id, name, sport))
     conn.commit()
     c.close()
-    
 
 
 def get_sport_by_id(_id):
@@ -398,7 +396,7 @@ def get_close_name2(name, sport, site, only_null=True):
                                                                     or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
                 or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
-                                                                                           .lower())):
+                                                                                   .lower())):
             return line
         set_line = set(map(lambda x: unidecode.unidecode(x.lower()), split_line))
         if set_line.issubset(set_name):
@@ -471,6 +469,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                     except TypeError:  # live
                         pass
     return
+
 
 def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     url = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id=" + str(-id_opponent)
@@ -562,7 +561,7 @@ def get_all_competitions(sport):
 
 def get_all_sports():
     """
-    Retourne toutes les sports disponibles dans la db
+    Retourne tous les sports disponibles dans la db
     """
     print(PATH_DB)
     conn = sqlite3.connect(PATH_DB)
@@ -571,4 +570,3 @@ def get_all_sports():
     SELECT sport FROM competitions
     """)
     return sorted(list(set(map(lambda x: x[0], c.fetchall()))))
-
