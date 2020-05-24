@@ -31,6 +31,9 @@ def odds_table(result):
             break
     dict_odds = eval("".join(lines[1:i + 1]))
     odds = dict_odds["odds"]
+    if len(list(odds.values())[0]) == 2:
+        for key in odds.keys():
+            odds[key].insert(1, "-   ")
     table = []
     for key, value in odds.items():
         table.append([key] + list(map(str, value)))
@@ -473,6 +476,9 @@ def odds_match_interface(window, values):
         sys.stdout = old_stdout  # Put the old stream back in place
         odds = odds_dict["odds"]
         date = odds_dict["date"]
+        if len(list(odds.values())[0]) == 2:
+            for key in odds.keys():
+                odds[key].insert(1, "-   ")
         table = []
         for key, value in odds.items():
             table.append([key] + list(map(str, value)))
