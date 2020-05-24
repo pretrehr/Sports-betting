@@ -121,6 +121,7 @@ def parse_betstars(url=""):
     match = ""
     odds = []
     is_12 = False
+    is_basketball = False
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
@@ -147,6 +148,9 @@ def parse_betstars(url=""):
                     odds.append(float(list(line.stripped_strings)[0]))
                 except ValueError:  # cote non disponible (OTB)
                     odds.append(1)
+            if not odds and"class" in line.attrs and "button__bet__odds" in line["class"]:
+                odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
+                is_basketball = True
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
                 date = strings[0] + " " + year
@@ -159,10 +163,14 @@ def parse_betstars(url=""):
                     date_time = datetime.datetime.strptime(date + " " + hour, "%d %b %Y %H:%M")
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year + 1)
+                if is_basketball:
+                    odds = [odds[0], odds[int(len(odds)/2)]]
                 match = match.replace("  ", " ")
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {"betstars": odds}
-                match_odds_hash[match]['date'] = date_time
+                if odds:
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"betstars": odds}
+                    match_odds_hash[match]['date'] = date_time
+                    odds = []
             if "class" in line.attrs and "prices" in line["class"]:
                 try:
                     odds = list(map(lambda x: float(x.replace(",", ".")),
