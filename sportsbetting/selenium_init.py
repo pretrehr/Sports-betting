@@ -25,8 +25,8 @@ def start_selenium():
     options.add_argument("--headless")
     try:
         print(PATH_DRIVER)
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
-    except (selenium.common.exceptions.WebDriverException, OSError):
         DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
+    except (selenium.common.exceptions.WebDriverException, OSError):
+        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
     except selenium.common.exceptions.SessionNotCreatedException:
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older", options=options)
+        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
