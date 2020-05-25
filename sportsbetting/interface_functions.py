@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
 """
 .. module::interface_functions
 :synopsis: Fonctions d'intéraction entre l'interface et les fonctions du package sportsbetting

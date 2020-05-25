@@ -8,7 +8,7 @@ import selenium.webdriver
 import selenium.common
 import sportsbetting
 
-PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "\\resources\\chromedriver"
+PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 DRIVER = None
 
 
@@ -26,5 +26,7 @@ def start_selenium():
     try:
         print(PATH_DRIVER)
         DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
-    except (selenium.common.exceptions.WebDriverException, OSError):
+    except OSError:
         DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
+    except selenium.common.exceptions.WebDriverException:
+        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)

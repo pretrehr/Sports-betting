@@ -14,7 +14,7 @@ import unidecode
 from bs4 import BeautifulSoup
 import sportsbetting
 
-PATH_DB = os.path.dirname(sportsbetting.__file__) + "\\resources\\teams.db"
+PATH_DB = os.path.dirname(sportsbetting.__file__) + "/resources/teams.db"
 
 
 def get_id_formatted_competition_name(competition, sport):
