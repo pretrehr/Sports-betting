@@ -24,11 +24,11 @@ import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import merge_dicts, add_matches_to_db
 
-PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "\\resources\\chromedriver"
+PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 
 if sys.platform == "win32":
     locale.setlocale(locale.LC_TIME, "fr")
-else:
+else: # sys.platform == "linux"
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
 

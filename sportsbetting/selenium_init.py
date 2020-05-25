@@ -26,7 +26,14 @@ def start_selenium():
     try:
         print(PATH_DRIVER)
         DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
+        print("Version ancienne Windows")
     except OSError:
         DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
+        print("Version Windows")
     except selenium.common.exceptions.WebDriverException:
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
+        try:
+            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
+            print("Version Unix")
+        except selenium.common.exceptions.WebDriverException:
+            print("Wrong permissions, please make chromedriver executable")
+            exit()

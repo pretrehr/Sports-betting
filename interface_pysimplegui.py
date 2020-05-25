@@ -28,7 +28,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_pari_gagnant_interface,
                                                odds_match_interface, delete_odds_interface)
 
-PATH_DATA = os.path.dirname(sportsbetting.__file__) + "\\resources\\data.pickle"
+PATH_DATA = os.path.dirname(sportsbetting.__file__) + "/resources/data.pickle"
 
 try:
     sportsbetting.ODDS = pickle.load(open(PATH_DATA, "rb"))
