@@ -25,15 +25,15 @@ def start_selenium():
     options.add_argument("--headless")
     try:
         print(PATH_DRIVER)
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
         print("Version ancienne Windows")
-    except OSError:
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
-        print("Version Windows")
+        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
     except selenium.common.exceptions.WebDriverException:
         try:
-            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
             print("Version Unix")
+            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
+        except OSError:
+            print("Version Windows")
+            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
         except selenium.common.exceptions.WebDriverException:
             print("Wrong permissions, please make chromedriver executable")
             exit()
