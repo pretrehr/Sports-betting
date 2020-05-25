@@ -12,6 +12,7 @@ import time
 import urllib
 import urllib.error
 import urllib.request
+import unidecode
 
 import selenium
 import selenium.common
@@ -148,7 +149,7 @@ def parse_betstars(url=""):
                     odds.append(float(list(line.stripped_strings)[0]))
                 except ValueError:  # cote non disponible (OTB)
                     odds.append(1)
-            if not odds and"class" in line.attrs and "button__bet__odds" in line["class"]:
+            if not odds and "class" in line.attrs and "button__bet__odds" in line["class"]:
                 odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
                 is_basketball = True
             if "class" in line.attrs and "match-time" in line["class"]:
@@ -164,7 +165,7 @@ def parse_betstars(url=""):
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year + 1)
                 if is_basketball:
-                    odds = [odds[0], odds[int(len(odds)/2)]]
+                    odds = [odds[0], odds[int(len(odds) / 2)]]
                 match = match.replace("  ", " ")
                 if odds:
                     match_odds_hash[match] = {}
@@ -270,7 +271,7 @@ def parse_bwin(url=""):
             if "@" in strings and not is_us:
                 return
             if len(strings) == 4:
-                match = strings[0] + " (" + strings[1] + ") - " + strings[2] + " (" + strings[3]\
+                match = strings[0] + " (" + strings[1] + ") - " + strings[2] + " (" + strings[3] \
                         + ")"
             else:
                 try:
@@ -1029,7 +1030,7 @@ def parse_sport_unibet(sport):
     )
     for elem in selenium_init.DRIVER.find_elements_by_class_name("SPORT_"
                                                                  + sport.replace("-15", "axv")
-                                                                 .replace("-", "").upper()):
+                                                                         .replace("-", "").upper()):
         if elem.tag_name == "li":
             elem.click()
     for _ in range(10):
@@ -1047,8 +1048,8 @@ def parse_sport_unibet(sport):
                 if (url not in urls and "competition" not in url
                         and "compétition" not in url and url.count("/") == 6):
                     urls.append(url)
-                    competition = url.split(sport + "/")[1].replace("-", " ").replace("matchs", "")\
-                                     .replace("/", " ").title()
+                    competition = url.split(sport + "/")[1].replace("-", " ").replace("matchs", "") \
+                        .replace("/", " ").title()
                     competitions.append(competition)
         if urls:
             break
@@ -1084,7 +1085,7 @@ def parse_winamax(url=""):
     for line in soup.find_all(['script']):
         if "PRELOADED_STATE" in str(line.string):
             json_text = (line.string.split("var PRELOADED_STATE = ")[1]
-                         .split(";var BETTING_CONFIGURATION")[0])
+                .split(";var BETTING_CONFIGURATION")[0])
             if json_text[-1] == ";":
                 json_text = json_text[:-1]
             dict_matches = json.loads(json_text)
@@ -1122,7 +1123,7 @@ def parse_sport_winamax(sport):
     for line in soup.find_all(['script']):
         if "PRELOADED_STATE" in line.text:
             json_text = (line.text.split("var PRELOADED_STATE = ")[1]
-                         .split(";var BETTING_CONFIGURATION")[0])
+                .split(";var BETTING_CONFIGURATION")[0])
             dict_data = json.loads(json_text)
             for id_sport in dict_data["sports"]:
                 if dict_data["sports"][id_sport]["sportName"] == sport.capitalize():
@@ -1132,8 +1133,8 @@ def parse_sport_winamax(sport):
                 tournaments = dict_data["categories"][str(id_category)]["tournaments"]
                 category_name = dict_data["categories"][str(id_category)]["categoryName"]
                 for id_tournament in tournaments:
-                    url = "https://www.winamax.fr/paris-sportifs/sports/{}/{}/{}"\
-                            .format(id_sport, id_category, id_tournament)
+                    url = "https://www.winamax.fr/paris-sportifs/sports/{}/{}/{}" \
+                        .format(id_sport, id_category, id_tournament)
                     urls.append(url)
                     tournament_name = dict_data["tournaments"][str(id_tournament)]["tournamentName"]
                     competition = category_name + " - " + tournament_name
@@ -1294,4 +1295,78 @@ def parse_buteurs_betclic_match(url):
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"betclic": odds}
                 match_odds_hash[match]['date'] = date_time
+    return match_odds_hash
+
+
+def parse_comparateur_de_cotes(url, sites):
+    sport = url.split("/comparateur/")[1].split("/")[0]
+    n = 3
+    if sport in ["tennis", "volleyball", "basketball"]:
+        n = 2
+    url = unidecode.unidecode(url)
+    soup = BeautifulSoup(urllib.request.urlopen(url))
+    match_odds_hash = {}
+    count_teams = 0
+    count_odds = 0
+    odds = []
+    match = ""
+    date = None
+    surebet = False
+    surebet_matches = []
+    site = None
+    for line in soup.find_all(['a', 'td', 'img']):
+        if line.name == 'a' and 'class' in line.attrs:
+            if count_teams == 0:
+                sites_in_dict = True
+                if match:
+                    for site in sites:
+                        if site not in match_odds_hash[match]['odds']:
+                            sites_in_dict = False
+                            break
+                    if not match_odds_hash[match] or not sites_in_dict:
+                        del match_odds_hash[match]
+                match = ""
+            match += line.text
+            if count_teams == 0:
+                match += ' - '
+                count_teams += 1
+            else:
+                match_odds_hash[match] = {}
+                match_odds_hash[match]['odds'] = {}
+                match_odds_hash[match]['date'] = date
+                count_teams = 0
+                if "surebetbox" in line.findParent().findParent()['class']:
+                    surebet = True
+                    surebet_matches.append(match)
+        elif 'src' in line.attrs:
+            if 'logop' in line['src']:
+                site = line['src'].split('-')[1].split('.')[0]
+        elif (line.name == 'td'
+              and 'class' in line.find_parent().find_parent().attrs
+              and "bettable" in line.find_parent().find_parent()['class']
+              and 'à' in line.text):
+            date = datetime.datetime.strptime(list(line.stripped_strings)[3],
+                                              "%A %d %B %Y à %Hh%M")
+        elif 'class' in line.attrs and 'bet' in line['class']:
+            if (not sites) or site in sites:
+                odds.append(float(line.text))
+                if count_odds < n - 1:
+                    count_odds += 1
+                else:
+                    match_odds_hash[match]['odds'][site] = odds
+                    count_odds = 0
+                    odds = []
+    sites_in_dict = True
+    for site in sites:
+        try:
+            if site not in match_odds_hash[match]['odds']:
+                sites_in_dict = False
+                break
+        except KeyError:
+            pass
+    if (match and not match_odds_hash[match]['odds']) or not sites_in_dict:
+        del match_odds_hash[match]
+    if surebet:
+        print("*************************** SUREBET ***************************")
+        print(surebet_matches)
     return match_odds_hash
