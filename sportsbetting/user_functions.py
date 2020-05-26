@@ -20,6 +20,7 @@ import selenium.common
 import unidecode
 import urllib3
 from bs4 import BeautifulSoup
+from multiprocessing.pool import ThreadPool
 
 import sportsbetting
 from sportsbetting import selenium_init
@@ -52,7 +53,7 @@ def parse_competition(competition, sport="football", *sites):
     except TypeError:
         print("Competition inconnue")
         return
-    print(formatted_name)
+    print(formatted_name, *sites)
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
@@ -135,7 +136,6 @@ def parse_competitions_site(competitions, sport, site):
         # print(now - before, now - start)
         # before = now
         sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUB_PROGRESS_LIMIT)
-    print()
     if selenium_required:
         selenium_init.DRIVER.quit()
     return merge_dict_odds(list_odds)
@@ -168,7 +168,10 @@ def parse_competitions2(competitions, sport="football", *sites):
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
-        selenium_init.start_selenium()
+        # for site in selenium_sites.intersection(sites):
+        #     selenium_init.start_selenium(site)
+        ThreadPool(6).map(lambda x: selenium_init.start_selenium(x),
+                          selenium_sites.intersection(sites))
     list_odds = []
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
@@ -182,14 +185,18 @@ def parse_competitions2(competitions, sport="football", *sites):
             else:
                 import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
                                     + "/a-ed" + str(id_competition))
-    for site in sites:
-        print(site)
-        list_odds.append(parse_competitions_site(competitions, sport, site))
-        total_time -= (expected_times[site][0] * len(competitions) + expected_times[site][1])
-        sportsbetting.EXPECTED_TIME = total_time
+    list_odds = ThreadPool(7).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+    # for site in sites:
+    #     print(site)
+    #     list_odds.append(parse_competitions_site(competitions, sport, site))
+    #     total_time -= (expected_times[site][0] * len(competitions) + expected_times[site][1])
+    #     sportsbetting.EXPECTED_TIME = total_time
     sportsbetting.EXPECTED_TIME = 0
     if selenium_required:
-        selenium_init.DRIVER.quit()
+        # for site in selenium_sites.intersection(sites):
+        #     selenium_init.DRIVER[site].quit()
+        ThreadPool(6).map(lambda x: selenium_init.DRIVER[x].quit(),
+                          selenium_sites.intersection(sites))
     sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
 
 

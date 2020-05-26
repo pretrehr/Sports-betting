@@ -9,10 +9,10 @@ import selenium.common
 import sportsbetting
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
-DRIVER = None
+DRIVER = {}
 
 
-def start_selenium():
+def start_selenium(site):
     """
     Lancement d'un driver selenium
     """
@@ -26,14 +26,14 @@ def start_selenium():
     try:
         print(PATH_DRIVER)
         print("Version ancienne Windows")
-        DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
+        DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
     except selenium.common.exceptions.WebDriverException:
         try:
             print("Version Unix")
-            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
+            DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
         except OSError:
             print("Version Windows")
-            DRIVER = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
+            DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
         except selenium.common.exceptions.WebDriverException:
             print("Wrong permissions, please make chromedriver executable")
             exit()

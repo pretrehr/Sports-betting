@@ -299,8 +299,7 @@ def add_name_to_db(_id, name, site):
         """.format(site, _id))
         sport, formatted_name, name_site = c.fetchone()
         if name != name_site:
-            if inspect.currentframe().f_back.f_back.f_back.f_back.f_back.f_back.f_back.f_code \
-                    .co_name == "parse_thread":
+            if sportsbetting.INTERFACE:
                 sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
                                                "Nouvelle donnée : {}\n"
                                                "Donnée déjà existante : {}"

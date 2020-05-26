@@ -117,7 +117,7 @@ def parse_betstars(url=""):
         return parse_sport_betstars(url)
     if not url:
         url = "https://www.betstars.fr/#/soccer/competitions/2152298"
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["betstars"].get(url)
     match_odds_hash = {}
     match = ""
     odds = []
@@ -127,10 +127,10 @@ def parse_betstars(url=""):
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
     try:
-        WebDriverWait(selenium_init.DRIVER, 15).until(
+        WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
         )
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "id" in line.attrs and "participants" in line["id"] and not is_12:
@@ -181,7 +181,7 @@ def parse_betstars(url=""):
         if match_odds_hash:
             return match_odds_hash
     except selenium.common.exceptions.TimeoutException:
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
         if "Nous procédons à une mise à jour" in inner_html:
             print("Betstars inaccessible")
         else:
@@ -193,11 +193,11 @@ def parse_sport_betstars(sport):
     """
     Retourne les cotes disponibles sur betstars pour un sport donné
     """
-    selenium_init.DRIVER.get("https://www.betstars.fr/#/{}/competitions".format(sport))
+    selenium_init.DRIVER["betstars"].get("https://www.betstars.fr/#/{}/competitions".format(sport))
     urls = []
     competitions = []
     for _ in range(100):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
         if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
             print("Betstars inaccessible")
             return dict()
@@ -230,7 +230,7 @@ def parse_bwin(url=""):
         url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/france-16/ligue-1-4131"
     if url in ["europa", "ldc", "élim"]:
         return parse_bwin_coupes_europe(url)
-    driver_bwin = selenium_init.DRIVER
+    driver_bwin = selenium_init.DRIVER["bwin"]
     if "handball" in url:
         options = selenium.webdriver.ChromeOptions()
         prefs = {'profile.managed_default_content_settings.images': 2, 'disk-cache-size': 4096}
@@ -344,10 +344,10 @@ def parse_bwin_coupes_europe(coupe):
     Retourne les cotes disponibles sur bwin en coupe d'Europe
     """
     base_url = "https://sports.bwin.fr/fr/sports/football-4/paris-sportifs/europe-7"
-    selenium_init.DRIVER.get(base_url)
+    selenium_init.DRIVER["bwin"].get(base_url)
     urls = {}
     for _ in range(50):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["bwin"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and list(line.stripped_strings)
@@ -368,11 +368,11 @@ def parse_bwin_hockey(url):
     """
     Retourne les cotes 1N2 d'un match de hockey
     """
-    selenium_init.DRIVER.get(url)
-    WebDriverWait(selenium_init.DRIVER, 15).until(
+    selenium_init.DRIVER["bwin"].get(url)
+    WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "option-panel"))
     )
-    inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+    inner_html = selenium_init.DRIVER["bwin"].execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
     for line in soup.findAll():
         if "class" in line.attrs and "option-panel" in line["class"]:
@@ -436,8 +436,8 @@ def parse_joa(url):
     """
     if not url:
         url = "https://www.joa-online.fr/fr/sport/paris-sportifs/844/54287323"
-    selenium_init.DRIVER.get("about:blank")
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["joa"].get("about:blank")
+    selenium_init.DRIVER["joa"].get(url)
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -447,12 +447,12 @@ def parse_joa(url):
     match = ""
     for _ in range(10):
         try:
-            WebDriverWait(selenium_init.DRIVER, 5).until(
+            WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
             )
         except selenium.common.exceptions.TimeoutException:
             raise sportsbetting.UnavailableCompetitionException
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["joa"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.find_all():
             if "class" in line.attrs and "bet-event-name" in line["class"]:
@@ -567,8 +567,8 @@ def parse_parionssport(url=""):
     """
     if not url:
         url = "https://www.enligne.parionssport.fdj.fr/paris-football/france/ligue-1-conforama"
-    selenium_init.DRIVER.get(url)
-    if selenium_init.DRIVER.current_url != url:
+    selenium_init.DRIVER["parionssport"].get(url)
+    if selenium_init.DRIVER["parionssport"].current_url != url:
         raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     if "basket" in url:
@@ -580,7 +580,7 @@ def parse_parionssport(url=""):
     match = ""
     date_time = None
     for _ in range(10):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
@@ -618,10 +618,10 @@ def parse_parionssport_nba(url=""):
     """
     if not url:
         url = "https://www.enligne.parionssport.fdj.fr/paris-basketball/usa/nba"
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["parionssport"].get(url)
     urls = []
     for _ in range(10):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and list(line.stripped_strings)
@@ -642,7 +642,7 @@ def parse_match_nba_parionssport(url):
     """
     Recupere les cotes d'un match de NBA
     """
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["parionssport"].get(url)
     match_odds = {}
     date_time = "undefined"
     match = ""
@@ -650,7 +650,7 @@ def parse_match_nba_parionssport(url):
     today = datetime.datetime(today.year, today.month, today.day)
     year = " " + str(today.year)
     for _ in range(10):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "header-banner-event-date-section" in line["class"]:
@@ -678,8 +678,8 @@ def parse_pasinobet(url=""):
         url = "https://www.pasinobet.fr/#/sport/?type=0&competition=20896&sport=1&region=830001"
     if "http" not in url:
         return parse_pasinobet_sport(url)
-    selenium_init.DRIVER.get("about:blank")
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["pasinobet"].get("about:blank")
+    selenium_init.DRIVER["pasinobet"].get(url)
     is_basketball = "sport=3" in url
     is_us = "region=5000" in url
     date = ""
@@ -688,13 +688,13 @@ def parse_pasinobet(url=""):
         all_odds = []
         links = []
         for _ in range(100):
-            links = selenium_init.DRIVER.find_elements_by_class_name('team-name-tc')
+            links = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name('team-name-tc')
             if links:
                 break
         for match_link in links:
             match_link.click()
             time.sleep(0.8)
-            inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+            inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
             soup = BeautifulSoup(inner_html, features="lxml")
             for line in soup.findAll():
                 if "data-title" in line.attrs and "Vainqueur du match" in line["data-title"]:
@@ -706,10 +706,10 @@ def parse_pasinobet(url=""):
         iter_odds = iter(all_odds)
     match_odds_hash = {}
     for _ in range(100):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         if (url.split("competition=")[1].split("&")[0]
-                != selenium_init.DRIVER.current_url.split("competition=")[1].split("&")[0]):
+                != selenium_init.DRIVER["pasinobet"].current_url.split("competition=")[1].split("&")[0]):
             raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if ("class" in line.attrs and "game-events-view-v3" in line["class"]
@@ -751,11 +751,11 @@ def parse_pasinobet_sport(sport):
     """
     all_odds = []
     date = ""
-    selenium_init.DRIVER.get("https://www.pasinobet.fr/#/sport/?type=0")
-    WebDriverWait(selenium_init.DRIVER, 15).until(
+    selenium_init.DRIVER["pasinobet"].get("https://www.pasinobet.fr/#/sport/?type=0")
+    WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
         EC.element_to_be_clickable((By.TAG_NAME, "button"))
     )
-    buttons = selenium_init.DRIVER.find_elements_by_tag_name("button")
+    buttons = selenium_init.DRIVER["pasinobet"].find_elements_by_tag_name("button")
     for button in buttons:
         try:
             if "ACCEPTER" in button.text:
@@ -767,7 +767,7 @@ def parse_pasinobet_sport(sport):
     active_elements = []
     while "Football" not in text_elements:
         try:
-            active_elements = selenium_init.DRIVER.find_elements_by_class_name("active")
+            active_elements = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name("active")
             text_elements = [el.text.replace("\n", "") for el in active_elements]
             # utile pour vérifier que tout est bien stocké
         except selenium.common.exceptions.StaleElementReferenceException:
@@ -782,25 +782,25 @@ def parse_pasinobet_sport(sport):
                     pass
         except selenium.common.exceptions.StaleElementReferenceException:
             pass
-    sports = selenium_init.DRIVER.find_elements_by_class_name("sports-item-v3")
+    sports = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name("sports-item-v3")
     for sport_selected in sports:
         if sport.capitalize() == sport_selected.text.split("\n")[0]:
             try:
                 sport_selected.click()
             except selenium.common.exceptions.ElementClickInterceptedException:
                 pass
-    regions = selenium_init.DRIVER.find_elements_by_class_name("region-item-v3")
+    regions = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name("region-item-v3")
     for region in regions:
         if region.text:
             try:
                 region.click()
-                competitions = WebDriverWait(selenium_init.DRIVER, 10).until(
+                competitions = WebDriverWait(selenium_init.DRIVER["pasinobet"], 10).until(
                     EC.presence_of_all_elements_located((By.CLASS_NAME, "competition-title-v3"))
                 )
                 list_competitions = list(filter(None, [competition.text
                                                        for competition in competitions]))
                 while len(list_competitions) == 0:
-                    competitions = WebDriverWait(selenium_init.DRIVER, 10).until(
+                    competitions = WebDriverWait(selenium_init.DRIVER["pasinobet"], 10).until(
                         EC.presence_of_all_elements_located((By.CLASS_NAME, "competition-title-v3"))
                     )
                     list_competitions = list(filter(None, [competition.text
@@ -812,7 +812,7 @@ def parse_pasinobet_sport(sport):
                             print("\t" + competition.text.replace("\n", " "))
                             match_odds_hash = {}
                             for _ in range(10):
-                                inner_html = (selenium_init.DRIVER
+                                inner_html = (selenium_init.DRIVER["pasinobet"]
                                               .execute_script("return document.body.innerHTML"))
                                 soup = BeautifulSoup(inner_html, features="lxml")
                                 for line in soup.findAll():
@@ -847,7 +847,7 @@ def parse_pasinobet_sport(sport):
                 region.click()
             except selenium.common.exceptions.ElementClickInterceptedException:
                 pass
-    selenium_init.DRIVER.quit()
+    # selenium_init.DRIVER["pasinobet"].quit()
     return merge_dicts(all_odds)
 
 
@@ -965,7 +965,7 @@ def parse_unibet(url=""):
         return parse_sport_unibet(url)
     if not url:
         url = "https://www.unibet.fr/sport/football/ligue-1-conforama"
-    selenium_init.DRIVER.get(url)
+    selenium_init.DRIVER["unibet"].get(url)
     match_odds_hash = {}
     match = ""
     today = datetime.datetime.today()
@@ -973,7 +973,7 @@ def parse_unibet(url=""):
     year = str(today.year) + "/"
     date_time = None
     for _ in range(10):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         if "Aucun marché trouvé." in str(soup):
             raise sportsbetting.UnavailableCompetitionException
@@ -1022,19 +1022,19 @@ def parse_sport_unibet(sport):
     """
     Retourne les cotes disponibles sur unibet pour un sport donné
     """
-    selenium_init.DRIVER.get("https://www.unibet.fr/sport")
+    selenium_init.DRIVER["unibet"].get("https://www.unibet.fr/sport")
     urls = []
     competitions = []
-    WebDriverWait(selenium_init.DRIVER, 15).until(
+    WebDriverWait(selenium_init.DRIVER["unibet"], 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "sportsmenu"))
     )
-    for elem in selenium_init.DRIVER.find_elements_by_class_name("SPORT_"
+    for elem in selenium_init.DRIVER["unibet"].find_elements_by_class_name("SPORT_"
                                                                  + sport.replace("-15", "axv")
                                                                          .replace("-", "").upper()):
         if elem.tag_name == "li":
             elem.click()
     for _ in range(10):
-        inner_html = selenium_init.DRIVER.execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         #         for line in soup.findAll(["span"], {"class":"SPORT_FOOTBALL"}):
         #             line.findParent().click()

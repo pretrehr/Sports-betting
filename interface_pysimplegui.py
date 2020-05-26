@@ -386,6 +386,7 @@ window_odds_active = False
 sport = ''
 old_stdout = sys.stdout
 window_odds = None
+sportsbetting.INTERFACE = True
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -524,6 +525,6 @@ while True:
         break
     else:
         pass
-
+sportsbetting.INTERFACE = False
 window.close()
 sys.stdout = old_stdout
