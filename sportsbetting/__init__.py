@@ -17,6 +17,7 @@ QUEUE_FROM_GUI = queue.Queue()
 ODDS_INTERFACE = ""
 EXPECTED_TIME = 0
 INTERFACE = False
+IS_PARSING = False
 
 
 class UnavailableCompetitionException(Exception):

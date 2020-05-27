@@ -53,7 +53,7 @@ parsing_layout = [
     [sg.Button('Démarrer', key="START_PARSING"),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
-     sg.Col([[sg.Text("Temps restant", key="TEXT_PARSING", visible=False)]]),
+     sg.Col([[sg.Text("Initialisation de selenium en cours", key="TEXT_PARSING", visible=False)]]),
      sg.Col([[sg.Text("8:88:88", key="REMAINING_TIME_PARSING", visible=False)]])]
 ]
 
@@ -390,6 +390,8 @@ window_odds = None
 sportsbetting.INTERFACE = True
 start_time = time.time()
 elapsed_time = 0
+start_parsing = 0
+palier = 0
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -407,9 +409,24 @@ while True:
         else:
             window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
             now = time.time()
+            if sportsbetting.IS_PARSING and not start_parsing:
+                start_parsing = now
             elapsed_time = now - start_time
+            elapsed_time_parsing = now - start_parsing
+            if sportsbetting.PROGRESS > palier:
+                palier += 5
+                sportsbetting.EXPECTED_TIME = elapsed_time * (100 / sportsbetting.PROGRESS - 1)
+                time_to_display = sportsbetting.EXPECTED_TIME
+                start_parsing = time.time()
+            else:
+                if start_parsing:
+                    window["TEXT_PARSING"].update("Récupération des cotes en cours")
+                    time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time_parsing
+                else:
+                    window["TEXT_PARSING"].update("Initialisation de selenium en cours")
+                    time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time
             # sportsbetting.EXPECTED_TIME = int(max(0, sportsbetting.EXPECTED_TIME - 0.1))
-            m, s = divmod(max(0, (sportsbetting.EXPECTED_TIME - elapsed_time)), 60)
+            m, s = divmod(max(0, int(time_to_display)), 60)
             window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
     except AttributeError:
         pass
@@ -453,6 +470,8 @@ while True:
             thread = threading.Thread(target=parse_thread)
             thread.start()
             start_time = time.time()
+            start_parsing = 0
+            palier = 20
             window['PROGRESS_PARSING'].Update(visible=True)
             window["TEXT_PARSING"].update(visible=True)
             window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME, visible=True)

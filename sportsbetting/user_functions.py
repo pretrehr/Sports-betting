@@ -168,6 +168,7 @@ def parse_competitions2(competitions, sport="football", *sites):
                           in ["<module>", "parse_thread"]
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
                          and (selenium_sites.intersection(sites) or not sites))
+    sportsbetting.SELENIUM_REQUIRED = selenium_required
     if selenium_required:
         # for site in selenium_sites.intersection(sites):
         #     selenium_init.start_selenium(site)
@@ -186,7 +187,9 @@ def parse_competitions2(competitions, sport="football", *sites):
             else:
                 import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
                                     + "/a-ed" + str(id_competition))
+    sportsbetting.IS_PARSING = True
     list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+    sportsbetting.IS_PARSING = False
     # for site in sites:
     #     print(site)
     #     list_odds.append(parse_competitions_site(competitions, sport, site))
