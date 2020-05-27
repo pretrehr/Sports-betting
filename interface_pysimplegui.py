@@ -11,6 +11,7 @@ import threading
 import pickle
 import os
 import sys
+import time
 from math import ceil
 
 import PySimpleGUI as sg
@@ -387,6 +388,8 @@ sport = ''
 old_stdout = sys.stdout
 window_odds = None
 sportsbetting.INTERFACE = True
+start_time = time.time()
+elapsed_time = 0
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -400,10 +403,13 @@ while True:
             sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                  fade_in_duration=125)
             thread = None
+            print(elapsed_time)
         else:
             window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
-            sportsbetting.EXPECTED_TIME = max(0, sportsbetting.EXPECTED_TIME - 0.1)
-            m, s = divmod(sportsbetting.EXPECTED_TIME, 60)
+            now = time.time()
+            elapsed_time = now - start_time
+            # sportsbetting.EXPECTED_TIME = int(max(0, sportsbetting.EXPECTED_TIME - 0.1))
+            m, s = divmod(max(0, (sportsbetting.EXPECTED_TIME - elapsed_time)), 60)
             window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
     except AttributeError:
         pass
@@ -446,6 +452,7 @@ while True:
 
             thread = threading.Thread(target=parse_thread)
             thread.start()
+            start_time = time.time()
             window['PROGRESS_PARSING'].Update(visible=True)
             window["TEXT_PARSING"].update(visible=True)
             window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME, visible=True)
