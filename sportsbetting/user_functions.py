@@ -128,13 +128,8 @@ def parse_competitions_site(competitions, sport, site):
     if selenium_required:
         selenium_init.start_selenium()
     list_odds = []
-    # start = time.time()
-    # before = time.time()
     for competition in competitions:
         list_odds.append(parse_competition(competition, sport, site))
-        # now = time.time()
-        # print(now - before, now - start)
-        # before = now
         sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUB_PROGRESS_LIMIT)
     if selenium_required:
         selenium_init.DRIVER.quit()
@@ -142,26 +137,9 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions2(competitions, sport="football", *sites):
-    expected_times = {"betclic": [0.7, 1],
-                      "betstars": [3.1, 8],
-                      "bwin": [3.4, 8],
-                      "france_pari": [0.5, 0],
-                      "joa": [2.2, 6],
-                      "netbet": [0.6, 0.5],
-                      "parionssport": [3.4, 2],
-                      "pasinobet": [2.5, 5],
-                      "pmu": [3, 5],
-                      "unibet": [1.5, 3.5],
-                      "winamax": [0.4, 0],
-                      "zebet": [0.5, 0.3]}
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
-    # sportsbetting.EXPECTED_TIME = 0
-    # for site in sites:
-    #     sportsbetting.EXPECTED_TIME += (expected_times[site][0] * len(competitions)
-    #                                     + expected_times[site][1])
-    # total_time = sportsbetting.EXPECTED_TIME
     sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = ((inspect.currentframe().f_back.f_code.co_name
@@ -170,11 +148,8 @@ def parse_competitions2(competitions, sport="football", *sites):
                          and (selenium_sites.intersection(sites) or not sites))
     sportsbetting.SELENIUM_REQUIRED = selenium_required
     if selenium_required:
-        # for site in selenium_sites.intersection(sites):
-        #     selenium_init.start_selenium(site)
         ThreadPool(6).map(lambda x: selenium_init.start_selenium(x),
                           selenium_sites.intersection(sites))
-    list_odds = []
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
@@ -190,15 +165,7 @@ def parse_competitions2(competitions, sport="football", *sites):
     sportsbetting.IS_PARSING = True
     list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
     sportsbetting.IS_PARSING = False
-    # for site in sites:
-    #     print(site)
-    #     list_odds.append(parse_competitions_site(competitions, sport, site))
-    #     total_time -= (expected_times[site][0] * len(competitions) + expected_times[site][1])
-    #     sportsbetting.EXPECTED_TIME = total_time
-    # sportsbetting.EXPECTED_TIME = 0
     if selenium_required:
-        # for site in selenium_sites.intersection(sites):
-        #     selenium_init.DRIVER[site].quit()
         ThreadPool(6).map(lambda x: selenium_init.DRIVER[x].quit(),
                           selenium_sites.intersection(sites))
     sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
