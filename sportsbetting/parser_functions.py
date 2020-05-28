@@ -255,6 +255,7 @@ def parse_bwin(url=""):
         raise sportsbetting.UnavailableCompetitionException
     i = 0
     date_time = "undefined"
+    index_column_result_odds = 0
     for line in soup.findAll():
         if (is_hockey and "class" in line.attrs and "href" in line.attrs
                 and "grid-event-wrapper" in line["class"]):
@@ -318,6 +319,10 @@ def parse_bwin(url=""):
                 match_odds_hash[match]['date'] = date_time
         if "class" in line.attrs and "group-title" in line["class"] and not is_1n2:
             is_1n2 = (line.text == "Résultat 1 X 2")
+        if "class" in line.attrs and "grid-group" in line["class"] and not is_1n2:
+            strings = list(line.stripped_strings)
+            if "Pari sur le vainqueur" in strings:
+                index_column_result_odds = strings.index("Pari sur le vainqueur")
         if "class" in line.attrs and "offline" in line["class"] and not is_hockey:
             odds_unavailable = True
         if "class" in line.attrs and "option-indicator" in line["class"] and not is_hockey:
@@ -325,9 +330,10 @@ def parse_bwin(url=""):
                 n = 3
             else:
                 n = 2
-            if i < n:
+            if 2 * index_column_result_odds <= i < n + 2 * index_column_result_odds:
                 odds.append(float(line.text))
-                i += 1
+            i += 1
+                
     if len(odds) == n and match and ("handball" in url or not odds_unavailable):
         if is_us:
             odds.reverse()
