@@ -422,12 +422,16 @@ while True:
                 if start_parsing:
                     window["TEXT_PARSING"].update("Récupération des cotes en cours")
                     time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time_parsing
+                    window["REMAINING_TIME_PARSING"].update(visible=True)
                 else:
                     window["TEXT_PARSING"].update("Initialisation de selenium en cours")
                     time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time
             # sportsbetting.EXPECTED_TIME = int(max(0, sportsbetting.EXPECTED_TIME - 0.1))
             m, s = divmod(max(0, int(time_to_display)), 60)
             window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
+            if 100 - sportsbetting.PROGRESS < 1e-6:
+                window["TEXT_PARSING"].update("Finalisation")
+                window["REMAINING_TIME_PARSING"].update(visible=False)
     except AttributeError:
         pass
     try:
@@ -474,7 +478,7 @@ while True:
             palier = 20
             window['PROGRESS_PARSING'].Update(visible=True)
             window["TEXT_PARSING"].update(visible=True)
-            window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME, visible=True)
+            window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME)
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
     elif event == "SPORT_STAKE":
