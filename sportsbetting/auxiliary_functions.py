@@ -252,7 +252,8 @@ def merge_dict_odds(dict_odds):
                 try:
                     site = list(list(odds.values())[0]["odds"].keys())[0]
                     if match in odds.keys() and odds[match]["odds"] and odds[match]["odds"][site]:
-                        if not date_found and odds[match]["date"] != "undefined":
+                        if (not date_found and odds[match]["date"] != "undefined"
+                                and odds[match]["date"]):  # Si la date est None
                             new_dict[match]["date"] = odds[match]["date"]
                             date_found = True
                         new_dict[match]["odds"][site] = odds[match]["odds"][site]
@@ -268,7 +269,8 @@ def merge_dicts(dict_args):
     """
     def_dict = collections.defaultdict(dict)
     for key, val in chain(*map(lambda x: x.items(), dict_args)):
-        def_dict[key]["date"] = val["date"]
+        if val["date"]:
+            def_dict[key]["date"] = val["date"]
         try:
             def_dict[key]["odds"].update(val["odds"])
         except KeyError:
@@ -317,13 +319,13 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                 sites_bet_combinaison[site]["mise"] = round(sites_bet_combinaison[site]["mise"], 2)
             except KeyError:
                 sites_bet_combinaison[site]["mise freebet"] = round((sites_bet_combinaison[site]
-                                                                     ["mise freebet"]),
+                ["mise freebet"]),
                                                                     2)
         if cotes_boostees and cotes_boostees[i] > cotes[sites[0][i]][i]:
             # Valable que s'il n'y a qu'un seul match
             sites_bet_combinaison["total boosté"] = round(cotes_boostees[i]
                                                           * (sites_bet_combinaison[sites[0][i]]
-                                                             ["mise"]),
+            ["mise"]),
                                                           2)
         else:
             try:

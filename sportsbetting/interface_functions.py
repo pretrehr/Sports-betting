@@ -486,7 +486,10 @@ def odds_match_interface(window, values):
         for key, value in odds.items():
             table.append([key] + list(map(str, value)))
         window["ODDS_ODDS"].update(table, visible=True)
-        window["DATE_ODDS"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
+        if date:
+            window["DATE_ODDS"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
+        else:
+            window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(match, visible=True)
         window["DELETE_ODDS"].update(visible=True)
     except IndexError:
