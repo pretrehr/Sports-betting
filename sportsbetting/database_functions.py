@@ -569,3 +569,28 @@ def get_all_sports():
     SELECT sport FROM competitions
     """)
     return sorted(list(set(map(lambda x: x[0], c.fetchall()))))
+
+
+def get_competition_name_by_id(_id):
+    """
+    Retourne l'url d'une competition donnée sur un site donné
+    """
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT competition FROM competitions WHERE id='{}'
+    """.format(_id))
+    try:
+        return c.fetchone()[0]
+    except TypeError:
+        return
+
+
+def get_all_current_competitions(sport):
+    url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    id_leagues = []
+    for line in soup.find_all("a"):
+        if "href" in line.attrs and sport in line["href"] and "ed" in line["href"]:
+            id_leagues.append(int(line["href"].split("-ed")[-1]))
+    return list(map(get_competition_name_by_id, id_leagues))

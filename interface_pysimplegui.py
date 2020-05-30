@@ -27,7 +27,8 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_stakes_match_interface,
                                                best_matches_freebet_interface,
                                                best_match_pari_gagnant_interface,
-                                               odds_match_interface, delete_odds_interface)
+                                               odds_match_interface, delete_odds_interface,
+                                               get_current_competitions_interface)
 
 PATH_DATA = os.path.dirname(sportsbetting.__file__) + "/resources/data.pickle"
 
@@ -45,7 +46,8 @@ parsing_layout = [
     [
         sg.Listbox(sports, size=(20, 6), key="SPORT", enable_events=True),
         sg.Column([[sg.Listbox((), size=(20, 12), key='COMPETITIONS', select_mode='multiple')],
-                   [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")]]),
+                   [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
+                   [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS")]]),
         sg.Column([[sg.Listbox(sites, size=(20, 12), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL"),
                     sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
@@ -453,6 +455,8 @@ while True:
         window['COMPETITIONS'].update(values=competitions)
     elif event == "SELECT_NONE_COMPETITION":
         window['COMPETITIONS'].update(set_to_index=[])
+    elif event == "CURRENT_COMPETITIONS":
+        get_current_competitions_interface(window, values)
     elif event == "SELECT_ALL":
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sites)])
     elif event == "SELECT_NONE_SITE":
