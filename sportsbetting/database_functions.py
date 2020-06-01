@@ -146,9 +146,10 @@ def import_teams_by_competition_id_thesportsdb(_id):
     url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-_id)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_competition = json.loads(soup.text)
-    for event in dict_competition["events"]:
-        for _id in [event["idHomeTeam"], event["idAwayTeam"]]:
-            add_id_to_db_thesportsdb(-int(_id))
+    if dict_competition["events"]:
+        for event in dict_competition["events"]:
+            for _id in [event["idHomeTeam"], event["idAwayTeam"]]:
+                add_id_to_db_thesportsdb(-int(_id))
 
 
 def is_id_in_db(_id):
@@ -478,19 +479,20 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     except urllib.error.HTTPError:
         return
     dict_events = json.loads(soup.text)
-    for event in dict_events["events"]:
-        date_time = (datetime.datetime(*(map(int, event["dateEvent"].split("-"))),
-                                       *(map(int, event["strTime"].split(":"))))
-                     + datetime.timedelta(hours=2))
-        if abs(date_time - date_match) < datetime.timedelta(days=0.5):
-            id_home = -int(event["idHomeTeam"])
-            id_away = -int(event["idAwayTeam"])
-            if id_home == id_opponent:
-                return id_away
-            elif id_away == id_opponent:
-                return id_home
-            else:
-                return
+    if dict_events["events"]:
+        for event in dict_events["events"]:
+            date_time = (datetime.datetime(*(map(int, event["dateEvent"].split("-"))),
+                                           *(map(int, event["strTime"].split(":"))))
+                         + datetime.timedelta(hours=2))
+            if abs(date_time - date_match) < datetime.timedelta(days=0.5):
+                id_home = -int(event["idHomeTeam"])
+                id_away = -int(event["idAwayTeam"])
+                if id_home == id_opponent:
+                    return id_away
+                elif id_away == id_opponent:
+                    return id_home
+                else:
+                    return
     return
 
 
