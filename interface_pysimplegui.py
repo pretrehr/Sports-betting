@@ -377,7 +377,7 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Freebets à placer', freebets_layout)
                          ]])],
-          [sg.Button('Quitter')]]
+          [sg.Button('Quitter', button_color=("white", "red"))]]
 
 # Create the Window
 window = sg.Window('Paris sportifs', layout, location=(0, 0))
