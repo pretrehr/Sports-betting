@@ -83,15 +83,11 @@ def parse_competition(competition, sport="football", *sites):
         except selenium.common.exceptions.TimeoutException:
             print("Element non trouvé par selenium")
         except sportsbetting.UnavailableCompetitionException:
-            print("Compétition non disponible")
-    #         sportsbetting.PROGRESS += 100/(len(sites)*sportsbetting.SUBPROGRESS_LIMIT)
+            print("{} non disponible sur {}".format(competition, *sites))
     if selenium_required:
         selenium_init.DRIVER.quit()
-    #     if len(sites) > 1:
     res = format_team_names(res_parsing, sport)
     out = valid_odds(merge_dict_odds(res), sport)
-    #     else:
-    #         out = valid_odds(res_parsing[sites[0]], sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return out
     sportsbetting.ODDS[sport] = out
