@@ -29,7 +29,7 @@ PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver
 
 if sys.platform == "win32":
     locale.setlocale(locale.LC_TIME, "fr")
-else: # sys.platform == "linux"
+else:  # sys.platform == "linux"
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
 
@@ -122,7 +122,6 @@ def parse_betstars(url=""):
     match = ""
     odds = []
     is_12 = False
-    is_basketball = False
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
@@ -130,7 +129,8 @@ def parse_betstars(url=""):
         WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
         )
-        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
+        inner_html = (selenium_init.DRIVER["betstars"]
+                      .execute_script("return document.body.innerHTML"))
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "id" in line.attrs and "participants" in line["id"] and not is_12:
@@ -149,9 +149,8 @@ def parse_betstars(url=""):
                     odds.append(float(list(line.stripped_strings)[0]))
                 except ValueError:  # cote non disponible (OTB)
                     odds.append(1)
-            if not odds and "class" in line.attrs and "button__bet__odds" in line["class"]:
+            if len(odds) < 2 and "class" in line.attrs and "afEvt__row--team" in line["class"]:
                 odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
-                is_basketball = True
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
                 date = strings[0] + " " + year
@@ -164,8 +163,6 @@ def parse_betstars(url=""):
                     date_time = datetime.datetime.strptime(date + " " + hour, "%d %b %Y %H:%M")
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year + 1)
-                if is_basketball:
-                    odds = [odds[0], odds[int(len(odds) / 2)]]
                 match = match.replace("  ", " ")
                 if odds:
                     match_odds_hash[match] = {}
@@ -181,7 +178,8 @@ def parse_betstars(url=""):
         if match_odds_hash:
             return match_odds_hash
     except selenium.common.exceptions.TimeoutException:
-        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["betstars"].execute_script(
+            "return document.body.innerHTML")
         if "Nous procédons à une mise à jour" in inner_html:
             print("Betstars inaccessible")
         else:
@@ -197,7 +195,8 @@ def parse_sport_betstars(sport):
     urls = []
     competitions = []
     for _ in range(100):
-        inner_html = selenium_init.DRIVER["betstars"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["betstars"].execute_script(
+            "return document.body.innerHTML")
         if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
             print("Betstars inaccessible")
             return dict()
@@ -333,7 +332,7 @@ def parse_bwin(url=""):
             if 2 * index_column_result_odds <= i < n + 2 * index_column_result_odds:
                 odds.append(float(line.text))
             i += 1
-                
+
     if len(odds) == n and match and ("handball" in url or not odds_unavailable):
         if is_us:
             odds.reverse()
@@ -586,7 +585,8 @@ def parse_parionssport(url=""):
     match = ""
     date_time = None
     for _ in range(10):
-        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script(
+            "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
@@ -627,7 +627,8 @@ def parse_parionssport_nba(url=""):
     selenium_init.DRIVER["parionssport"].get(url)
     urls = []
     for _ in range(10):
-        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script(
+            "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll(["a"]):
             if ("href" in line.attrs and list(line.stripped_strings)
@@ -656,7 +657,8 @@ def parse_match_nba_parionssport(url):
     today = datetime.datetime(today.year, today.month, today.day)
     year = " " + str(today.year)
     for _ in range(10):
-        inner_html = selenium_init.DRIVER["parionssport"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["parionssport"].execute_script(
+            "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
             if "class" in line.attrs and "header-banner-event-date-section" in line["class"]:
@@ -700,7 +702,8 @@ def parse_pasinobet(url=""):
         for match_link in links:
             match_link.click()
             time.sleep(0.8)
-            inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
+            inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
+                "return document.body.innerHTML")
             soup = BeautifulSoup(inner_html, features="lxml")
             for line in soup.findAll():
                 if "data-title" in line.attrs and "Vainqueur du match" in line["data-title"]:
@@ -712,10 +715,13 @@ def parse_pasinobet(url=""):
         iter_odds = iter(all_odds)
     match_odds_hash = {}
     for _ in range(100):
-        inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
+        inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
+            "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         if (url.split("competition=")[1].split("&")[0]
-                != selenium_init.DRIVER["pasinobet"].current_url.split("competition=")[1].split("&")[0]):
+                !=
+                selenium_init.DRIVER["pasinobet"].current_url.split("competition=")[1].split("&")[
+                    0]):
             raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if ("class" in line.attrs and "game-events-view-v3" in line["class"]
@@ -773,7 +779,8 @@ def parse_pasinobet_sport(sport):
     active_elements = []
     while "Football" not in text_elements:
         try:
-            active_elements = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name("active")
+            active_elements = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name(
+                "active")
             text_elements = [el.text.replace("\n", "") for el in active_elements]
             # utile pour vérifier que tout est bien stocké
         except selenium.common.exceptions.StaleElementReferenceException:
@@ -1035,8 +1042,10 @@ def parse_sport_unibet(sport):
         EC.presence_of_all_elements_located((By.CLASS_NAME, "sportsmenu"))
     )
     for elem in selenium_init.DRIVER["unibet"].find_elements_by_class_name("SPORT_"
-                                                                 + sport.replace("-15", "axv")
-                                                                         .replace("-", "").upper()):
+                                                                           + sport.replace("-15",
+                                                                                           "axv")
+                                                                                   .replace("-",
+                                                                                            "").upper()):
         if elem.tag_name == "li":
             elem.click()
     for _ in range(10):
