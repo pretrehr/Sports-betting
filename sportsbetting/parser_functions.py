@@ -94,17 +94,29 @@ def parse_sport_betclic(sport):
     Retourne les cotes disponibles sur betclic pour un sport donné
     """
     url = "https://www.betclic.fr"
-    soup = BeautifulSoup(urllib.request.urlopen(url + "/sport/"), features="lxml")
+    id_sports = {
+        "football": 1,
+        "tennis": 2,
+        "basket-ball": 4,
+        "rugby-a-xv": 5,
+        "handball": 9,
+        "hockey-sur-glace": 13
+    }
+    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + sport + "-" + str(id_sports[sport])),
+                         features="lxml")
     odds = []
+    links = []
     for line in soup.find_all(["a"]):
         if "href" in line.attrs and "/" + sport + "/" in line["href"]:
-            print(line.text)
             if "https://" in line["href"]:
                 link = line["href"]
             else:
                 link = url + line["href"]
-            if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
-                odds.append(parse_betclic(link))
+            if link not in links:
+                links.append(link)
+                print("\t" + line.text)
+                if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
+                    odds.append(parse_betclic(link))
     return merge_dicts(odds)
 
 
