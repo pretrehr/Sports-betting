@@ -124,9 +124,13 @@ def parse_competitions_site(competitions, sport, site):
     if selenium_required:
         selenium_init.start_selenium()
     list_odds = []
+    if len(competitions) > 40 and site == "winamax":  # to avoid being blocked by winamax
+        competitions = competitions[:40]
+    sportsbetting.SITE_PROGRESS[site] = 0
     for competition in competitions:
         list_odds.append(parse_competition(competition, sport, site))
         sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUB_PROGRESS_LIMIT)
+        sportsbetting.SITE_PROGRESS[site] += 100 / len(competitions)
     if selenium_required:
         selenium_init.DRIVER.quit()
     return merge_dict_odds(list_odds)
