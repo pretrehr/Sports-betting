@@ -1,7 +1,7 @@
 """
 initialisation du module
 """
-
+import collections
 import queue
 import re
 
@@ -12,6 +12,7 @@ ODDS = {}
 TEAMS_NOT_FOUND = []
 PROGRESS = 0
 SUB_PROGRESS_LIMIT = 1
+SITE_PROGRESS = collections.defaultdict(int)
 QUEUE_TO_GUI = queue.Queue()
 QUEUE_FROM_GUI = queue.Queue()
 ODDS_INTERFACE = ""

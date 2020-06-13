@@ -6,6 +6,7 @@ Interface
 # pyinstaller --onefile --add-binary
 # "sportsbetting\resources\chromedriver.exe;sportsbetting\resources" --add-data
 # "sportsbetting\resources\teams.db;sportsbetting\resources" interface_pysimplegui.py --noconfirm
+import collections
 import queue
 import threading
 import pickle
@@ -56,7 +57,11 @@ parsing_layout = [
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
      sg.Col([[sg.Text("Initialisation de selenium en cours", key="TEXT_PARSING", visible=False)]]),
-     sg.Col([[sg.Text("8:88:88", key="REMAINING_TIME_PARSING", visible=False)]])]
+     sg.Col([[sg.Text("8:88:88", key="REMAINING_TIME_PARSING", visible=False)]])],
+    [sg.Col([[sg.ProgressBar(max_value=100, orientation='v', size=(10, 20),
+                             key="PROGRESS_{}_PARSING".format(site), visible=False)],
+             [sg.Text(site, key="TEXT_{}_PARSING".format(site), visible=False)]],
+            element_justification="center") for site in sites]
 ]
 
 column_text_under_condition = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -404,12 +409,18 @@ while True:
             window['PROGRESS_PARSING'].Update(visible=False)
             window["TEXT_PARSING"].update(visible=False)
             window["REMAINING_TIME_PARSING"].update(visible=False)
+            for site in sites:
+                window["TEXT_{}_PARSING".format(site)].update(visible=False)
+                window["PROGRESS_{}_PARSING".format(site)].update(visible=False)
             sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                  fade_in_duration=125)
             thread = None
             print(elapsed_time)
         else:
             window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
+            for site in sites:
+                (window["PROGRESS_{}_PARSING".format(site)]
+                 .UpdateBar(ceil(sportsbetting.SITE_PROGRESS[site]), 100))
             now = time.time()
             if sportsbetting.IS_PARSING and not start_parsing:
                 start_parsing = now
@@ -483,6 +494,11 @@ while True:
             window['PROGRESS_PARSING'].Update(visible=True)
             window["TEXT_PARSING"].update(visible=True)
             window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME)
+            sportsbetting.SITE_PROGRESS = collections.defaultdict(int)
+            for site in selected_sites:
+                window["TEXT_{}_PARSING".format(site)].update(visible=True)
+                window["PROGRESS_{}_PARSING".format(site)].UpdateBar(0, 100)
+                window["PROGRESS_{}_PARSING".format(site)].update(visible=True)
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
     elif event == "SPORT_STAKE":
