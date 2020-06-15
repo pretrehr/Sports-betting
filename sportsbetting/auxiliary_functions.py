@@ -437,12 +437,12 @@ def get_future_opponents(name, matches):
     future_opponents = []
     future_matches = []
     for match in matches:
-        if name in match:
-            future_matches.append(match)
-            opponents = match.split(" - ")
+        opponents = match.split(" - ")
+        if name in opponents:
             try:
                 opponents.remove(name)
                 future_opponents.append(opponents[0])
+                future_matches.append(match)
             except ValueError:
                 pass
             except IndexError:
