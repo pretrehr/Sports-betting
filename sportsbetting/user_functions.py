@@ -137,9 +137,10 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions2(competitions, sport="football", *sites):
+    sites_order = ['bwin', 'parionssport', 'betstars', 'pasinobet', 'joa', 'unibet', 'pmu',
+                   'betclic', 'france_pari', 'netbet', 'winamax', 'zebet']
     if not sites:
-        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
-                 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+        sites = sites_order
     sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
     selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = ((inspect.currentframe().f_back.f_code.co_name
@@ -147,6 +148,7 @@ def parse_competitions2(competitions, sport="football", *sites):
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
                          and (selenium_sites.intersection(sites) or not sites))
     sportsbetting.SELENIUM_REQUIRED = selenium_required
+    sites = [site for site in sites_order if site in sites]
     if selenium_required:
         ThreadPool(6).map(lambda x: selenium_init.start_selenium(x),
                           selenium_sites.intersection(sites))
