@@ -64,78 +64,16 @@ def add_matches_to_db(odds, sport, site):
     print(i, list(teams_sets[i]))
     if not teams_sets[i]:
         return
-    i += 1
     teams_sets.append(set())
+    get_close_name_functions = [get_close_name, get_close_name2]
+    if sport == "tennis":
+        get_close_name_functions.append(get_close_name3)
+        get_close_name_functions.append(get_double_team_tennis)
     for only_null in [True, False]:
-        for team in teams_sets[i - 1]:
-            line = get_close_name(team, sport, site, only_null)
-            if line:
-                success = add_name_to_db(line[0], team, site)
-                if not success:
-                    teams_sets[i].add(team)
-            else:
-                teams_sets[i].add(team)
-        print(i, list(teams_sets[i]))
-        if not teams_sets[i]:
-            return
-        i += 1
-        teams_sets.append(set())
-        for team in teams_sets[i - 1]:
-            future_opponents, future_matches = get_future_opponents(team, matches)
-            success = False
-            for future_opponent, future_match in zip(future_opponents, future_matches):
-                id_opponent = get_id_by_site(future_opponent, sport, site)
-                if id_opponent < 0:
-                    id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
-                else:
-                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                if id_to_find:
-                    success = add_name_to_db(id_to_find, team, site)
-                    if success:
-                        break
-            if not success:
-                teams_sets[i].add(team)
-        print(i, list(teams_sets[i]))
-        if not teams_sets[i]:
-            return
-        i += 1
-        teams_sets.append(set())
-        for team in teams_sets[i - 1]:
-            line = get_close_name2(team, sport, site, only_null)
-            if line:
-                success = add_name_to_db(line[0], team, site)
-                if not success:
-                    teams_sets[i].add(team)
-            else:
-                teams_sets[i].add(team)
-        print(i, list(teams_sets[i]))
-        if not teams_sets[i]:
-            return
-        i += 1
-        teams_sets.append(set())
-        for team in teams_sets[i - 1]:
-            future_opponents, future_matches = get_future_opponents(team, matches)
-            success = False
-            for future_opponent, future_match in zip(future_opponents, future_matches):
-                id_opponent = get_id_by_site(future_opponent, sport, site)
-                if id_opponent < 0:
-                    id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
-                else:
-                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                if id_to_find:
-                    success = add_name_to_db(id_to_find, team, site)
-                    if success:
-                        break
-            if not success:
-                teams_sets[i].add(team)
-        print(i, list(teams_sets[i]))
-        if not teams_sets[i]:
-            return
-        i += 1
-        teams_sets.append(set())
-        if sport == "tennis":
+        for get_close_name_function in get_close_name_functions:
+            i += 1
             for team in teams_sets[i - 1]:
-                line = get_close_name3(team, sport, site, only_null)
+                line = get_close_name_function(team, sport, site, only_null)
                 if line:
                     success = add_name_to_db(line[0], team, site)
                     if not success:
@@ -149,41 +87,7 @@ def add_matches_to_db(odds, sport, site):
             teams_sets.append(set())
             for team in teams_sets[i - 1]:
                 future_opponents, future_matches = get_future_opponents(team, matches)
-                found = False
-                for future_opponent, future_match in zip(future_opponents, future_matches):
-                    id_opponent = get_id_by_site(future_opponent, sport, site)
-                    if id_opponent < 0:
-                        id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
-                    else:
-                        id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                    if id_to_find:
-                        found = True
-                        success = add_name_to_db(id_to_find, team, site)
-                        if not success:
-                            teams_sets[i].add(team)
-                if not found:
-                    teams_sets[i].add(team)
-            print(i, list(teams_sets[i]))
-            if not teams_sets[i]:
-                return
-            i += 1
-            teams_sets.append(set())
-            for team in teams_sets[i - 1]:
-                line = get_double_team_tennis(team, site)
-                if line:
-                    success = add_name_to_db(line[0], team, site)
-                    if not success:
-                        teams_sets[i].add(team)
-                else:
-                    teams_sets[i].add(team)
-            print(i, list(teams_sets[i]))
-            if not teams_sets[i]:
-                return
-            i += 1
-            teams_sets.append(set())
-            for team in teams_sets[i - 1]:
-                future_opponents, future_matches = get_future_opponents(team, matches)
-                found = False
+                success = False
                 for future_opponent, future_match in zip(future_opponents, future_matches):
                     id_opponent = get_id_by_site(future_opponent, sport, site)
                     if id_opponent < 0:
@@ -192,15 +96,13 @@ def add_matches_to_db(odds, sport, site):
                         id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                     if id_to_find:
                         success = add_name_to_db(id_to_find, team, site)
-                        if not success:
-                            teams_sets[i].add(team)
-                if not found:
+                        if success:
+                            break
+                if not success:
                     teams_sets[i].add(team)
             print(i, list(teams_sets[i]))
             if not teams_sets[i]:
                 return
-            i += 1
-            teams_sets.append(set())
 
 
 def adapt_names(odds, site, sport):
@@ -460,9 +362,11 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
     """
     try:
         if combine:
-            all_odds = sportsbetting.ALL_ODDS_COMBINE
+            all_odds = filter_dict_dates(sportsbetting.ALL_ODDS_COMBINE, date_max, time_max,
+                                         date_min, time_min)
         else:
-            all_odds = sportsbetting.ODDS[sport]
+            all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min,
+                                         time_min)
     except NameError:
         print("""
         Merci de définir les côtes de base, appelez la fonction parse_football,
@@ -470,43 +374,15 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
         return
     best_profit = -float("inf")
     best_rank = 0
-    hour_max, minute_max = 0, 0
-    hour_min, minute_min = 0, 0
     if combine:
         n = (2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])) ** nb_matches_combine
     else:
         n = 2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])
-    if time_max:
-        if time_max[-1] == 'h':
-            hour_max = int(time_max[:-1])
-        else:
-            hour_max, minute_max = (int(_) for _ in time_max.split('h'))
-    if date_max:
-        day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime.datetime(year_max, month_max, day_max,
-                                         hour_max, minute_max)
-    else:
-        datetime_max = None
-    if time_min:
-        if time_min[-1] == 'h':
-            hour_min = int(time_min[:-1])
-        else:
-            hour_min, minute_min = (int(_) for _ in time_min.split('h'))
-    if date_min:
-        day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
-        datetime_min = datetime.datetime(year_min, month_min, day_min,
-                                         hour_min, minute_min)
-    else:
-        datetime_min = None
     best_match = None
     best_overall_odds = None
     sites = None
     for match in all_odds:
-        if (site in all_odds[match]['odds']
-                and (not date_max or all_odds[match]['date'] <= datetime_max
-                     or all_odds[match]['date'] == "undefined")
-                and (not date_min or all_odds[match]['date'] >= datetime_min
-                     or all_odds[match]['date'] == "undefined")):
+        if site in all_odds[match]['odds']:
             odds_site = all_odds[match]['odds'][site]
             best_odds = copy.deepcopy(odds_site)
             best_sites = [site for _ in range(n)]
@@ -566,3 +442,40 @@ def generate_sites(url_netbet):
                                                                                            name)
         url_zebet = "https://www.zebet.fr/fr/competition/{}-{}".format(id_, name_zebet)
         return url_france_pari, url_zebet
+
+def datetime_from_strings(date_max=None, time_max=None, date_min=None, time_min=None):
+    hour_max, minute_max = 0, 0
+    if time_max:
+        if time_max[-1] == 'h':
+            hour_max = int(time_max[:-1])
+        else:
+            hour_max, minute_max = (int(_) for _ in time_max.split('h'))
+    if date_max:
+        day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
+        datetime_max = datetime.datetime(year_max, month_max, day_max,
+                                         hour_max, minute_max)
+    else:
+        datetime_max = None
+    hour_min, minute_min = 0, 0
+    if time_min:
+        if time_min[-1] == 'h':
+            hour_min = int(time_min[:-1])
+        else:
+            hour_min, minute_min = (int(_) for _ in time_min.split('h'))
+    if date_min:
+        day_min, month_min, year_min = (int(_) for _ in date_min.split('/'))
+        datetime_min = datetime.datetime(year_min, month_min, day_min,
+                                         hour_min, minute_min)
+    else:
+        datetime_min = None
+    return datetime_max, datetime_min
+
+def filter_dict_dates(odds, date_max=None, time_max=None, date_min=None, time_min=None):
+    all_odds = copy.deepcopy(odds)
+    datetime_max, datetime_min = datetime_from_strings(date_max, time_max, date_min, time_min)
+    if datetime_max:
+        all_odds = {k: v for k, v in all_odds.items() if v["date"] <= datetime_max}
+    if datetime_min:
+        all_odds = {k: v for k, v in all_odds.items() if v["date"] >= datetime_min}
+    return all_odds
+

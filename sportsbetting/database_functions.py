@@ -506,7 +506,7 @@ def are_same_double(team1, team2):
             or (team2[0] in team1[1] and team2[1] in team1[0]))
 
 
-def get_double_team_tennis(team, site):
+def get_double_team_tennis(team, site, sport="tennis", only_null=False):
     """
     Trouve l'équipe de double la plus proche d'une équipe donnée
     """
@@ -539,9 +539,14 @@ def get_double_team_tennis(team, site):
             players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
         conn = sqlite3.connect(PATH_DB)
         c = conn.cursor()
-        c.execute("""
-        SELECT id, name FROM names WHERE sport='tennis' AND name LIKE '% & %'
-        """)
+        if only_null:
+            c.execute("""
+            SELECT id, name FROM names WHERE sport='tennis' AND name LIKE '% & %' AND name_{} IS NULL
+            """.format(site))
+        else:
+            c.execute("""
+            SELECT id, name FROM names WHERE sport='tennis' AND name LIKE '% & %'
+            """)
         for line in c.fetchall():
             compared_players = unidecode.unidecode(line[1]).lower().split(" & ")
             if are_same_double(players, compared_players):

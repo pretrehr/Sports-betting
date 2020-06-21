@@ -33,7 +33,7 @@ from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_bu
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets,
-                                               best_match_base, generate_sites)
+                                               best_match_base, generate_sites, filter_dict_dates)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2,
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
@@ -380,19 +380,6 @@ def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
         stakes.append([bet, site, minimum_odd])
     best_match_stakes_to_bet(stakes, 1, sport, date_max, time_max)
 
-    # odds_function = lambda best_odds, odds_site, i: odds_site
-    # profit_function = lambda odds_to_check, i: gain2(odds_to_check, np.argmax(odds_to_check), bet)
-    # criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
-    # display_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
-    #                                                                np.argmax(best_overall_odds),
-    #                                                                True)
-    # result_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet,
-    #                                                               np.argmax(best_overall_odds),
-    #                                                               False)
-    # best_match_base(odds_function, profit_function, criteria, display_function,
-    #                 result_function, site, sport, date_max, time_max, date_min,
-    #                 time_min, one_site=True)
-
 
 def best_match_freebet(site, freebet, sport="football", live=False, date_max=None, time_max=None,
                        date_min=None, time_min=None):
@@ -464,7 +451,7 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     Retourne les meilleurs matches sur lesquels miser lorsqu'on doit miser une somme
     donnée à une cote donnée sur un combiné
     """
-    all_odds = sportsbetting.ODDS[sport]
+    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min, time_min)
     sportsbetting.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         try:
@@ -575,25 +562,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     second_sites = {stake[1] for stake in stakes}
     main_sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                   'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
-    new_odds = sportsbetting.ODDS[sport]
-    all_odds = {}
-    hour_max, minute_max = 0, 0
-    if time_max:
-        if time_max[-1] == 'h':
-            hour_max = int(time_max[:-1])
-        else:
-            hour_max, minute_max = (int(_) for _ in time_max.split('h'))
-    if date_max:
-        day_max, month_max, year_max = (int(_) for _ in date_max.split('/'))
-        datetime_max = datetime.datetime(year_max, month_max, day_max,
-                                         hour_max, minute_max)
-    else:
-        datetime_max = None
-    for match in new_odds:
-        if (((datetime_max and new_odds[match]["date"] <= datetime_max) or not datetime_max)
-                and not any([site not in new_odds[match]["odds"].keys() for site in second_sites])):
-            if new_odds[match]["odds"]:
-                all_odds[match] = new_odds[match]
+    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max)
     best_profit = -sum(stake[0] for stake in stakes)
     n = 3 ** nb_matches
     nb_stakes = len(stakes)
@@ -604,16 +573,9 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     best_bets = None
     main_site_odds = []
     main_sites_distribution = []
-    progress = 10
-    start = time.time()
     sportsbetting.PROGRESS = 0
     for i, combine in enumerate(combis):
         sportsbetting.PROGRESS += 100 / nb_combis
-        #         if i == 20:
-        #             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
-        #         if i/nb_combis*100 > progress:
-        #             print(str(progress)+"%")
-        #             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
         for main0 in main_sites:
@@ -654,7 +616,6 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                 best_profit = profit
                 best_combine = combine
                 best_bets = defined_bets_temp
-    #     print("Temps d'exécution =", time.time()-start)
     if best_combine:
         best_match_combine = " / ".join([match[0] for match in best_combine])
         odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
@@ -675,8 +636,10 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
 
 def best_matches_freebet(main_sites, freebets, sport="football", *matches):
     """
-    Compute of best way to bet freebets following the model
+    Compute of the best way to bet freebets following the model
     [[bet, bookmaker], ...]
+    :param main_sites:
+    :type freebets: List[List[List[str] or str]]
     """
     second_sites = {freebet[1] for freebet in freebets}
     if not second_sites:
