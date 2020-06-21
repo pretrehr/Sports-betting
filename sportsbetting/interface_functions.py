@@ -486,6 +486,7 @@ def odds_match_interface(window, values):
         table = []
         for key, value in odds.items():
             table.append([key] + list(map(str, value)))
+        table.sort()
         window["ODDS_ODDS"].update(table, visible=True)
         if date:
             window["DATE_ODDS"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
