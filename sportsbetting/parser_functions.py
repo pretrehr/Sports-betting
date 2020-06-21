@@ -162,7 +162,10 @@ def parse_betstars(url=""):
                 except ValueError:  # cote non disponible (OTB)
                     odds.append(1)
             if len(odds) < 2 and "class" in line.attrs and "afEvt__row--team" in line["class"]:
-                odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
+                try:
+                    odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
+                except ValueError:  # Cote non disponible (Non publié)
+                    odds.append(1)
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
                 date = strings[0] + " " + year
@@ -192,7 +195,9 @@ def parse_betstars(url=""):
     except selenium.common.exceptions.TimeoutException:
         inner_html = selenium_init.DRIVER["betstars"].execute_script(
             "return document.body.innerHTML")
-        if "Nous procédons à une mise à jour" in inner_html:
+        if ("Nous procédons à une mise à jour" in inner_html or
+                "Nous devons procéder à la correction ou à la mise à jour d’un élément"
+                in inner_html):
             print("Betstars inaccessible")
         else:
             print("Aucun pari prématch disponible")
@@ -1193,6 +1198,9 @@ def parse_zebet(url=""):
     year = str(today.year) + "/"
     date_time = None
     for line in soup.find_all():
+        if "Zebet rencontre actuellement des difficultés techniques." in line.text:
+            print("Zebet non accessible")
+            return {}
         if "class" in line.attrs and "bet-time" in line["class"]:
             try:
                 date_time = datetime.datetime.strptime(year + " ".join(line.text.strip().split()),
