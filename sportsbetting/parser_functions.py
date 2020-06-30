@@ -538,27 +538,26 @@ def parse_netbet(url=""):
     match = ""
     date_time = None
     for line in soup.find_all():
-        if "class" in line.attrs and "nb-date-large" in line["class"]:
+        if "class" in line.attrs and "nb-event_datestart" in line["class"]:
             date = list(line.stripped_strings)[0] + year
-            if "Aujourd'hui" in date:
-                date = datetime.datetime.today().strftime("%A %d %B %Y")
-        elif "class" in line.attrs and "time" in line["class"]:
+            if "Auj." in date:
+                date = datetime.datetime.today().strftime("%d/%m %Y")
+        elif "class" in line.attrs and "nb-event_timestart" in line["class"]:
             hour = line.text
             try:
-                date_time = datetime.datetime.strptime(date + " " + hour, "%A %d %B %Y %H:%M")
+                date_time = datetime.datetime.strptime(date + " " + hour, "%d/%m %Y %H:%M")
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year + 1)
             except ValueError:
                 date_time = "undefined"
-        elif "class" in line.attrs and "bet-libEvent" in line["class"]:
-            match = list(line.stripped_strings)[0].replace("/", "-")
+        elif "class" in line.attrs and "nb-event_actors" in line["class"]:
+            match = " - ".join(list(line.stripped_strings))
             reg_exp = r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]'
             if list(re.finditer(reg_exp, match)):  # match tennis live
                 match = match.split("[")[0].strip()
-        elif ("class" in line.attrs and "mainOdds" in line["class"]
-              and "uk-margin-remove" in line["class"]):
+        elif "class" in line.attrs and "nb-event_odds_wrapper" in line["class"]:
             try:
-                odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+                odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"netbet": odds}
                 match_odds_hash[match]['date'] = date_time
