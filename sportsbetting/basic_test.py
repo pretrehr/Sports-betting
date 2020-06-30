@@ -24,6 +24,7 @@ def test_parsing():
         if "Principaux championnats" in str(line):
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
+            break
     name_competition = random.choice(names)
     parse_competitions([name_competition], "football", "betclic", "unibet")
     assert len(sportsbetting.ODDS) > 0
