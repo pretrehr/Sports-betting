@@ -18,7 +18,7 @@ from math import ceil
 import PySimpleGUI as sg
 import sportsbetting
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
-from sportsbetting.user_functions import parse_competitions2
+from sportsbetting.user_functions import parse_competitions
 from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_under_conditions_interface,
                                                best_match_freebet_interface,
@@ -483,7 +483,7 @@ while True:
                 :return: Crée un thread pour le parsing des compétitions
                 """
                 sportsbetting.PROGRESS = 0
-                parse_competitions2(selected_competitions, sport, *selected_sites)
+                parse_competitions(selected_competitions, sport, *selected_sites)
 
 
             thread = threading.Thread(target=parse_thread)

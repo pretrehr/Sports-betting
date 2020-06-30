@@ -9,22 +9,39 @@ import numpy as np
 
 def gain(cotes, mise=1):
     """
-    Calcule le gain pour une somme des mises égale a mise
+    :param cotes: Cotes au format décimal
+    :type cotes: list[float]
+    :param mise: Mise à répartir sur toutes les cotes
+    :type mise: float
+    :return: Gain pour une somme des mises égale à mise
+    :rtype: int
     """
     return mise / sum(map(lambda x: 1 / x, cotes))
 
 
-def gain2(cotes, rang, mise=1):
+def gain2(cotes, i, mise=1):
     """
-    Benefice gagne en misant mise sur la rang-ieme cote de cotes
+    :param cotes: Cotes au format décimal
+    :type cotes: list[float]
+    :param i: Indice de la cote sur laquelle miser
+    :type i: int
+    :param mise: Mise à placer sur une unique issue
+    :type mise: float
+    :return: Plus-value générée
+    :rtype: float
     """
-    return cotes[rang] * mise - sum(mises2(cotes, mise, rang))
+    return cotes[i] * mise - sum(mises2(cotes, mise, i))
 
 
 def mises(cotes, mise=1, output=False):
     """
-    Calcule la repartition des mises pour minimiser les pertes
-    avec une mise totale egale a mise
+    :param cotes: Cotes au format décimal
+    :type cotes: list[float]
+    :param mise: Mise à répartir sur toutes les cotes
+    :param output: Affichage des détails
+    :type output: bool
+    :return: Répartition optimale des mises
+    :rtype: list[float] or None
     """
     gains = gain(cotes, mise)
     mises_reelles = list(map(lambda x: gains / x, cotes))
@@ -46,7 +63,18 @@ def mises(cotes, mise=1, output=False):
 def mises2(cotes, mise_requise, choix=-1, output=False):
     """
     Calcule la repartition des mises en pariant mise_requise sur l'une des
-    issues. Par defaut, mise_requise est placee sur la cote la plus basse.
+    issues. Par défaut, mise_requise est placée sur la cote la plus basse.
+
+    :param cotes: Cotes au format décimal
+    :type cotes: list[float]
+    :param mise_requise: Mise à répartir sur toutes les cotes
+    :type mise_requise: float
+    :param choix: Indice de la cote sur laquelle miser
+    :type choix: int
+    :param output: Affichage des détails
+    :type output: bool
+    :return: Répartition optimale des mises
+    :rtype: list[float] or None
     """
     if choix == -1:
         choix = np.argmin(cotes)
@@ -72,7 +100,12 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
 
 def cotes_freebet(cotes):
     """
-    Calcule les cotes d'un match joue avec des paris gratuits
+    Calcule les cotes d'un match joué avec des paris gratuits
+
+    :param cotes: Cotes au format décimal
+    :type cotes: list[float]
+    :return: Cotes réduites de 1
+    :rtype: list[float]
     """
     return list(map(lambda x: (x - 1 if x > 1 else 0.01), cotes))
 
@@ -80,7 +113,14 @@ def cotes_freebet(cotes):
 def mises_freebets(cotes, mise):
     """
     Calcule la repartition des mises en paris gratuits pour maximiser les gains
-    avec une mise totale egale a mise
+    avec une mise totale égale à mise
+    :param cotes:
+    :type cotes:
+    :param mise:
+    :type mise:
+    :return:
+    :rtype:
+
     """
     return mises(cotes_freebet(cotes), mise)
 

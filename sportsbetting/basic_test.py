@@ -9,7 +9,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 import sportsbetting
-from sportsbetting.user_functions import parse_competitions2
+from sportsbetting.user_functions import parse_competitions
 
 
 def test_parsing():
@@ -25,5 +25,5 @@ def test_parsing():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
     name_competition = random.choice(names)
-    parse_competitions2([name_competition], "football", "betclic", "unibet")
+    parse_competitions([name_competition], "football", "betclic", "unibet")
     assert len(sportsbetting.ODDS) > 0

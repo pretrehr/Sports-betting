@@ -34,7 +34,8 @@ def valid_odds(all_odds, sport):
 
 def add_matches_to_db(odds, sport, site):
     """
-    :param odds: Dictionnaire {match :{"date":date, "odds":cotes}}
+    :param odds: Cotes des matches
+    :type odds: dict[str,int]
     :param sport: Sport
     :param site: Nom du bookmaker
     :return: Ajoute les équipes inconnues dans la base de données
@@ -64,7 +65,6 @@ def add_matches_to_db(odds, sport, site):
     print(i, list(teams_sets[i]))
     if not teams_sets[i]:
         return
-    teams_sets.append(set())
     get_close_name_functions = [get_close_name, get_close_name2]
     if sport == "tennis":
         get_close_name_functions.append(get_close_name3)
@@ -72,6 +72,7 @@ def add_matches_to_db(odds, sport, site):
     for only_null in [True, False]:
         for get_close_name_function in get_close_name_functions:
             i += 1
+            teams_sets.append(set())
             for team in teams_sets[i - 1]:
                 line = get_close_name_function(team, sport, site, only_null)
                 if line:

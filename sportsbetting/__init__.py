@@ -30,6 +30,15 @@ class UnavailableCompetitionException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
+class UnavailableSiteException(Exception):
+    """
+    Exception renvoyée lorsqu'un bookmaker est indisponible
+    """
+
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
 def grp(pat, txt):
     r = re.search(pat, txt)
     return r.group(0) if r else '&'

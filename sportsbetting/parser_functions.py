@@ -50,8 +50,7 @@ def parse_betclic(url=""):
     date_time = None
     for line in soup.find_all():
         if "Nous nous excusons pour cette interruption momentanée du site." in line.text:
-            print("Betclic non accessible")
-            return {}
+            raise sportsbetting.UnavailableSiteException
         if "Vous allez être redirigé sur notre page calendrier dans 5 secondes" in line.text:
             raise sportsbetting.UnavailableCompetitionException
         if line.name == "time":
@@ -199,6 +198,7 @@ def parse_betstars(url=""):
                 "Nous devons procéder à la correction ou à la mise à jour d’un élément"
                 in inner_html):
             print("Betstars inaccessible")
+            raise sportsbetting.UnavailableSiteException
         else:
             print("Aucun pari prématch disponible")
     return match_odds_hash
@@ -589,7 +589,10 @@ def parse_parionssport(url=""):
     if not url:
         url = "https://www.enligne.parionssport.fdj.fr/paris-football/france/ligue-1-conforama"
     selenium_init.DRIVER["parionssport"].get(url)
-    if selenium_init.DRIVER["parionssport"].current_url != url:
+    if (selenium_init.DRIVER["parionssport"].current_url
+            == "https://www.enligne.parionssport.fdj.fr/"):
+        raise sportsbetting.UnavailableSiteException
+    elif selenium_init.DRIVER["parionssport"].current_url != url:
         raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     if "basket" in url:
@@ -605,6 +608,8 @@ def parse_parionssport(url=""):
             "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         for line in soup.findAll():
+            if "Nous vous prions de bien vouloir nous en excuser" in line:
+                raise sportsbetting.UnavailableCompetitionException
             if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
                 if line.text.strip() == "Aujourd'hui":
                     date = datetime.date.today().strftime("%A %d %B %Y")
@@ -1137,8 +1142,7 @@ def parse_winamax(url=""):
             if not match_odds_hash:
                 raise sportsbetting.UnavailableCompetitionException
             return match_odds_hash
-    print("Winamax non accessible")
-    return {}
+    raise sportsbetting.UnavailableSiteException
 
 
 def parse_sport_winamax(sport):
@@ -1198,8 +1202,7 @@ def parse_zebet(url=""):
     date_time = None
     for line in soup.find_all():
         if "Zebet rencontre actuellement des difficultés techniques." in line.text:
-            print("Zebet non accessible")
-            return {}
+            raise sportsbetting.UnavailableSiteException
         if "class" in line.attrs and "bet-time" in line["class"]:
             try:
                 date_time = datetime.datetime.strptime(year + " ".join(line.text.strip().split()),
