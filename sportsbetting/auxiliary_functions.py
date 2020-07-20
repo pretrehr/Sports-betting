@@ -7,6 +7,7 @@ import collections
 from pprint import pprint
 import datetime
 import copy
+import itertools
 import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
