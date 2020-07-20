@@ -527,7 +527,10 @@ def parse_netbet(url=""):
         return parse_sport_netbet(url)
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
+    request=urllib.request.Request(url,None,headers)
+    response = urllib.request.urlopen(request)
+    soup = BeautifulSoup(response, features="lxml")
     if soup.find(attrs={"class": "none"}):
         raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
