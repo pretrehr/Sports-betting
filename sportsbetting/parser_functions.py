@@ -592,7 +592,7 @@ def parse_parionssport(url=""):
     if (selenium_init.DRIVER["parionssport"].current_url
             == "https://www.enligne.parionssport.fdj.fr/"):
         raise sportsbetting.UnavailableSiteException
-    elif selenium_init.DRIVER["parionssport"].current_url != url:
+    elif selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
         raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     if "basket" in url:
@@ -902,6 +902,8 @@ def parse_pmu(url=""):
     handicap = False
     date = ""
     for line in soup.find_all():
+        if "n'est pas accessible pour le moment !" in line.text:
+            raise sportsbetting.UnavailableSiteException
         if "data-date" in line.attrs and "shadow" in line["class"]:
             date = line["data-date"]
         elif "class" in line.attrs and "trow--live--remaining-time" in line["class"]:
