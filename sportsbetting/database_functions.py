@@ -601,3 +601,23 @@ def get_all_current_competitions(sport):
         if "href" in line.attrs and sport in line["href"] and "ed" in line["href"]:
             id_leagues.append(int(line["href"].split("-ed")[-1]))
     return list(map(get_competition_name_by_id, id_leagues))
+
+def is_played_soon(url):
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    for line in soup.find_all("table", attrs={"class":"bettable"}):
+        date_time = datetime.datetime.strptime(list(line.stripped_strings)[3].lower(), "%A %d %B %Y à %Hh%M")
+        return date_time<datetime.datetime.today()+datetime.timedelta(days=7)
+
+def get_main_competitions(sport):
+    url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    sportsbetting.ODDS = {}
+    names = []
+    for line in soup.find_all(attrs={"class": "subhead"}):
+        if any(x in str(line) for x in ["Événements internationaux", "Coupes européennes", "Principaux championnats", "Coupes nationales"]):
+            for link in line.findParent().find_all(["a"]):
+                if sport in link["href"] and is_played_soon("http://www.comparateur-de-cotes.fr/"+link["href"]):
+                    names.append(link.text.strip().replace("Coupe de France", "Coupe de France FFF"))
+            if "Coupes nationales" in str(line) and names:
+                break
+    return names
