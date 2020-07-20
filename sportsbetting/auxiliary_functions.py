@@ -480,3 +480,22 @@ def filter_dict_dates(odds, date_max=None, time_max=None, date_min=None, time_mi
         all_odds = {k: v for k, v in all_odds.items() if v["date"] >= datetime_min}
     return all_odds
 
+def combine_reduit(nb_matches, combi_to_keep):
+    def get_issues(combi_to_keep_aux):
+        issues = [combi_to_keep_aux]
+        base_issues = [0,1,2]
+        for i, e in enumerate(combi_to_keep_aux):
+            issue = combi_to_keep_aux[:i]
+            for j in base_issues:
+                if j != e:
+                    issues.append(issue+[j]+[-1]*(nb_matches-len(issue)-1))
+        return issues
+    def change_order(original, order):
+        return [original[i] for i in order]
+    all_issues = []
+    for (i, (order, combi)) in enumerate(zip(itertools.permutations(list(range(nb_matches))),
+                                             itertools.permutations(combi_to_keep)
+                                             )
+                                        ):
+        all_issues.append(sorted(list(map(lambda x:change_order(x, order), get_issues(list(combi))))))
+    return all_issues
