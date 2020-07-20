@@ -245,6 +245,10 @@ On peut appliquer cette méthode depuis l'interface dans l'onglet "Freebet uniqu
 Cette méthode est en moyenne beaucoup moins rentable et beaucoup plus volatile que les deux précédentes. Les deux premières méthodes assurent un taux de revient situé entre 77 et 85% de la somme de freebets engagés. Avec la 3ème méthode, il faut s'attendre à un taux de revient situé entre 55 et 70%.
 
 
+## Avertissement
+Ce projet a pour but d'aider l'utilisateur à dégager de l'argent en se rapprochant au maximum de l'absence de risque. Néanmoins, il est important de préciser que le risque zéro n'existe pas et que les cotes publiées par les bookmakers sont destinées à évoluer au cours du temps. Il est donc de votre ressort de vous assurer que les informations affichées par l'application Sports-betting sont fiables. En tant que créateur, je ne pourrai, en aucun cas, être tenu responsable de toute perte de capital survenue lors de l'utilisation 
+de ce projet.
+
 ### *English version*
 
 <details>
@@ -424,3 +428,7 @@ Please note: Be careful not to confuse `best_match_freebet` with `best_matches_f
 
 Note that some sites like NetBet or PMU sometimes offer freebets that are only playable on a single sport. In this case, you have to adapt the sport to the situation.
 This method is on average much less profitable and much more volatile than the first two. The first two methods ensure a return rate of between 77 and 85% of the sum of freebets placed.  With the third method, a return rate between 55 and 70% is to be expected.
+
+
+## Disclaimer
+This project aims to help the user to free up money by getting as close as possible to the absence of risk. Nevertheless, it is important to specify that zero risk does not exist and that the odds published by bookmakers are intended to evolve over time. It is therefore your responsibility to make sure that the information displayed by the Sports-betting application is reliable. As the creator, I cannot be held responsible for any loss of capital that may occur during the use of the application.
