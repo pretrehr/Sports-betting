@@ -600,7 +600,47 @@ def get_all_current_competitions(sport):
     for line in soup.find_all("a"):
         if "href" in line.attrs and sport in line["href"] and "ed" in line["href"]:
             id_leagues.append(int(line["href"].split("-ed")[-1]))
-    return list(map(get_competition_name_by_id, id_leagues))
+    return list(set(list(map(get_competition_name_by_id, id_leagues))+get_all_current_competitions_betclic(sport)))
+
+def get_all_current_competitions_betclic(sport):
+    """
+    Retourne les compétitions disponibles sur betclic pour un sport donné
+    """
+    url = "https://www.betclic.fr"
+    id_sports = {
+        "football": 1,
+        "tennis": 2,
+        "basket-ball": 4,
+        "rugby-a-xv": 5,
+        "handball": 9,
+        "hockey-sur-glace": 13
+    }
+    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + sport + "-" + str(id_sports[sport])),
+                         features="lxml")
+    odds = []
+    links = []
+    ids = []
+    for line in soup.find_all(["a"]):
+        if "href" in line.attrs and "/" + sport + "/" in line["href"]:
+            if "https://" in line["href"]:
+                link = line["href"]
+            else:
+                link = url + line["href"]
+            if link not in links:
+                links.append(link)
+                if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
+                    ids.append(link.split("-e")[-1])
+    def get_competition_name_by_betclic_id(_id):
+        conn = sqlite3.connect(PATH_DB)
+        c = conn.cursor()
+        c.execute("""
+        SELECT competition FROM competitions WHERE url_betclic LIKE "%-e{}"
+        """.format(_id))
+        result = c.fetchone()
+        if result:
+            return result[0]
+    return [x for x in list(map(get_competition_name_by_betclic_id, ids)) if x]
+    
 
 def is_played_soon(url):
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
