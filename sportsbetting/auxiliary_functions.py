@@ -28,8 +28,8 @@ def valid_odds(all_odds, sport):
     copy_all_odds = copy.deepcopy(all_odds)
     for match in all_odds:
         for site in all_odds[match]["odds"]:
-            if len(all_odds[match]["odds"][site]) != n:
-                del copy_all_odds[match]["odds"][site]
+            if len(all_odds[match]["odds"][site]) != n or (all_odds[match]["date"] and all_odds[match]["date"] < datetime.datetime.today()):
+                copy_all_odds[match]["odds"][site] = [1.01 for _ in range(n)]
     return copy_all_odds
 
 
@@ -163,6 +163,8 @@ def merge_dict_odds(dict_odds):
                         new_dict[match]["odds"][site] = odds[match]["odds"][site]
                 except IndexError:
                     print("ERREUR :", odds)
+        if not date_found:
+            new_dict[match]["date"] = datetime.datetime.today()
     return new_dict
 
 
