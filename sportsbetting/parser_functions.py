@@ -533,6 +533,8 @@ def parse_netbet(url=""):
     soup = BeautifulSoup(response, features="lxml")
     if soup.find(attrs={"class": "none"}):
         raise sportsbetting.UnavailableCompetitionException
+    if response.geturl() == "https://www.netbet.fr/":
+        raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -561,9 +563,10 @@ def parse_netbet(url=""):
         elif "class" in line.attrs and "nb-event_odds_wrapper" in line["class"]:
             try:
                 odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {"netbet": odds}
-                match_odds_hash[match]['date'] = date_time
+                if match not in match_odds_hash:
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"netbet": odds}
+                    match_odds_hash[match]['date'] = date_time
             except ValueError:  # match live (cotes non disponibles)
                 pass
     return match_odds_hash
