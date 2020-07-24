@@ -304,6 +304,8 @@ def mises_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, freebet=Tru
     benefice_max = 0
     meilleures_mises = []
     for i, cote in enumerate(cotes):
+        if not taux_boost(cote, boost_selon_cote, boost):
+            continue
         mise = gain_max / ((cotes[i] - 1) * taux_boost(cote, boost_selon_cote, boost))
         mises_possibles = mises2(new_cotes, mise, i)
         mises_corrigees = []
