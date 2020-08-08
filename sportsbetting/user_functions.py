@@ -72,13 +72,13 @@ def parse_competition(competition, sport="football", *sites):
                     selenium_init.start_selenium()
                     res_parsing[site] = parse(site, url)
         except urllib.error.URLError:
-            print("Site non accessible (délai écoulé)")
+            print("{} non accessible sur {} (délai écoulé)".format(competition, site))
         except KeyboardInterrupt:
             res_parsing[site] = {}
         except selenium.common.exceptions.TimeoutException:
-            print("Element non trouvé par selenium")
+            print("Element non trouvé par selenium ({} sur {})".format(competition, site))
         except sportsbetting.UnavailableCompetitionException:
-            print("{} non disponible sur {}".format(competition, *sites))
+            print("{} non disponible sur {}".format(competition, site))
     res = format_team_names(res_parsing, sport)
     out = valid_odds(merge_dict_odds(res), sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
