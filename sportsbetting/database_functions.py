@@ -600,10 +600,33 @@ def get_all_current_competitions(sport):
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     id_leagues = []
+    leagues = []
     for line in soup.find_all("a"):
         if "href" in line.attrs and sport in line["href"] and "ed" in line["href"]:
-            id_leagues.append(int(line["href"].split("-ed")[-1]))
-    return list(set(list(map(get_competition_name_by_id, id_leagues))+get_all_current_competitions_betclic(sport)))
+            id_league = int(line["href"].split("-ed")[-1])
+            league_name = line.text.strip()
+            id_leagues.append(id_league)
+            league = get_competition_name_by_id(id_league)
+            if not league:
+                if sportsbetting.INTERFACE:
+                    sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle compétition : {}"
+                                                    .format(league_name))
+                    ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+                    if ans == "Yes":
+                        conn = sqlite3.connect(PATH_DB)
+                        c = conn.cursor()
+                        c.execute("""
+                        INSERT INTO competitions (id, sport, competition)
+                        VALUES ({}, "{}", "{}")
+                        """.format(id_league, sport, league_name))
+                        conn.commit()
+                        c.close()
+                        leagues.append(league_name)
+            else:
+                leagues.append(league)
+    result = list(set(leagues+get_all_current_competitions_betclic(sport)))
+    return result
+    
 
 def get_all_current_competitions_betclic(sport):
     """
@@ -611,20 +634,20 @@ def get_all_current_competitions_betclic(sport):
     """
     url = "https://www.betclic.fr"
     id_sports = {
-        "football": 1,
-        "tennis": 2,
-        "basket-ball": 4,
-        "rugby-a-xv": 5,
-        "handball": 9,
-        "hockey-sur-glace": 13
+        "football": (1, "football"),
+        "tennis": (2, "tennis"),
+        "basketball": (4, "basket-ball"),
+        "rugby": (5, "rugby-a-xv"),
+        "handball": (9, "hanball"),
+        "hockey-sur-glace": (13, "hockey-sur-glace")
     }
-    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + sport + "-" + str(id_sports[sport])),
+    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + id_sports[sport][1] + "-s" + str(id_sports[sport][0])),
                          features="lxml")
     odds = []
     links = []
     ids = []
     for line in soup.find_all(["a"]):
-        if "href" in line.attrs and "/" + sport + "/" in line["href"]:
+        if "href" in line.attrs and "/" + id_sports[sport][1] + "/" in line["href"]:
             if "https://" in line["href"]:
                 link = line["href"]
             else:
