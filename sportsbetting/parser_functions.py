@@ -1271,8 +1271,6 @@ def parse_and_add_to_db(site, sport, competition):
     else:
         return
     odds = parse(site, url)
-    if site == "france_pari":
-        site = "netbet"
     return add_matches_to_db(odds, sport, site)
 
 

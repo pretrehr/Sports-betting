@@ -113,8 +113,6 @@ def adapt_names(odds, site, sport):
     comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient "Marseille - Paris SG"
     """
     new_dict = {}
-    if site == "france_pari":
-        site = "netbet"
     add_matches_to_db(odds, sport, site)
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
@@ -131,10 +129,7 @@ def format_team_names(dict_odds, sport):
     """
     list_odds = []
     for site in dict_odds:
-        if site in ["netbet", "france_pari"]:
-            list_odds.append(adapt_names(dict_odds[site], "netbet", sport))
-        else:
-            list_odds.append(adapt_names(dict_odds[site], site, sport))
+        list_odds.append(adapt_names(dict_odds[site], site, sport))
     return list_odds
 
 
