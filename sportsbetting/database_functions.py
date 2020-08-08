@@ -264,7 +264,10 @@ def get_sport_by_id(_id):
     try:
         return c.fetchone()[0]
     except TypeError:
-        add_id_to_db(_id)
+        if _id>0:
+            add_id_to_db(_id)
+        else:
+            add_id_to_db_thesportsdb(_id)
         c.execute("""
         SELECT sport FROM names WHERE id='{}'
         """.format(_id))
