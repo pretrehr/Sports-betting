@@ -17,6 +17,7 @@ from math import ceil
 
 import PySimpleGUI as sg
 import sportsbetting
+from sportsbetting.auxiliary_functions import get_nb_issues
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.interface_functions import (odds_table_combine,
@@ -30,18 +31,20 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_pari_gagnant_interface,
                                                odds_match_interface, delete_odds_interface,
                                                get_current_competitions_interface,
-                                               get_main_competitions_interface)
+                                               get_main_competitions_interface,
+                                               best_combine_reduit_interface)
 
 PATH_DATA = os.path.dirname(sportsbetting.__file__) + "/resources/data.pickle"
+
+sports = get_all_sports()
+sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
+         'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
 
 try:
     sportsbetting.ODDS = pickle.load(open(PATH_DATA, "rb"))
 except FileNotFoundError:
     pass
 
-sports = get_all_sports()
-sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-         'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
 
 # All the stuff inside your window.
 parsing_layout = [
@@ -52,8 +55,8 @@ parsing_layout = [
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS")],
                    [sg.Button("Principales compétitions", key="MAIN_COMPETITIONS")]]),
         sg.Column([[sg.Listbox(sites, size=(20, 12), key="SITES", select_mode='multiple')],
-                   [sg.Button("Tout sélectionner", key="SELECT_ALL"),
-                    sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
+                   [sg.Button("Tout sélectionner", key="SELECT_ALL")],
+                   [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
     [sg.Button('Démarrer', key="START_PARSING"),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
@@ -262,7 +265,8 @@ column_results_stakes = [[sg.Text("", size=(6, 1), key="RESULTS_STAKES" + str(_)
 stakes_layout = [
     [sg.Text("Site\t\t"), sg.Text("Mise"), sg.Text("Cote minimale"),
      sg.Button("Retirer mise", key="REMOVE_STAKES"), sg.Text("Nombre de matches"),
-     sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_STAKES")],
+     sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_STAKES"),
+     sg.Combo(sports, key="SPORT_STAKES")],
     [sg.Col([[sg.Combo(sites, key="SITE_STAKES_0")]]),
      sg.Col([[sg.Input(key="STAKE_STAKES_0", size=(6, 1))]]),
      sg.Col([[sg.Input(key="ODD_STAKES_0", size=(6, 1))]]),
@@ -373,6 +377,45 @@ odds_layout = [
      ]
 ]
 
+visible_combi_opt = 1
+column_indicators_combi_opt = [[sg.Text("", size=(15, 1), key="INDICATORS_COMBI_OPT" + str(_),
+                                     visible=False)] for _ in range(5)]
+column_results_combi_opt = [[sg.Text("", size=(6, 1), key="RESULTS_COMBI_OPT" + str(_),
+                                  visible=False)] for _ in range(5)]
+column_text_combi_opt = [[sg.Text("Mise maximale")], [sg.Text("Cote boostée")], [sg.Text("Site boosté")]]
+column_fields_combi_opt = [[sg.InputText(key='STAKE_COMBI_OPT', size=(6, 1))],
+                                 [sg.InputText(key='ODD_COMBI_OPT', size=(6, 1))],
+                                 [sg.Combo(sites, key="SITE_COMBI_OPT")]]
+column_combi_opt = [[sg.Column(column_text_combi_opt),
+                           sg.Column(column_fields_combi_opt)]]
+
+combi_opt_layout = [
+    [sg.Column(column_combi_opt), sg.Listbox(sports, size=(20, 6), key="SPORT_COMBI_OPT", enable_events=True)],
+    [sg.Text("Match"),
+     sg.Button("Retirer match", key="REMOVE_COMBI_OPT"),
+     sg.Button("Ajouter match", key="ADD_COMBI_OPT"),  sg.Text("\t\tIssue boostée")],
+    [sg.Col([[sg.Combo(sorted(sportsbetting.ODDS["football"].keys()), key="MATCH_COMBI_OPT_0")]]),
+     sg.Col([[sg.Radio('1', "RES_COMBI_OPT_0", key="1_RES_COMBI_OPT_0", default=True)]]),
+     sg.Col([[sg.Radio('N', "RES_COMBI_OPT_0", key="N_RES_COMBI_OPT_0")]]),
+     sg.Col([[sg.Radio('2', "RES_COMBI_OPT_0", key="2_RES_COMBI_OPT_0")]])],
+     *([sg.Col([[sg.Combo(sorted(sportsbetting.ODDS["football"].keys()), key="MATCH_COMBI_OPT_" + str(i), visible=False)]]),
+     sg.Col([[sg.Radio('1', "RES_COMBI_OPT_" + str(i), key="1_RES_COMBI_OPT_" + str(i), visible=False, default=True)]]),
+     sg.Col([[sg.Radio('N', "RES_COMBI_OPT_" + str(i), key="N_RES_COMBI_OPT_" + str(i), visible=False)]]),
+     sg.Col([[sg.Radio('2', "RES_COMBI_OPT_" + str(i), key="2_RES_COMBI_OPT_" + str(i), visible=False)]])]
+     for i in range(1,9)),
+    [sg.Button("Calculer", key="BEST_COMBI_OPT")],
+    [sg.Text("", size=(100, 1), key="MATCH_COMBI_OPT")],
+    [sg.Text("", size=(30, 1), key="DATE_COMBI_OPT")],
+    [sg.Column([[sg.Button("Voir les cotes combinées", key="ODDS_COMBI_OPT", visible=False)],
+                [sg.Column(column_indicators_combi_opt),
+                 sg.Column(column_results_combi_opt)]
+                ]),
+     sg.Column([[sg.Text(
+         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+         key="TEXT_COMBI_OPT", visible=False)],
+         [sg.MLine(size=(120, 12), key="RESULT_COMBI_OPT", font="Consolas 10", visible=False)]])
+     ]]
+
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
@@ -382,7 +425,8 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Pari combiné', combine_layout),
                          sg.Tab('Paris à placer', stakes_layout),
                          sg.Tab('Freebet unique', freebet_layout),
-                         sg.Tab('Freebets à placer', freebets_layout)
+                         sg.Tab('Freebets à placer', freebets_layout),
+                         sg.Tab('Combiné optimisé', combi_opt_layout)
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -469,7 +513,8 @@ while True:
     elif event == "SELECT_NONE_COMPETITION":
         window['COMPETITIONS'].update(set_to_index=[])
     elif event == "CURRENT_COMPETITIONS":
-        get_current_competitions_interface(window, values)
+        thread_competitions = threading.Thread(target=lambda : get_current_competitions_interface(window, values))
+        thread_competitions.start()
     elif event == "MAIN_COMPETITIONS":
         get_main_competitions_interface(window, values)
     elif event == "SELECT_ALL":
@@ -519,7 +564,7 @@ while True:
         best_match_cashback_interface(window, values)
     elif event == "BEST_MATCHES_COMBINE":
         sportsbetting.ODDS_INTERFACE = best_matches_combine_interface(window, values)
-    elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS"]:
+    elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS", "ODDS_COMBI_OPT"]:
         window_odds_active = True
         table = odds_table_combine(sportsbetting.ODDS_INTERFACE)
         layout_odds = [[sg.Table(table[1:], headings=table[0], size=(None, 20))]]
@@ -575,6 +620,39 @@ while True:
     elif event == "DELETE_ODDS":
         delete_odds_interface(window, values)
         pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+    elif event == "ADD_COMBI_OPT":
+        sport = ""
+        if values["SPORT_COMBI_OPT"]:
+            sport = values["SPORT_COMBI_OPT"][0]
+        if visible_combi_opt < 9:
+            window["MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
+            issues = ["1", "N", "2"] if sport and get_nb_issues(sport) == 3 else ["1", "2"]
+            for issue in issues:
+                window[issue+"_RES_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
+            visible_combi_opt += 1
+    elif event == "REMOVE_COMBI_OPT":
+        if visible_combi_opt > 1:
+            visible_combi_opt -= 1
+            window["MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=False)
+            for issue in ["1", "N", "2"]:
+                window[issue+"_RES_COMBI_OPT_" + str(visible_combi_opt)].update(visible=False)
+    elif event == "BEST_COMBI_OPT":
+        best_combine_reduit_interface(window, values, visible_combi_opt)
+    elif event == "SPORT_COMBI_OPT":
+        sport = values["SPORT_COMBI_OPT"][0]
+        for i in range(visible_combi_opt):
+            if get_nb_issues(sport) == 2:
+                window["N_RES_COMBI_OPT_"+str(i)].update(visible=False)
+            elif get_nb_issues(sport) == 3:
+                window["N_RES_COMBI_OPT_"+str(i)].update(visible=True)
+        for i in range(9):
+            if sport in sportsbetting.ODDS:
+                matches = sorted(list(sportsbetting.ODDS[sport]))
+                window['MATCH_COMBI_OPT_'+str(i)].update(values=matches)
+            else:
+                window['MATCH_COMBI_OPT_'+str(i)].update(values=[])
+                sg.Popup("Aucun match disponible en {}".format(sport))
+                break
     elif event in (None, 'Quitter'):  # if user closes window or clicks cancel
         break
     else:

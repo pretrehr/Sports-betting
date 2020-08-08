@@ -34,14 +34,13 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets,
                                                best_match_base, generate_sites, filter_dict_dates,
-                                               combine_reduit)
+                                               combine_reduit, get_nb_issues, best_combine_reduit)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2,
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
                                            gain_promo_gain_cote,
                                            mises_promo_gain_cote, gain_gains_nets_boostes,
                                            mises_gains_nets_boostes)
-
 
 def parse_competition(competition, sport="football", *sites):
     """
@@ -451,7 +450,7 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
                                                                        False))
     best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport, date_max, time_max, date_min,
-                    time_min, True, nb_matches, one_site=one_site)
+                    time_min, True, nb_matches, one_site=one_site, combine_opt=True)
 
 
 def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_selection, combi_max=0,
@@ -737,76 +736,9 @@ def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, t
     best_match_base(odds_function, profit_function, criteria, display_function, result_function,
                     site, sport, date_max, time_max, date_min, time_min)
 
-def best_combine_reduit(matches, combinaison_boostee, cote, site_booste, mise_max):
-    def get_odd(combinaison, matches):
-        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-                 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
-        best_odd = 1
-        best_site = ""
-        for site in sites:
-            odd = 1
-            for i, match in zip(combinaison, matches):
-                if i!=-1:
-                    if site in sportsbetting.ODDS["football"][match]["odds"].keys():
-                        odd *= sportsbetting.ODDS["football"][match]["odds"][site][i]
-                    else:
-                        break
-            if odd > best_odd:
-                best_odd = odd
-                best_site = site
-        return best_odd, best_site
-    odds = {}
-    for match in matches:
-        odds[match] = sportsbetting.ODDS["football"][match]
-    best_combinaison = []
-    best_cotes = []
-    best_sites = []
-    best_gain = -mise_max
-    best_i = -1
-    for combinaisons in combine_reduit(len(matches), combinaison_boostee):
-        cotes = []
-        sites = []
-        for i, combinaison in enumerate(combinaisons):
-            if list(combinaison) == combinaison_boostee:
-                cotes.append(cote)
-                sites.append(site_booste)
-                i_boost = i
-            else:
-                res = get_odd(combinaison, matches)
-                cotes.append(res[0])
-                sites.append(res[1])
-        new_gain = gain2(cotes, i_boost, mise_max)
-        if new_gain > best_gain:
-            best_cotes = cotes
-            best_sites = sites
-            best_combinaison = combinaisons
-            best_gain = new_gain
-            best_i = i_boost
-    print(best_gain)
-    mises = mises2(best_cotes, mise_max, best_i)
-#     return best_cotes, best_sites, best_combinaison
-    out = {}
-    def get_issue(match, i):
-        if i==-1:
-            return
-        elif i==1:
-            return "Nul"
-        else:
-            return match.split(" - ")[i//2]
-    opponents = []
-    for match in matches:
-        opponents_match = match.split(" - ")
-        opponents_match.insert(1, "Nul")
-        opponents.append(opponents_match)
-    nb_chars = max(map(lambda x: len(" / ".join(x)), product(*opponents)))
-    for combine, mise, cote, site in zip(best_combinaison, mises, best_cotes, best_sites):
-        names = [opponents_match[i] if i>-1 else "" for match, i, opponents_match in zip(matches, combine, opponents)]
-        name_combine = " / ".join(x for x in names if x)
-        diff = nb_chars - len(name_combine)
-        sites_bet_combinaison = {site:{"mise":mise, "cote":cote}, "total":mise*cote}
-        print(name_combine + " " * diff + "\t", sites_bet_combinaison)
-        
-        
+def best_combine_booste(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee):
+    best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee)
+
 
 
 def add_names_to_db(competition, sport="football", *sites):
