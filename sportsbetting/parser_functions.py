@@ -101,7 +101,7 @@ def parse_sport_betclic(sport):
         "handball": 9,
         "hockey-sur-glace": 13
     }
-    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + sport + "-" + str(id_sports[sport])),
+    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + sport + "-s" + str(id_sports[sport])),
                          features="lxml")
     odds = []
     links = []
@@ -155,15 +155,11 @@ def parse_betstars(url=""):
                     match = teams[1] + " - " + teams[0]
                 odds = []
             if "class" in line.attrs and ("market-AB" in line["class"]
-                                          or "market-BAML" in line["class"]):
-                try:
-                    odds.append(float(list(line.stripped_strings)[0]))
-                except ValueError:  # cote non disponible (OTB)
-                    odds.append(1)
-            if len(odds) < 2 and "class" in line.attrs and "afEvt__row--team" in line["class"]:
+#                                           or "market-BAML" in line["class"]
+                                          or "market-BASKETBALL-FTOT-ML" in line["class"]):
                 try:
                     odds.append(float(list(line.stripped_strings)[0].replace(",", ".")))
-                except ValueError:  # Cote non disponible (Non publié)
+                except ValueError:  # cote non disponible (OTB, Non publiée)
                     odds.append(1)
             if "class" in line.attrs and "match-time" in line["class"]:
                 strings = list(line.stripped_strings)
@@ -208,25 +204,25 @@ def parse_sport_betstars(sport):
     """
     Retourne les cotes disponibles sur betstars pour un sport donné
     """
-    selenium_init.DRIVER["betstars"].get("https://www.betstars.fr/#/{}/competitions".format(sport))
+    selenium_init.DRIVER["betstars"].get("https://www.pokerstarssports.fr/#/{}/competitions".format(sport))
     urls = []
     competitions = []
-    for _ in range(100):
-        inner_html = selenium_init.DRIVER["betstars"].execute_script(
-            "return document.body.innerHTML")
-        if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
-            print("Betstars inaccessible")
-            return dict()
-        soup = BeautifulSoup(inner_html, features="lxml")
-        for line in soup.findAll(["a"]):
-            if ("href" in line.attrs and sport + "/competitions/" in line["href"]
-                    and "data-leagueid" in line.attrs):
-                url = "https://www.betstars.fr/" + line["href"]
-                if url not in urls:
-                    urls.append(url)
-                    competitions.append(line.text.strip())
-        if urls:
-            break
+    WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "match-time"))
+    )
+    inner_html = selenium_init.DRIVER["betstars"].execute_script(
+        "return document.body.innerHTML")
+    if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
+        print("Betstars inaccessible")
+        return dict()
+    soup = BeautifulSoup(inner_html, features="lxml")
+    for line in soup.findAll(["a"]):
+        if ("href" in line.attrs and sport + "/competitions/" in line["href"]
+                and "data-leagueid" in line.attrs):
+            url = "https://www.pokerstarssports.fr/" + line["href"]
+            if url not in urls:
+                urls.append(url)
+                competitions.append(line.text.strip())
     list_odds = []
     for url, competition in zip(urls, competitions):
         print("\t" + competition)
@@ -566,6 +562,8 @@ def parse_netbet(url=""):
                 if match not in match_odds_hash:
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"netbet": odds}
+                    if not date_time:
+                        date_time = "undefined"
                     match_odds_hash[match]['date'] = date_time
             except ValueError:  # match live (cotes non disponibles)
                 pass
@@ -578,12 +576,14 @@ def parse_sport_netbet(sport):
     """
     url = "https://www.netbet.fr"
     odds = []
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    for line in soup.find_all("a", {"data-type-event": "sport"}):
-        if sport == line.text.lower():
-            print(line.text)
-            for child in line.findParent().findChildren("a", {"data-type-event": "competition"}):
-                link = url + child["href"]
+    headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
+    request=urllib.request.Request(url,None,headers)
+    response = urllib.request.urlopen(request)
+    soup = BeautifulSoup(response, features="lxml")
+    for line in soup.find_all("li", {"data-type-event": "sport"}):
+        if sport == line.text.split()[0].lower():
+            for child in line.findChildren("li", {"data-type-event": "competition"}):
+                link = child.findChild("a")["href"]
                 odds.append(parse_netbet(link))
     return merge_dicts(odds)
 
@@ -598,7 +598,7 @@ def parse_parionssport(url=""):
     if (selenium_init.DRIVER["parionssport"].current_url
             == "https://www.enligne.parionssport.fdj.fr/"):
         raise sportsbetting.UnavailableSiteException
-    elif selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
+    elif "tennis" not in url and selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
         raise sportsbetting.UnavailableCompetitionException
     match_odds_hash = {}
     if "basket" in url:
@@ -1243,10 +1243,12 @@ def parse_sport_zebet(sport):
         if ("class" in line.attrs and "menu-sport-cat" in line["class"]
                 and sport in list(line.stripped_strings)[0].lower()):
             for child in line.findChildren():
-                if ("href" in child.attrs and "fr/category/" in child["href"]
-                        and "uk-visible-small" in child["class"]):
-                    link = url + child["href"][2:]
-                    odds.append(parse_zebet(link))
+                if "href" in child.attrs and "fr/competition/" in child["href"]:
+                    link = url + child["href"][1:]
+                    try:
+                        odds.append(parse_zebet(link))
+                    except sportsbetting.UnavailableCompetitionException:
+                        pass
     return merge_dicts(odds)
 
 
