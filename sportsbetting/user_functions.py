@@ -530,7 +530,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                   'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
     all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max)
     best_profit = -sum(stake[0] for stake in stakes)
-    n = 3 ** nb_matches
+    n = get_nb_issues(sport) ** nb_matches
     nb_stakes = len(stakes)
     all_odds_combine = {}
     combis = list(combinations(all_odds.items(), nb_matches))
@@ -561,15 +561,16 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
             except KeyError:
                 pass
         second_odds = {second_site: all_odds_combine[match_combine]["odds"][second_site]
-                       for second_site in second_sites}
+                       for second_site in second_sites if second_site in all_odds_combine[match_combine]["odds"]}
+        if not second_odds:
+            continue
         dict_combine_odds = copy.deepcopy(second_odds)
         for perm in permutations(range(n), nb_stakes):
             valid_perm = True
             defined_second_sites = [[perm[j], stake[0], stake[1]]
                                     for j, stake in enumerate(stakes)]
             for j, stake in enumerate(stakes):
-                if dict_combine_odds[defined_second_sites[j][2]][defined_second_sites[j][0]] < \
-                        stake[2]:
+                if dict_combine_odds[defined_second_sites[j][2]][defined_second_sites[j][0]] < stake[2]:
                     valid_perm = False
                     break
             if not valid_perm:
@@ -595,7 +596,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         print("Gain référence =", best_bets[0])
         print("Somme des mises =", np.sum(best_bets[1]))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                               all_odds_combine[best_match_combine]["odds"], "football")
+                               all_odds_combine[best_match_combine]["odds"], sport)
     else:
         print("No match found")
 

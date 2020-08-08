@@ -366,12 +366,13 @@ def best_match_stakes_to_bet_interface(window, values, visible_stakes):
                             float(values["ODD_STAKES_" + str(i)])])
     date_max = None
     time_max = None
+    sport = values["SPORT_STAKES"]
     if values["DATE_MAX_STAKES_BOOL"]:
         date_max = values["DATE_MAX_STAKES"]
         time_max = values["TIME_MAX_STAKES"].replace(":", "h")
     old_stdout = sys.stdout  # Memorize the default stdout stream
     sys.stdout = buffer = io.StringIO()
-    best_match_stakes_to_bet(stakes_list, nb_matches, "football", date_max, time_max)
+    best_match_stakes_to_bet(stakes_list, nb_matches, sport, date_max, time_max)
     sys.stdout = old_stdout  # Put the old stream back in place
     what_was_printed = buffer.getvalue()
     match, date = infos(what_was_printed)
