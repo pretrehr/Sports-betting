@@ -479,7 +479,7 @@ def odds_match_interface(window, values):
         sport = values["SPORT_ODDS"][0]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = io.StringIO()
-        _, odds_dict = odds_match(match, sport)
+        odds_dict = odds_match(match, sport)[1]
         sys.stdout = old_stdout  # Put the old stream back in place
         odds = odds_dict["odds"]
         date = odds_dict["date"]

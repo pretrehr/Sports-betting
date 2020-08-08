@@ -253,7 +253,7 @@ def odds_match(match, sport="football"):
         else:
             return None, None
     print(match_name)
-    return match_name, all_odds[match_name]
+    return match_name, copy.deepcopy(all_odds[match_name])
 
 
 def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
