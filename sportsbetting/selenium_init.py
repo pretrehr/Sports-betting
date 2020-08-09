@@ -23,6 +23,7 @@ def start_selenium(site):
     options.add_argument('log-level=3')
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless")
+    options.add_argument("--disable-extensions")
     try:
         print(PATH_DRIVER)
         print("Version ancienne Windows")

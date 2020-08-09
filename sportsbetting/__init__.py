@@ -19,7 +19,7 @@ ODDS_INTERFACE = ""
 EXPECTED_TIME = 0
 INTERFACE = False
 IS_PARSING = False
-
+SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 
 class UnavailableCompetitionException(Exception):
     """

@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import time
+import http.client
 import urllib
 import urllib.error
 import urllib.request
@@ -404,6 +405,8 @@ def parse_france_pari(url=""):
     """
     if not url:
         url = "https://www.france-pari.fr/competition/96-parier-sur-ligue-1-conforama"
+    if url in sportsbetting.SPORTS:
+        return parse_sport_france_pari(url)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
     today = datetime.datetime.today()
@@ -447,6 +450,37 @@ def parse_france_pari(url=""):
         raise sportsbetting.UnavailableCompetitionException
     return match_odds_hash
 
+
+def parse_sport_france_pari(sport):
+    id_sports = {
+        "football": 13,
+        "tennis": 21,
+        "basketball": 4,
+        "rugby": 12,
+        "handball": 9,
+        "hockey-sur-glace": 10
+    }
+    url = "https://www.france-pari.fr"
+    soup = BeautifulSoup(urllib.request.urlopen(url+"/sport/sport-list-"+str(id_sports[sport])), features="lxml")
+    odds = []
+    for line in soup.find_all(attrs={"class":["odd-event", "item-subheader"]}):
+        strings = list(line.stripped_strings)
+        if "item-subheader" in line["class"]:
+            country = strings[0]
+        else:
+            name = strings[0]
+            nb_bets = int(strings[1])
+            if nb_bets>1:
+                child = line.findChild().findChild().findChild()
+                print("\t"+country+" - "+name)
+                link = url+child["href"]
+                try:
+                    odds.append(parse_france_pari(link))
+                except sportsbetting.UnavailableCompetitionException:
+                    pass
+    return merge_dicts(odds)
+
+    
 
 def parse_joa(url):
     """
@@ -519,14 +553,22 @@ def parse_netbet(url=""):
     """
     Retourne les cotes disponibles sur netbet
     """
-    if "http" not in url:
+    if url in sportsbetting.SPORTS:
         return parse_sport_netbet(url)
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
     headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
-    request=urllib.request.Request(url,None,headers)
-    response = urllib.request.urlopen(request)
-    soup = BeautifulSoup(response, features="lxml")
+    for i in range(10):
+        request=urllib.request.Request(url,None,headers)
+        response = urllib.request.urlopen(request)
+        try:
+            soup = BeautifulSoup(response, features="lxml")
+            break
+        except http.client.IncompleteRead:
+            headers = {"User-Agent":Useragent().random}
+            print("User agent change")
+    else:
+        raise sportsbetting.UnavailableSiteException
     if soup.find(attrs={"class": "none"}):
         raise sportsbetting.UnavailableCompetitionException
     if response.geturl() == "https://www.netbet.fr/":
@@ -577,14 +619,32 @@ def parse_sport_netbet(sport):
     url = "https://www.netbet.fr"
     odds = []
     headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
-    request=urllib.request.Request(url,None,headers)
+    request=urllib.request.Request(url+"/"+sport, None, headers)
     response = urllib.request.urlopen(request)
     soup = BeautifulSoup(response, features="lxml")
-    for line in soup.find_all("li", {"data-type-event": "sport"}):
-        if sport == line.text.split()[0].lower():
-            for child in line.findChildren("li", {"data-type-event": "competition"}):
-                link = child.findChild("a")["href"]
-                odds.append(parse_netbet(link))
+    country = ""
+    h2_found = False
+    for line in soup.find_all("h2"):
+        if line.text == "A-Z catégories":
+            h2_found = True
+            competitions_part = line.find_next_sibling("ul")
+            break
+    for line in competitions_part.find_all(attrs={"class":["uk-accordion-title", "uk-accordion-content"]}):
+        strings = list(line.stripped_strings)
+        if "uk-accordion-title" in line["class"]:
+            country = strings[0]
+        elif "uk-accordion-content" in line["class"]:
+            for child in line.findChildren("a"):
+                link = url+child["href"]
+                substrings = list(child.stripped_strings)
+                name = substrings[0]
+                nb_bets = int(substrings[1])
+                if nb_bets>1:
+                    print("\t"+country+" - "+name)
+                    try:
+                        odds.append(parse_netbet(link))
+                    except sportsbetting.UnavailableCompetitionException:
+                        pass
     return merge_dicts(odds)
 
 
@@ -995,7 +1055,10 @@ def parse_sport_pmu(sport):
                 competitions.append(line.text)
     for line, competition in zip(links, competitions):
         print("\t" + competition)
-        odds.append(parse_pmu(line))
+        try:
+            odds.append(parse_pmu(line))
+        except sportsbetting.UnavailableCompetitionException:
+            pass
     return merge_dicts(odds)
 
 
@@ -1064,48 +1127,47 @@ def parse_sport_unibet(sport):
     """
     Retourne les cotes disponibles sur unibet pour un sport donné
     """
-    selenium_init.DRIVER["unibet"].get("https://www.unibet.fr/sport")
+    sport_upper = sport.upper()
+    selenium_init.start_selenium("unibet")
+    url = "https://www.unibet.fr"
+    selenium_init.DRIVER["unibet"].get(url+"/sport")
     urls = []
+    odds = []
     competitions = []
     WebDriverWait(selenium_init.DRIVER["unibet"], 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "sportsmenu"))
     )
-    for elem in selenium_init.DRIVER["unibet"].find_elements_by_class_name("SPORT_"
-                                                                           + sport.replace("-15",
-                                                                                           "axv")
-                                                                                   .replace("-",
-                                                                                            "").upper()):
-        if elem.tag_name == "li":
-            elem.click()
-    for _ in range(10):
-        inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        #         for line in soup.findAll(["span"], {"class":"SPORT_FOOTBALL"}):
-        #             line.findParent().click()
-        #             print(list(line.stripped_strings))
-        for line in soup.findAll(["a"], {"class": "linkaction"}):
-            if "href" in line.attrs and "sport/" + sport + "/" in line["href"]:
-                if "http" in line["href"]:
-                    url = line["href"]
-                else:
-                    url = "https://www.unibet.fr" + line["href"]
-                if (url not in urls and "competition" not in url
-                        and "compétition" not in url and url.count("/") == 6):
-                    urls.append(url)
-                    competition = url.split(sport + "/")[1].replace("-", " ").replace("matchs", "") \
-                        .replace("/", " ").title()
-                    competitions.append(competition)
-        if urls:
+    for el in selenium_init.DRIVER["unibet"].find_elements_by_class_name("SPORT_"+sport_upper):
+        if "item-arrow" in el.get_attribute("class"):
+            accordion = el
             break
-    list_odds = []
-    for url, competition in zip(urls, competitions):
-        print("\t" + competition)
-        try:
-            odds = parse_unibet(url)
-            list_odds.append(odds)
-        except KeyboardInterrupt:
-            pass
-    return merge_dicts(list_odds)
+    accordion.find_elements_by_xpath(".//*")[0].click()
+    click_next = False
+    for el in accordion.find_elements_by_xpath(".//*"):
+        if "item-arrow" in el.get_attribute("class"):
+            click_next = True
+        elif click_next:
+            el.click()
+            click_next = False
+    inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    parent = soup.select("li.SPORT_"+sport_upper+".item-arrow")[0]
+    region = ""
+    for child in parent.findChildren("a")[2:]:
+        link = url+child["href"]
+        if "javascript" in link:
+            region = child.text
+        else:
+            if child.text not in ["Tout voir", "Compétition"]:
+                if "level2" in child.findParent().findParent()["class"]:
+                    print("\t" + region + " - " +child.text)
+                else:
+                    print("\t" + child.text)
+                try:
+                    odds.append(parse_unibet(link))
+                except sportsbetting.UnavailableCompetitionException:
+                    pass
+    return merge_dicts(odds)
 
 
 def parse_winamax(url=""):
@@ -1163,10 +1225,13 @@ def parse_sport_winamax(sport):
     competitions = []
     list_odds = []
     id_sport = None
+    i = 0
     for line in soup.find_all(['script']):
-        if "PRELOADED_STATE" in line.text:
-            json_text = (line.text.split("var PRELOADED_STATE = ")[1]
+        if "PRELOADED_STATE" in str(line.string):
+            json_text = (line.string.split("var PRELOADED_STATE = ")[1]
                 .split(";var BETTING_CONFIGURATION")[0])
+            if json_text[-1] == ";":
+                json_text = json_text[:-1]
             dict_data = json.loads(json_text)
             for id_sport in dict_data["sports"]:
                 if dict_data["sports"][id_sport]["sportName"] == sport.capitalize():
@@ -1183,11 +1248,13 @@ def parse_sport_winamax(sport):
                     competition = category_name + " - " + tournament_name
                     competitions.append(competition)
                     print("\t" + competition)
+                    i += 1
                     try:
-                        odds = parse_winamax(url)
-                        list_odds.append(odds)
-                    except urllib.error.HTTPError:
-                        print("forbidden")
+                        if i<40:
+                            odds = parse_winamax(url)
+                            list_odds.append(odds)
+                    except sportsbetting.UnavailableCompetitionException:
+                        pass
     return merge_dicts(list_odds)
 
 
@@ -1197,7 +1264,7 @@ def parse_zebet(url=""):
     """
     if not url:
         url = "https://www.zebet.fr/fr/competition/96-ligue_1_conforama"
-    if "http" not in url:
+    if url in sportsbetting.SPORTS:
         return parse_sport_zebet(url)
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
@@ -1236,19 +1303,28 @@ def parse_sport_zebet(sport):
     """
     Retourne les cotes disponibles sur zebet pour un sport donné
     """
-    url = "https://www.zebet.fr/"
+    id_sports = {
+        "football": 13,
+        "tennis": 21,
+        "basketball": 4,
+        "rugby": 12,
+        "handball": 9,
+        "hockey-sur-glace": 10
+    }
+    url = "https://www.zebet.fr"
+    soup = BeautifulSoup(urllib.request.urlopen(url+"/fr/sport/{}-{}".format(id_sports[sport], sport)), features="lxml")
     odds = []
-    soup = BeautifulSoup(urllib.request.urlopen(url + "fr/"), features="lxml")
-    for line in soup.find_all():
-        if ("class" in line.attrs and "menu-sport-cat" in line["class"]
-                and sport in list(line.stripped_strings)[0].lower()):
-            for child in line.findChildren():
-                if "href" in child.attrs and "fr/competition/" in child["href"]:
-                    link = url + child["href"][1:]
-                    try:
-                        odds.append(parse_zebet(link))
-                    except sportsbetting.UnavailableCompetitionException:
-                        pass
+    for line in soup.find_all(attrs={"class":"uk-accordion-wrapper"}):
+        strings = list(line.stripped_strings)
+        country = strings[0]
+        for child in line.findChildren("a"):
+            link = url + child["href"]
+            name = child.text.strip()
+            print("\t"+country+" - "+name)
+            try:
+                odds.append(parse_zebet(link))
+            except sportsbetting.UnavailableCompetitionException:
+                pass
     return merge_dicts(odds)
 
 
