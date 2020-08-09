@@ -509,7 +509,7 @@ def are_same_double(team1, team2):
             or (team2[0] in team1[1] and team2[1] in team1[0]))
 
 
-def get_double_team_tennis(team, site, sport="tennis", only_null=False):
+def get_double_team_tennis(team, sport, site, only_null=False):
     """
     Trouve l'équipe de double la plus proche d'une équipe donnée
     """
