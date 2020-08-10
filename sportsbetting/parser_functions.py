@@ -557,16 +557,22 @@ def parse_netbet(url=""):
         return parse_sport_netbet(url)
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
-    headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
+    headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}
     for i in range(10):
-        request=urllib.request.Request(url,None,headers)
-        response = urllib.request.urlopen(request)
         try:
+            request = urllib.request.Request(url,None,headers)
+            response = urllib.request.urlopen(request, timeout=5)
             soup = BeautifulSoup(response, features="lxml")
             break
         except http.client.IncompleteRead:
-            headers = {"User-Agent":Useragent().random}
+            headers = {"User-Agent": fake_useragent.UserAgent().random}
             print("User agent change")
+        except urllib.error.HTTPError:
+            headers = {"User-Agent": fake_useragent.UserAgent().random}
+            print("User agent change (403)")
+        except urllib.error.URLError:
+            headers = {"User-Agent": fake_useragent.UserAgent().random}
+            print("User agent change (Timeout)")
     else:
         raise sportsbetting.UnavailableSiteException
     if soup.find(attrs={"class": "none"}):
@@ -1128,7 +1134,7 @@ def parse_sport_unibet(sport):
     Retourne les cotes disponibles sur unibet pour un sport donné
     """
     sport_upper = sport.upper()
-    selenium_init.start_selenium("unibet")
+#     selenium_init.start_selenium("unibet")
     url = "https://www.unibet.fr"
     selenium_init.DRIVER["unibet"].get(url+"/sport")
     urls = []
