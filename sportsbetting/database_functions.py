@@ -283,7 +283,7 @@ def add_name_to_db(_id, name, site):
     sport = get_sport_by_id(_id)
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
     id_is_potential_double = "&" in get_formatted_name_by_id(_id)
-    if (is_id_available_for_site(_id, site)
+    if (name and is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
         c.execute("""
         UPDATE names
@@ -302,7 +302,7 @@ def add_name_to_db(_id, name, site):
         WHERE id = {}
         """.format(site, _id))
         sport, formatted_name, name_site = c.fetchone()
-        if name != name_site:
+        if name and name != name_site:
             if sportsbetting.INTERFACE:
                 sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
                                                "Nouvelle donnée : {}\n"
