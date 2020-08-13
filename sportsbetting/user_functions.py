@@ -67,7 +67,7 @@ def parse_competition(competition, sport="football", *sites):
                 try:
                     res_parsing[site] = parse(site, url)
                 except urllib3.exceptions.MaxRetryError:
-                    selenium_init.DRIVER.quit()
+                    selenium_init.DRIVER[site].quit()
                     print("Redémarrage de selenium")
                     selenium_init.start_selenium()
                     res_parsing[site] = parse(site, url)
