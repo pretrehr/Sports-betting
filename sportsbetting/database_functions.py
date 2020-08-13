@@ -264,7 +264,7 @@ def get_sport_by_id(_id):
     try:
         return c.fetchone()[0]
     except TypeError:
-        if _id>0:
+        if int(_id)>0:
             add_id_to_db(_id)
         else:
             add_id_to_db_thesportsdb(_id)
