@@ -301,7 +301,7 @@ def mises_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, freebet=Tru
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(lambda x: cote_boostee(x, boost_selon_cote, freebet, boost), cotes))
-    benefice_max = 0
+    benefice_max = -float("inf")
     meilleures_mises = []
     for i, cote in enumerate(cotes):
         if not taux_boost(cote, boost_selon_cote, boost):
@@ -331,7 +331,7 @@ def gain_gains_nets_boostes(cotes, gain_max, boost_selon_cote=True, freebet=True
     Optimisation de gain pour promotion Betclic de type "Cotes boostees"
     """
     new_cotes = list(map(lambda x: cote_boostee(x, boost_selon_cote, freebet, boost), cotes))
-    benefice_max = 0
+    benefice_max = -float("inf")
     for i, cote in enumerate(cotes):
         mise = gain_max / ((cotes[i] - 1) * taux_boost(cote, boost_selon_cote, boost))
         mises_possibles = mises2(new_cotes, mise, i)
