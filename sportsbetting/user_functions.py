@@ -8,6 +8,7 @@ import copy
 import datetime
 import inspect
 import sqlite3
+import sys
 import termcolor
 import time
 import traceback
@@ -74,7 +75,7 @@ def parse_competition(competition, sport="football", *sites):
                 except urllib3.exceptions.MaxRetryError:
                     selenium_init.DRIVER[site].quit()
                     print("Redémarrage de selenium")
-                    selenium_init.start_selenium()
+                    selenium_init.start_selenium(site)
                     res_parsing[site] = parse(site, url)
         except urllib.error.URLError:
             print("{} non accessible sur {} (délai écoulé)".format(competition, site))

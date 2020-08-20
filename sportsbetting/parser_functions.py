@@ -195,7 +195,6 @@ def parse_betstars(url=""):
         if ("Nous procédons à une mise à jour" in inner_html or
                 "Nous devons procéder à la correction ou à la mise à jour d’un élément"
                 in inner_html):
-            print("Betstars inaccessible")
             raise sportsbetting.UnavailableSiteException
         else:
             print("Aucun pari prématch disponible")
@@ -697,7 +696,7 @@ def parse_parionssport(url=""):
                 except ValueError:
                     date_time = "undefined"
             if "class" in line.attrs and "wpsel-desc" in line["class"]:
-                match = line.text.strip()
+                match = line.text.split(" À")[0].strip()
             if "class" in line.attrs and "buttonLine" in line["class"]:
                 try:
                     odds = list(map(lambda x: float(x.replace(",", ".")),
@@ -1109,7 +1108,7 @@ def parse_unibet(url=""):
                     match = input("Réentrez le nom du match :")
                 if "-" not in match:
                     break
-                reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)'
+                reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)|\([0-7]\-[0-7](\s[0-7]\-[0-7])*\)'
                 if list(re.finditer(reg_exp, match)):  # match tennis live
                     match = match.split("(")[0].strip()
                     if " - " not in match:
@@ -1165,7 +1164,7 @@ def parse_sport_unibet(sport):
         if "javascript" in link:
             region = child.text
         else:
-            if child.text not in ["Tout voir", "Compétition"]:
+            if all(x not in child.text for x in ["Tout voir", "Compétition"]):
                 if "level2" in child.findParent().findParent()["class"]:
                     print("\t" + region + " - " +child.text)
                 else:
