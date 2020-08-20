@@ -50,7 +50,7 @@ except FileNotFoundError:
 parsing_layout = [
     [
         sg.Listbox(sports, size=(20, 6), key="SPORT", enable_events=True),
-        sg.Column([[sg.Listbox((), size=(20, 12), key='COMPETITIONS', select_mode='multiple')],
+        sg.Column([[sg.Listbox((), size=(27, 12), key='COMPETITIONS', select_mode='multiple')],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS")],
                    [sg.Button("Principales compétitions", key="MAIN_COMPETITIONS")]]),
@@ -58,7 +58,8 @@ parsing_layout = [
                    [sg.Button("Tout sélectionner", key="SELECT_ALL")],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
-    [sg.Button('Démarrer', key="START_PARSING"),
+    [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
+     sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
      sg.Col([[sg.Text("Initialisation de selenium en cours", key="TEXT_PARSING", visible=False)]]),
@@ -450,18 +451,21 @@ palier = 0
 while True:
     event, values = window.read(timeout=100)
     try:
-        if not thread.is_alive():
+        if sportsbetting.ABORT or not thread.is_alive():
             pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
             window['PROGRESS_PARSING'].Update(visible=False)
-            window["TEXT_PARSING"].update(visible=False)
+            window["TEXT_PARSING"].update(visible=sportsbetting.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
+            window["STOP_PARSING"].update(visible=False)
+            window["START_PARSING"].update(visible=True)
             for site in sites:
                 window["TEXT_{}_PARSING".format(site)].update(visible=False)
                 window["PROGRESS_{}_PARSING".format(site)].update(visible=False)
-            sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
-                                 fade_in_duration=125)
-            thread = None
-            print(elapsed_time)
+            if not sportsbetting.ABORT:
+                sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
+                                    fade_in_duration=125)
+                thread = None
+                print(elapsed_time)
         else:
             window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
             for site in sites:
@@ -527,6 +531,8 @@ while True:
         window["MATCHES_ODDS"].update([])
         window["MATCHES"].update([])
         if selected_competitions and selected_sites:
+            window["STOP_PARSING"].update(visible=True)
+            window["START_PARSING"].update(visible=False)
             def parse_thread():
                 """
                 :return: Crée un thread pour le parsing des compétitions
@@ -548,6 +554,10 @@ while True:
                 window["TEXT_{}_PARSING".format(site)].update(visible=True)
                 window["PROGRESS_{}_PARSING".format(site)].UpdateBar(0, 100)
                 window["PROGRESS_{}_PARSING".format(site)].update(visible=True)
+    elif event == "STOP_PARSING":
+        window["STOP_PARSING"].update(visible=False)
+        window["TEXT_PARSING"].update("Interruption en cours")
+        sportsbetting.ABORT = True
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
     elif event == "SPORT_STAKE":

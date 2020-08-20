@@ -48,6 +48,8 @@ def parse_competition(competition, sport="football", *sites):
     paris. Si aucun site n'est choisi, le parsing se fait sur l'ensemble des
     bookmakers reconnus par l'ARJEL
     """
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     try:
         _id, formatted_name = get_id_formatted_competition_name(competition, sport)
     except TypeError:
@@ -99,6 +101,9 @@ def parse_competitions_site(competitions, sport, site):
         print("{} non accessible".format(site))
         sportsbetting.SITE_PROGRESS[site] = 100
         return {}
+    except sportsbetting.AbortException:
+        print("Interruption", site)
+        return merge_dict_odds(list_odds)
     return merge_dict_odds(list_odds)
 
 
@@ -136,6 +141,7 @@ def parse_competitions(competitions, sport="football", *sites):
     if selenium_required:
         ThreadPool(6).map(lambda x: selenium_init.DRIVER[x].quit(),
                           selenium_sites.intersection(sites))
+    sportsbetting.ABORT = False
     sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
 
 

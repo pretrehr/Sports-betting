@@ -5,6 +5,7 @@ import collections
 import queue
 import re
 
+
 from fake_useragent import UserAgent
 
 ALL_ODDS_COMBINE = {}
@@ -19,6 +20,7 @@ ODDS_INTERFACE = ""
 EXPECTED_TIME = 0
 INTERFACE = False
 IS_PARSING = False
+ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 
 class UnavailableCompetitionException(Exception):
@@ -37,6 +39,16 @@ class UnavailableSiteException(Exception):
 
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
+
+class AbortException(Exception):
+    """
+    Exception renvoyée lorsqu'on interropt le parsing
+    """
+    
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
 
 
 def grp(pat, txt):
