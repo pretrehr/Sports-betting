@@ -53,7 +53,7 @@ def add_matches_to_db(odds, sport, site):
             teams_not_in_db_site.add(team)
     if not teams_not_in_db_site:
         return
-    print(list(teams_not_in_db_site))
+    print(list(teams_not_in_db_site), site)
     i = 0
     teams_sets.append(set())
     for team in teams_not_in_db_site:
@@ -64,7 +64,7 @@ def add_matches_to_db(odds, sport, site):
                 teams_sets[i].add(team)
         else:
             teams_sets[i].add(team)
-    print(i, list(teams_sets[i]))
+    print(i, list(teams_sets[i]), site)
     if not teams_sets[i]:
         return
     get_close_name_functions = [get_close_name, get_close_name2]
@@ -83,7 +83,7 @@ def add_matches_to_db(odds, sport, site):
                         teams_sets[i].add(team)
                 else:
                     teams_sets[i].add(team)
-            print(i, list(teams_sets[i]))
+            print(i, list(teams_sets[i]), site)
             if not teams_sets[i]:
                 return
             i += 1
@@ -103,7 +103,7 @@ def add_matches_to_db(odds, sport, site):
                             break
                 if not success:
                     teams_sets[i].add(team)
-            print(i, list(teams_sets[i]))
+            print(i, list(teams_sets[i]), site)
             if not teams_sets[i]:
                 return
 

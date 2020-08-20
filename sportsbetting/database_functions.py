@@ -1,10 +1,12 @@
 """
 Fonctions de gestion de la base de données des noms d'équipe/joueur/compétition
 """
+import colorama
 import json
 import os
 import inspect
 import sqlite3
+import termcolor
 import urllib
 import urllib.request
 import urllib.error
@@ -64,7 +66,10 @@ def get_formatted_name(name, site, sport):
     try:
         return res[0][0]
     except IndexError:
-        print(name, site)
+        colorama.init()
+        print(termcolor.colored('{} {}'.format(name, site), 'red'))
+        colorama.Style.RESET_ALL
+        colorama.deinit()
         return "unknown team/player ".upper() + name
 
 
@@ -494,8 +499,6 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
                     return id_away
                 elif id_away == id_opponent:
                     return id_home
-                else:
-                    return
     return
 
 

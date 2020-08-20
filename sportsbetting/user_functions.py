@@ -3,11 +3,14 @@
 Fonctions principales d'assistant de paris
 """
 
+import colorama
 import copy
 import datetime
 import inspect
 import sqlite3
+import termcolor
 import time
+import traceback
 import urllib
 import urllib.error
 import urllib.request
@@ -136,11 +139,19 @@ def parse_competitions(competitions, sport="football", *sites):
                 import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
                                     + "/a-ed" + str(id_competition))
     sportsbetting.IS_PARSING = True
-    list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+    list_odds = []
+    try:
+        list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+    except Exception:
+        print(traceback.format_exc(), file=sys.stderr)
     sportsbetting.IS_PARSING = False
     if selenium_required:
         ThreadPool(6).map(lambda x: selenium_init.DRIVER[x].quit(),
                           selenium_sites.intersection(sites))
+        colorama.init()
+        print(termcolor.colored('Drivers closed', 'green'))
+        colorama.Style.RESET_ALL
+        colorama.deinit()
     sportsbetting.ABORT = False
     sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
 
