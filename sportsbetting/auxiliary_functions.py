@@ -362,7 +362,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         for site in sites:
             odd = 1
             for i, match in zip(combinaison, matches):
-                if i!=-1:
+                if i!=float("inf"):
                     if site in sportsbetting.ODDS[sport][match]["odds"].keys():
                         odd *= sportsbetting.ODDS[sport][match]["odds"][site][i]
                     else:
@@ -370,6 +370,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             if odd > best_odd:
                 best_odd = odd
                 best_site = site
+#         print(best_odd, best_site)
         return best_odd, best_site
     odds = {}
     for match in matches:
@@ -379,7 +380,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     best_sites = []
     best_gain = -mise
     best_i = -1
-    for combinaisons in combine_reduit(len(matches), combinaison_boostee, sport):
+    for combinaisons in combine_reduit_rec(combinaison_boostee, sport):
         cotes = []
         sites = []
         for i, combinaison in enumerate(combinaisons):
@@ -406,7 +407,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     mises = mises2(best_cotes, mise, best_i)
     out = {}
     def get_issue(match, i, sport):
-        if i==-1:
+        if i==float("inf"):
             return
         elif sport in ["basketball", "tennis"]:
             return match.split(" - ")[i]
@@ -432,7 +433,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     print()
     print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
     for combine, mise, cote, site in zip(best_combinaison, mises, best_cotes, best_sites):
-        names = [opponents_match[i] if i!=-1 else "" for match, i, opponents_match in zip(matches, combine, opponents)]
+        names = [opponents_match[i] if i!=float("inf") else "" for match, i, opponents_match in zip(matches, combine, opponents)]
         name_combine = " / ".join(x for x in names if x)
         diff = nb_chars - len(name_combine)
         sites_bet_combinaison = {site:{"mise":round(mise, 2), "cote":round(cote, 2)}, "total":round(mise*cote, 2)}
@@ -583,7 +584,7 @@ def combine_reduit(nb_matches, combi_to_keep, sport):
             issue = combi_to_keep_aux[:i]
             for j in base_issues:
                 if j != e:
-                    issues.append(issue+[j]+[-1]*(nb_matches-len(issue)-1))
+                    issues.append(issue+[j]+[float("inf")]*(nb_matches-len(issue)-1))
         return issues
     def change_order(original, order):
         return [original[i] for i in order]
@@ -594,6 +595,31 @@ def combine_reduit(nb_matches, combi_to_keep, sport):
                                         ):
         all_issues.append(sorted(list(map(lambda x:change_order(x, order), get_issues(list(combi))))))
     return all_issues
+
+def combine_reduit_rec(combi_to_keep, sport):
+    n = len(combi_to_keep)
+    if n <= 1:
+        return [[[i] for i in range(get_nb_issues(sport))]]
+    else:
+        out = []
+        for i in range(n):
+            ref_combi = combi_to_keep[:i]+combi_to_keep[i+1:]
+            combines_partiels = combine_reduit_rec(ref_combi, sport)
+            for list_combi in combines_partiels:
+                new_combi = []
+                for combi in list_combi:
+                    if combi != ref_combi:
+                        copy_combi = copy.deepcopy(combi)
+                        copy_combi.insert(i, float("inf"))
+                        new_combi.append(copy_combi)
+                    else:
+                        for j in range(get_nb_issues(sport)):
+                            copy_combi = copy.deepcopy(combi)
+                            copy_combi.insert(i, j)
+                            new_combi.append(copy_combi)
+                out.append(new_combi)
+        return out
+            
 
 def get_nb_issues(sport):
     return 2+(sport not in ["basketball", "tennis"])
