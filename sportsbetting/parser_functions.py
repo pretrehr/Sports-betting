@@ -962,6 +962,8 @@ def parse_pmu(url=""):
     Retourne les cotes disponibles sur pmu
     """
     if "http" not in url:
+        if url in ["basket", "hockey-sur-glace"]:
+            return merge_dicts([parse_sport_pmu(url+"-us"), parse_sport_pmu(url+"-eu")])
         return parse_sport_pmu(url)
     if not url:
         url = "https://paris-sportifs.pmu.fr/pari/competition/169/football/ligue-1-conforama"
@@ -998,7 +1000,7 @@ def parse_pmu(url=""):
                             match_odds_hash[match] = {}
                             match_odds_hash[match]['odds'] = {"pmu": odds}
                             match_odds_hash[match]['date'] = date_time
-                        elif "hockey" in url:
+                        elif "hockey-sur-glace-us" in url:
                             handicap = True
                             odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
                                                         + line.parent["href"])[1]
