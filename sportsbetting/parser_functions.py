@@ -1088,7 +1088,7 @@ def parse_unibet(url=""):
     for _ in range(10):
         inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
-        if "Aucun marché trouvé." in str(soup):
+        if any(x in str(soup) for x in ["La page à laquelle vous souhaitez accéder n'existe plus.", "Aucun marché trouvé."]):
             raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
