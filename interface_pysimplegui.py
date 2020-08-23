@@ -267,7 +267,8 @@ stakes_layout = [
     [sg.Text("Site\t\t"), sg.Text("Mise"), sg.Text("Cote minimale"),
      sg.Button("Retirer mise", key="REMOVE_STAKES"), sg.Text("Nombre de matches"),
      sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_STAKES"),
-     sg.Combo(sports, key="SPORT_STAKES")],
+     sg.Text("Sport"),
+     sg.Combo(sports, default_value="football", key="SPORT_STAKES")],
     [sg.Col([[sg.Combo(sites, key="SITE_STAKES_0")]]),
      sg.Col([[sg.Input(key="STAKE_STAKES_0", size=(6, 1))]]),
      sg.Col([[sg.Input(key="ODD_STAKES_0", size=(6, 1))]]),
@@ -343,7 +344,8 @@ options_gagnant = [[sg.Text("Options")],
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MIN_GAGNANT")],
                    [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_GAGNANT_BOOL"),
                     sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_GAGNANT"),
-                    sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")]]
+                    sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")],
+                   [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")]]
 column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
@@ -353,10 +355,11 @@ gagnant_layout = [
      sg.Column(column_gagnant),
      sg.Column(options_gagnant)],
     [sg.Button("Calculer", key="BEST_MATCH_GAGNANT")],
-    [sg.Text("", size=(30, 1), key="MATCH_GAGNANT"),
-     sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
-    [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
-              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+    [sg.Text("", size=(60, 1), key="MATCH_GAGNANT")],
+    [sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
+    [sg.Column([[sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
+              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12))],
+     [sg.Button("Voir les cotes combinées", key="ODDS_COMBINE_GAGNANT", visible=False)]]),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_GAGNANT", visible=False)],
@@ -574,7 +577,7 @@ while True:
         best_match_cashback_interface(window, values)
     elif event == "BEST_MATCHES_COMBINE":
         sportsbetting.ODDS_INTERFACE = best_matches_combine_interface(window, values)
-    elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS", "ODDS_COMBI_OPT"]:
+    elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS", "ODDS_COMBI_OPT", "ODDS_COMBINE_GAGNANT"]:
         window_odds_active = True
         table = odds_table_combine(sportsbetting.ODDS_INTERFACE)
         layout_odds = [[sg.Table(table[1:], headings=table[0], size=(None, 20))]]

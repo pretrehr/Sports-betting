@@ -436,10 +436,11 @@ def best_match_pari_gagnant_interface(window, values):
         if values["DATE_MAX_GAGNANT_BOOL"]:
             date_max = values["DATE_MAX_GAGNANT"]
             time_max = values["TIME_MAX_GAGNANT"].replace(":", "h")
+        nb_matches_combine = values["NB_MATCHES_GAGNANT"]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
         best_match_pari_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min,
-                                time_min)
+                                time_min, nb_matches_combine)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)
@@ -447,6 +448,7 @@ def best_match_pari_gagnant_interface(window, values):
             window["MATCH_GAGNANT"].update("Aucun match trouvé")
             window["DATE_GAGNANT"].update("")
             window["ODDS_GAGNANT"].update(visible=False)
+            window["ODDS_COMBINE_GAGNANT"].update(visible=False)
             window["RESULT_GAGNANT"].update(visible=False)
             window["TEXT_GAGNANT"].update(visible=False)
             for i in range(5):
@@ -455,12 +457,18 @@ def best_match_pari_gagnant_interface(window, values):
         else:
             window["MATCH_GAGNANT"].update(match)
             window["DATE_GAGNANT"].update(date)
-            window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
+            if nb_matches_combine > 1:
+                window["ODDS_GAGNANT"].update(visible=False)
+                window["ODDS_COMBINE_GAGNANT"].update(visible=True)
+            else:
+                window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
+                window["ODDS_COMBINE_GAGNANT"].update(visible=False)
             window["RESULT_GAGNANT"].update(stakes(what_was_printed), visible=True)
             window["TEXT_GAGNANT"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_GAGNANT" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_GAGNANT" + str(i)].update(elem[1], visible=True)
+            sportsbetting.ODDS_INTERFACE = what_was_printed
         buffer.close()
     except IndexError:
         pass

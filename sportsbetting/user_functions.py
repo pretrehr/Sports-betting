@@ -353,16 +353,16 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_m
 
 def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
                             date_max=None, time_max=None, date_min=None,
-                            time_min=None):
+                            time_min=None, nb_matches_combine=1):
     """
     Retourne le meilleur match sur lequel miser lorsqu'on doit gagner un pari à
     une cote donnée sur un site donné.
     """
     stakes = []
     n = 2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])
-    for _ in range(n):
+    for _ in range(n*nb_matches_combine):
         stakes.append([bet, site, minimum_odd])
-    best_match_stakes_to_bet(stakes, 1, sport, date_max, time_max)
+    best_match_stakes_to_bet(stakes, nb_matches_combine, sport, date_max, time_max, True)
 
 
 def best_match_freebet(site, freebet, sport="football", live=False, date_max=None, time_max=None,
@@ -542,7 +542,7 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
                     time_min, True, nb_matches)
 
 
-def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=None, time_max=None):
+def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=None, time_max=None, identical_stakes=False):
     second_sites = {stake[1] for stake in stakes}
     main_sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                   'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
@@ -601,6 +601,8 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                 best_profit = profit
                 best_combine = combine
                 best_bets = defined_bets_temp
+            if identical_stakes:
+                break
     if best_combine:
         best_match_combine = " / ".join([match[0] for match in best_combine])
         odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
@@ -610,9 +612,9 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                 del odds_best_match["odds"][site]
         print(best_match_combine)
         pprint(odds_best_match, compact=1)
-        print("Plus-value =", best_profit)
-        print("Gain référence =", best_bets[0])
-        print("Somme des mises =", np.sum(best_bets[1]))
+        print("Plus-value =", round(best_profit, 2))
+        print("Gain référence =", round(best_bets[0], 2))
+        print("Somme des mises =", round(np.sum(best_bets[1]), 2))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
                                all_odds_combine[best_match_combine]["odds"], sport)
     else:
