@@ -77,6 +77,9 @@ def parse_competition(competition, sport="football", *sites):
                     print("Redémarrage de selenium")
                     selenium_init.start_selenium(site)
                     res_parsing[site] = parse(site, url)
+                except sqlite3.OperationalError:
+                    print("Erreur dans la base de données, redémarrage en cours")
+                    res_parsing[site] = parse(site, url)
         except urllib.error.URLError:
             print("{} non accessible sur {} (délai écoulé)".format(competition, site))
         except KeyboardInterrupt:
