@@ -1203,20 +1203,21 @@ def parse_winamax(url=""):
             if json_text[-1] == ";":
                 json_text = json_text[:-1]
             dict_matches = json.loads(json_text)
-            for match in dict_matches["matches"].values():
-                if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
-                        and match['sportId'] == sport_id):
-                    try:
-                        match_name = match["title"]
-                        date_time = datetime.datetime.fromtimestamp(match["matchStart"])
-                        main_bet_id = match["mainBetId"]
-                        odds_ids = dict_matches["bets"][str(main_bet_id)]["outcomes"]
-                        odds = [dict_matches["odds"][str(x)] for x in odds_ids]
-                        match_odds_hash[match_name] = {}
-                        match_odds_hash[match_name]['odds'] = {"winamax": odds}
-                        match_odds_hash[match_name]['date'] = date_time
-                    except KeyError:
-                        pass
+            if "matches" in dict_matches:
+                for match in dict_matches["matches"].values():
+                    if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
+                            and match['sportId'] == sport_id):
+                        try:
+                            match_name = match["title"]
+                            date_time = datetime.datetime.fromtimestamp(match["matchStart"])
+                            main_bet_id = match["mainBetId"]
+                            odds_ids = dict_matches["bets"][str(main_bet_id)]["outcomes"]
+                            odds = [dict_matches["odds"][str(x)] for x in odds_ids]
+                            match_odds_hash[match_name] = {}
+                            match_odds_hash[match_name]['odds'] = {"winamax": odds}
+                            match_odds_hash[match_name]['date'] = date_time
+                        except KeyError:
+                            pass
             if not match_odds_hash:
                 raise sportsbetting.UnavailableCompetitionException
             return match_odds_hash
