@@ -2,11 +2,13 @@
 Initialisation de selenium
 """
 
+import colorama
 import os
 import selenium
 import selenium.webdriver
 import selenium.common
 import sportsbetting
+import termcolor
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 DRIVER = {}
@@ -38,3 +40,7 @@ def start_selenium(site):
         except selenium.common.exceptions.WebDriverException:
             print("Wrong permissions, please make chromedriver executable")
             exit()
+    colorama.init()
+    print(termcolor.colored('Driver started for {}'.format(site), 'green'))
+    colorama.Style.RESET_ALL
+    colorama.deinit()
