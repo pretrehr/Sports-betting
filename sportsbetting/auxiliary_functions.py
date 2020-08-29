@@ -343,7 +343,7 @@ def get_future_opponents(name, matches):
         if name in opponents:
             try:
                 opponents.remove(name)
-                future_opponents.append(opponents[0])
+                future_opponents.append(opponents[0].strip())
                 future_matches.append(match)
             except ValueError:
                 pass
