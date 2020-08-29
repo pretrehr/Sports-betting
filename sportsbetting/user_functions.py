@@ -107,10 +107,10 @@ def parse_competitions_site(competitions, sport, site):
     except sportsbetting.UnavailableSiteException:
         print("{} non accessible".format(site))
         sportsbetting.SITE_PROGRESS[site] = 100
-        return {}
     except sportsbetting.AbortException:
         print("Interruption", site)
-        return merge_dict_odds(list_odds)
+    except sqlite3.OperationalError:
+        print("Database is locked")
     return merge_dict_odds(list_odds)
 
 
@@ -128,8 +128,8 @@ def parse_competitions(competitions, sport="football", *sites):
     sportsbetting.SELENIUM_REQUIRED = selenium_required
     sites = [site for site in sites_order if site in sites]
     if selenium_required:
-        ThreadPool(6).map(lambda x: selenium_init.start_selenium(x),
-                          selenium_sites.intersection(sites))
+        for site in selenium_sites.intersection(sites):
+            selenium_init.start_selenium(site)
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
@@ -146,6 +146,7 @@ def parse_competitions(competitions, sport="football", *sites):
     list_odds = []
     try:
         list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+        sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
     sportsbetting.IS_PARSING = False
@@ -157,7 +158,6 @@ def parse_competitions(competitions, sport="football", *sites):
         colorama.Style.RESET_ALL
         colorama.deinit()
     sportsbetting.ABORT = False
-    sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
 
 
 def parse_football(*sites):
