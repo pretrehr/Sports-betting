@@ -541,8 +541,12 @@ def get_double_team_tennis(team, sport, site, only_null=False):
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["betclic"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
-        else:  # if site in ["zebet"]:
-            players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
+        elif site in ["zebet"]:
+            if "." in team:
+                players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
+            else:
+                players = list(map(lambda x: x.split(" ")[0], complete_names))
+        players = list(map(lambda x:x.strip(), players))
         conn = sqlite3.connect(PATH_DB)
         c = conn.cursor()
         if only_null:
