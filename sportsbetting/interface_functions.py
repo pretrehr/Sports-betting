@@ -110,7 +110,7 @@ def odds_table_combine(result):
     combinaisons = ["Combinaison"] + combinaisons
     table.append(combinaisons)
     for key, value in odds.items():
-        table.append([key] + list(map(str, value)))
+        table.append([key] + list(map(lambda x:str(round(x, 3)), value)))
     return np.transpose(table).tolist()
 
 
