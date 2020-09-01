@@ -458,6 +458,8 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
     """
     url = "http://www.comparateur-de-cotes.fr/comparateur/football/Nice-td" + str(id_opponent)
     date_match = matches[name_site_match]["date"]
+    if date_match == "undefined":
+        date_match = datetime.datetime.today()
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     except urllib.error.HTTPError:
@@ -520,6 +522,8 @@ def get_double_team_tennis(team, sport, site, only_null=False):
         separator_team = "-"
     elif site in ["betclic", "winamax", "pmu", "zebet"]:
         separator_team = " / "
+        if " / " not in team: # pour zebet (varie entre / et -)
+            separator_team = "-"
     elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
     else:  # if site in ["betstars"]:
@@ -530,7 +534,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
         elif site in ["netbet", "france_pari", "winamax"]:
             players = list(map(lambda x: x.split(".")[-1], complete_names))
-        elif site in ["joa", "parionssport"]:
+        elif site in ["parionssport"]:
             players = complete_names
         elif site in ["bwin"]:
             players = list(map(lambda x: x.split(". ")[-1], complete_names))
@@ -541,11 +545,11 @@ def get_double_team_tennis(team, sport, site, only_null=False):
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["betclic"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
-        elif site in ["zebet"]:
+        elif site in ["zebet", "joa"]:
             if "." in team:
                 players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
             else:
-                players = list(map(lambda x: x.split(" ")[0], complete_names))
+                players = list(map(lambda x: x.split(" ")[0].strip(), complete_names))
         players = list(map(lambda x:x.strip(), players))
         conn = sqlite3.connect(PATH_DB)
         c = conn.cursor()

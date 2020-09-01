@@ -600,7 +600,7 @@ def parse_netbet(url=""):
             except ValueError:
                 date_time = "undefined"
         elif "class" in line.attrs and "nb-event_actors" in line["class"]:
-            match = " - ".join(list(line.stripped_strings))
+            match = " - ".join(list(map(lambda x: x.replace(" - ", "-"), line.stripped_strings)))
             reg_exp = r'\[[0-7]\/[0-7]\s?([0-7]\/[0-7]\s?)*\]|\[[0-7]\-[0-7]\s?([0-7]\-[0-7]\s?)*\]'
             if list(re.finditer(reg_exp, match)):  # match tennis live
                 match = match.split("[")[0].strip()
