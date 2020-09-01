@@ -127,9 +127,11 @@ def parse_competitions(competitions, sport="football", *sites):
                          and (selenium_sites.intersection(sites) or not sites))
     sportsbetting.SELENIUM_REQUIRED = selenium_required
     sites = [site for site in sites_order if site in sites]
+    sportsbetting.PROGRESS = 0
     if selenium_required:
         for site in selenium_sites.intersection(sites):
             selenium_init.start_selenium(site)
+            sportsbetting.PROGRESS += 100/len(selenium_sites.intersection(sites))
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
@@ -142,9 +144,9 @@ def parse_competitions(competitions, sport="football", *sites):
             else:
                 import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
                                     + "/a-ed" + str(id_competition))
-    sportsbetting.IS_PARSING = True
     list_odds = []
     try:
+        sportsbetting.IS_PARSING = True
         list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
         sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:

@@ -479,7 +479,7 @@ while True:
                 start_parsing = now
             elapsed_time = now - start_time
             elapsed_time_parsing = now - start_parsing
-            if sportsbetting.PROGRESS > palier:
+            if sportsbetting.IS_PARSING and sportsbetting.PROGRESS > palier:
                 palier += 5
                 sportsbetting.EXPECTED_TIME = elapsed_time * (100 / sportsbetting.PROGRESS - 1)
                 time_to_display = sportsbetting.EXPECTED_TIME
@@ -495,7 +495,7 @@ while True:
             # sportsbetting.EXPECTED_TIME = int(max(0, sportsbetting.EXPECTED_TIME - 0.1))
             m, s = divmod(max(0, int(time_to_display)), 60)
             window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
-            if 100 - sportsbetting.PROGRESS < 1e-6:
+            if sportsbetting.IS_PARSING and 100 - sportsbetting.PROGRESS < 1e-6:
                 window["TEXT_PARSING"].update("Finalisation")
                 window["REMAINING_TIME_PARSING"].update(visible=False)
     except AttributeError:
