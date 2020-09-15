@@ -437,7 +437,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         names = [opponents_match[i] if i!=float("inf") else "" for match, i, opponents_match in zip(matches, combine, opponents)]
         name_combine = " / ".join(x for x in names if x)
         diff = nb_chars - len(name_combine)
-        sites_bet_combinaison = {site:{"mise":round(mise, 2), "cote":round(cote, 2)}, "total":round(mise*cote, 2)}
+        sites_bet_combinaison = {site:{"mise":round(mise, 2), "cote":round(cote, 2)}, "total":round(round(mise, 2)*cote, 2)}
         print(name_combine + " " * diff + "\t", sites_bet_combinaison)
 
 
