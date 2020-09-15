@@ -790,7 +790,8 @@ def add_names_to_db(competition, sport="football", *sites):
     selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
                          and (selenium_sites.intersection(sites) or not sites))
     if selenium_required:
-        selenium_init.start_selenium()
+        for site in selenium_sites.intersection(sites):
+            selenium_init.start_selenium(site)
     for site in sites:
         print(site)
         url = get_competition_url(competition, sport, site)
@@ -814,7 +815,8 @@ def add_names_to_db(competition, sport="football", *sites):
             except urllib.error.HTTPError:
                 pass
     if selenium_required:
-        selenium_init.DRIVER.quit()
+        for site in selenium_sites.intersection(sites):
+            selenium_init.DRIVER[site].quit()
 
 
 def update_all_database(start="", *sites):
