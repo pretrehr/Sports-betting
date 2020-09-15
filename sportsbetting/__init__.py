@@ -59,4 +59,7 @@ def grp(pat, txt):
 
 ua = UserAgent()
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
-chromedriver_autoinstaller.install()
+try:
+    chromedriver_autoinstaller.install()
+except IndexError:
+    pass
