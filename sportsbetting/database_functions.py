@@ -373,10 +373,12 @@ def get_close_name(name, sport, site, only_null=True):
         c.execute("""
         SELECT id, name FROM names WHERE sport='{}'
         """.format(sport))
+    results = []
     for line in c.fetchall():
         if (unidecode.unidecode(name.lower()) in unidecode.unidecode(line[1].lower())
                 or unidecode.unidecode(line[1].lower()) in unidecode.unidecode(name.lower())):
-            return line
+            results.append(line)
+    return results
 
 
 def get_close_name2(name, sport, site, only_null=True):
@@ -384,6 +386,7 @@ def get_close_name2(name, sport, site, only_null=True):
     Cherche un nom similaire dans la base de données en ignorant tous les sigles. Par exemple,
     "Paris SG" devient "Paris"
     """
+    name = name.split("(")[0].strip()
     split_name = re.split('[ .\-,]', name)
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
@@ -398,17 +401,21 @@ def get_close_name2(name, sport, site, only_null=True):
         c.execute("""
         SELECT id, name FROM names WHERE sport='{}'
         """.format(sport))
+    results = []
     for line in c.fetchall():
-        split_line = re.split('[ .\-,]', line[1])
+        string_line = line[1].split("(")[0].strip()
+        split_line = re.split('[ .\-,]', string_line)
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
                                                                     or string != string.upper())])
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
                 or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
                                                                                    .lower())):
-            return line
+            results.append(line)
+            continue
         set_line = set(map(lambda x: unidecode.unidecode(x.lower()), split_line))
         if set_line.issubset(set_name):
-            return line
+            results.append(line)
+    return results
 
 
 def get_close_name3(name, sport, site, only_null=True):
@@ -416,6 +423,7 @@ def get_close_name3(name, sport, site, only_null=True):
     Cherche un nom proche dans la base de données si le nom est de la forme "Initiale prénom + Nom"
     Par exemple "R. Nadal" renverra "Rafael Nadal"
     """
+    results = []
     if "." in name:
         split_name = name.split("(")[0].split(".")
         if len(split_name) == 2 and len(split_name[0]) == 1:
@@ -434,7 +442,8 @@ def get_close_name3(name, sport, site, only_null=True):
                 """.format(sport))
             for line in c.fetchall():
                 if re.match(reg_exp, line[1]):
-                    return line
+                    results.append(line)
+    return results
 
 
 def get_id_by_site(name, sport, site):
@@ -528,6 +537,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
         separator_team = "/"
     else:  # if site in ["betstars"]:
         separator_team = " & "
+    results = []
     if separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
         if site in ["betstars", "pasinobet", "pmu"]:
@@ -564,7 +574,8 @@ def get_double_team_tennis(team, sport, site, only_null=False):
         for line in c.fetchall():
             compared_players = unidecode.unidecode(line[1]).lower().split(" & ")
             if are_same_double(players, compared_players):
-                return line
+                results.append(line)
+    return results
 
 
 def get_all_competitions(sport):
@@ -698,3 +709,48 @@ def get_main_competitions(sport):
             if "Coupes nationales" in str(line) and names:
                 break
     return names
+
+def get_google_results(query):
+    for site in googlesearch.search(query+"site:wikipedia.org", lang="fr", num=1, stop=1, pause=2):
+        return site
+
+def check_consistency(team1, team2):
+    return get_google_results(team1) != get_google_results(team2)
+
+
+def get_all_names_from_id(_id):
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT * FROM names WHERE id="{}"
+    """.format(_id))
+    results = c.fetchall()
+    sport, name = results[0][1:3]
+    names_site = set(item for sublist in results for item in sublist[3:] if item)
+    for name_site in names_site:
+        yield sport, name, name_site
+
+
+def add_id_to_new_db(_id):
+    conn = sqlite3.connect(PATH_DB)
+    for sport, name, name_site in get_all_names_from_id(_id):
+        c = conn.cursor()
+        c.execute("""
+        INSERT INTO names_v2 (id, sport, name, name_site)
+        VALUES ({}, "{}", "{}", "{}")
+        """.format(_id, sport, name, name_site))
+    conn.commit()
+
+def get_all_ids():
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT id FROM names
+    """)
+    for id_ in sorted(list(set(map(lambda x: x[0], c.fetchall())))):
+        yield id_
+
+def create_new_db():
+    for _id in get_all_ids():
+        if _id>133300:
+            add_id_to_new_db(_id)

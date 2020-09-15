@@ -76,11 +76,12 @@ def add_matches_to_db(odds, sport, site):
             i += 1
             teams_sets.append(set())
             for team in teams_sets[i - 1]:
-                line = get_close_name_function(team, sport, site, only_null)
-                if line:
-                    success = add_name_to_db(line[0], team, site)
-                    if not success:
-                        teams_sets[i].add(team)
+                lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
+                if lines:
+                    for line in lines:
+                        success = add_name_to_db(line[0], team, site)
+                        if not success:
+                            teams_sets[i].add(team)
                 else:
                     teams_sets[i].add(team)
             print(i, list(teams_sets[i]), site)
