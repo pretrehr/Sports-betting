@@ -28,20 +28,8 @@ def start_selenium(site, headless=True):
     if headless:
         options.add_argument("--headless")
     options.add_argument("--disable-extensions")
-    try:
-        print(PATH_DRIVER)
-        print("Version ancienne Windows")
-        DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER + "_older.exe", options=options)
-    except selenium.common.exceptions.WebDriverException:
-        try:
-            print("Version Unix")
-            DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER, options=options)
-        except OSError:
-            print("Version Windows")
-            DRIVER[site] = selenium.webdriver.Chrome(PATH_DRIVER + ".exe", options=options)
-        except selenium.common.exceptions.WebDriverException:
-            print("Wrong permissions, please make chromedriver executable")
-            exit()
+    print(PATH_DRIVER)
+    DRIVER[site] = selenium.webdriver.Chrome(options=options)
     colorama.init()
     print(termcolor.colored('Driver started for {}'.format(site), 'green'))
     colorama.Style.RESET_ALL

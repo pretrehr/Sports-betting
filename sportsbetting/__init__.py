@@ -1,6 +1,7 @@
 """
 initialisation du module
 """
+import chromedriver_autoinstaller
 import collections
 import queue
 import re
@@ -58,3 +59,4 @@ def grp(pat, txt):
 
 ua = UserAgent()
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
+chromedriver_autoinstaller.install()
