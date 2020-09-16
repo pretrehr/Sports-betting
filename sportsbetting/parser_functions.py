@@ -841,7 +841,6 @@ def parse_parionssport(url=""):
         url = "https://www.enligne.parionssport.fdj.fr/paris-football/france/ligue-1-conforama"
     is_sport_page = "paris-" in url.split("/")[-1] and "?" not in url
     is_basket = "basket" in url
-    selenium_init.start_selenium("parionssport")
     selenium_init.DRIVER["parionssport"].get(url)
     if (selenium_init.DRIVER["parionssport"].current_url
             == "https://www.enligne.parionssport.fdj.fr/"):

@@ -47,6 +47,7 @@ except FileNotFoundError:
 
 
 # All the stuff inside your window.
+sg.set_options(enable_treeview_869_patch=False)
 parsing_layout = [
     [
         sg.Listbox(sports, size=(20, 6), key="SPORT", enable_events=True),
@@ -456,24 +457,24 @@ while True:
     try:
         if sportsbetting.ABORT or not thread.is_alive():
             pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
-            window['PROGRESS_PARSING'].Update(visible=False)
+            window['PROGRESS_PARSING'].update(0, 100, visible=False)
             window["TEXT_PARSING"].update(visible=sportsbetting.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
             window["STOP_PARSING"].update(visible=False)
             window["START_PARSING"].update(visible=True)
             for site in sites:
                 window["TEXT_{}_PARSING".format(site)].update(visible=False)
-                window["PROGRESS_{}_PARSING".format(site)].update(visible=False)
+                window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sportsbetting.ABORT:
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
                 print(elapsed_time)
         else:
-            window['PROGRESS_PARSING'].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
+            window['PROGRESS_PARSING'].update(ceil(sportsbetting.PROGRESS), 100)
             for site in sites:
                 (window["PROGRESS_{}_PARSING".format(site)]
-                 .UpdateBar(ceil(sportsbetting.SITE_PROGRESS[site]), 100))
+                 .update(ceil(sportsbetting.SITE_PROGRESS[site]), 100))
             now = time.time()
             if sportsbetting.IS_PARSING and not start_parsing:
                 start_parsing = now
@@ -502,10 +503,10 @@ while True:
         pass
     try:
         if not thread_stakes.is_alive():
-            window["PROGRESS_STAKES"].update(visible=False)
+            window["PROGRESS_STAKES"].update(0, 100, visible=False)
             thread_stakes = None
         else:
-            window["PROGRESS_STAKES"].UpdateBar(ceil(sportsbetting.PROGRESS), 100)
+            window["PROGRESS_STAKES"].update(ceil(sportsbetting.PROGRESS), 100)
     except AttributeError:
         pass
     try:  # see if something has been posted to Queue
@@ -549,14 +550,13 @@ while True:
             start_time = time.time()
             start_parsing = 0
             palier = 20
-            window['PROGRESS_PARSING'].Update(visible=True)
+            window['PROGRESS_PARSING'].update(0, 100, visible=True)
             window["TEXT_PARSING"].update(visible=True)
             window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME)
             sportsbetting.SITE_PROGRESS = collections.defaultdict(int)
             for site in selected_sites:
                 window["TEXT_{}_PARSING".format(site)].update(visible=True)
-                window["PROGRESS_{}_PARSING".format(site)].UpdateBar(0, 100)
-                window["PROGRESS_{}_PARSING".format(site)].update(visible=True)
+                window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=True)
     elif event == "STOP_PARSING":
         window["STOP_PARSING"].update(visible=False)
         window["TEXT_PARSING"].update("Interruption en cours")
