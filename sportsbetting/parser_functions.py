@@ -1445,7 +1445,8 @@ def parse_and_add_to_db(site, sport, competition):
     else:
         return
     odds = parse(site, url)
-    return add_matches_to_db(odds, sport, site)
+    id_competition = get_competition_id(competition, sport)
+    return add_matches_to_db(odds, sport, site, id_competition)
 
 
 def parse_buteurs_betclic(url):

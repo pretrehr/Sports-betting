@@ -14,7 +14,8 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
                                               get_close_name3, get_double_team_tennis,
-                                              get_id_by_opponent_thesportsdb)
+                                              get_id_by_opponent_thesportsdb, get_competition_id,
+                                              is_matching_next_match)
 
 from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
 
@@ -34,7 +35,7 @@ def valid_odds(all_odds, sport):
     return copy_all_odds
 
 
-def add_matches_to_db(odds, sport, site):
+def add_matches_to_db(odds, sport, site, id_competition):
     """
     :param odds: Cotes des matches
     :type odds: dict[str,int]
@@ -59,7 +60,8 @@ def add_matches_to_db(odds, sport, site):
     for team in teams_not_in_db_site:
         line = is_in_db(team, sport, site)
         if line:
-            success = add_name_to_db(line[0], team, site)
+            check = not is_matching_next_match(id_competition, line[0], team, odds)
+            success = add_name_to_db(line[0], team, site, check)
             if not success:
                 teams_sets[i].add(team)
         else:
@@ -79,7 +81,8 @@ def add_matches_to_db(odds, sport, site):
                 lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
                 if lines:
                     for line in lines:
-                        success = add_name_to_db(line[0], team, site)
+                        check = not is_matching_next_match(id_competition, line[0], team, odds)
+                        success = add_name_to_db(line[0], team, site, check)
                         if not success:
                             teams_sets[i].add(team)
                 else:
@@ -109,13 +112,14 @@ def add_matches_to_db(odds, sport, site):
                 return
 
 
-def adapt_names(odds, site, sport):
+def adapt_names(odds, site, sport, competition):
     """
     Uniformisation des noms d'équipe/joueur d'un site donné conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient "Marseille - Paris SG"
     """
     new_dict = {}
-    add_matches_to_db(odds, sport, site)
+    id_competition = get_competition_id(competition, sport)
+    add_matches_to_db(odds, sport, site, id_competition)
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
                                         match.split(" - "))))
@@ -124,14 +128,14 @@ def adapt_names(odds, site, sport):
     return new_dict
 
 
-def format_team_names(dict_odds, sport):
+def format_team_names(dict_odds, sport, competition):
     """
     Uniformisation des noms d'équipe/joueur entre tous les sites conformément aux noms disponibles
     sur comparateur-de-cotes.fr. Par exemple, le match "OM - PSG" devient "Marseille - Paris SG"
     """
     list_odds = []
     for site in dict_odds:
-        list_odds.append(adapt_names(dict_odds[site], site, sport))
+        list_odds.append(adapt_names(dict_odds[site], site, sport, competition))
     return list_odds
 
 

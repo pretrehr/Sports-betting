@@ -88,7 +88,7 @@ def parse_competition(competition, sport="football", *sites):
             print("Element non trouvé par selenium ({} sur {})".format(competition, site))
         except sportsbetting.UnavailableCompetitionException:
             print("{} non disponible sur {}".format(competition, site))
-    res = format_team_names(res_parsing, sport)
+    res = format_team_names(res_parsing, sport, competition)
     out = valid_odds(merge_dict_odds(res), sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
         return out

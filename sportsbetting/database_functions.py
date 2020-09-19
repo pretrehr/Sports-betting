@@ -279,7 +279,7 @@ def get_sport_by_id(_id):
         return c.fetchone()[0]
 
 
-def add_name_to_db(_id, name, site):
+def add_name_to_db(_id, name, site, check=False):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
@@ -287,20 +287,34 @@ def add_name_to_db(_id, name, site):
     c = conn.cursor()
     sport = get_sport_by_id(_id)
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
-    id_is_potential_double = "&" in get_formatted_name_by_id(_id)
+    formatted_name = get_formatted_name_by_id(_id)
+    id_is_potential_double = "&" in formatted_name
     if (name and is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
-        c.execute("""
-        UPDATE names
-        SET name_{0} = "{1}"
-        WHERE _rowid_ = (
-            SELECT _rowid_
-            FROM names
-            WHERE id = {2} AND name_{0} IS NULL
-            ORDER BY _rowid_
-            LIMIT 1
-        );
-        """.format(site, name, _id))
+        if check:
+            if sportsbetting.INTERFACE:
+                sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} ({}) sur {}\n"
+                                               "Nouvelle donnée : {}"
+                                               .format(formatted_name, _id, site, name))
+                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+            else:
+                ans = input("Créer une nouvelle entrée pour {} sur {} "
+                            "(nouvelle entrée : {}) (y/n)"
+                            .format(formatted_name, site, name))
+        if not check or ans in ['y', 'Yes']:
+            c.execute("""
+            UPDATE names
+            SET name_{0} = "{1}"
+            WHERE _rowid_ = (
+                SELECT _rowid_
+                FROM names
+                WHERE id = {2} AND name_{0} IS NULL
+                ORDER BY _rowid_
+                LIMIT 1
+            );
+            """.format(site, name, _id))
+        else:
+            return False
     else:
         c.execute("""
         SELECT sport, name, name_{} FROM names
@@ -512,6 +526,28 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
                     return id_home
     return
 
+def get_time_next_match(id_competition, id_team):
+    if id_team>0:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+        for line in soup.find_all("a"):
+            if "href" in line.attrs:
+                if line["href"].split("td"+str(id_team))[0][-1] == "-":
+                    strings = list(line.find_parent("tr").stripped_strings)
+                    for string in strings:
+                        if " à " in string:
+                            return datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
+    return 0
+
+def is_matching_next_match(id_competition, id_team, name_team, matches):
+    if id_team < 0:
+        return True
+    try:
+        date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+        return date_next_match == get_time_next_match(id_competition, id_team)
+    except IndexError:
+        return False
+        
 
 def are_same_double(team1, team2):
     """
