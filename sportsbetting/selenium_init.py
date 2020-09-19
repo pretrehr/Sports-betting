@@ -8,6 +8,7 @@ import selenium
 import selenium.webdriver
 import selenium.common
 import sportsbetting
+import stopit
 import termcolor
 import time
 
@@ -15,6 +16,7 @@ PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver
 DRIVER = {}
 
 
+@stopit.threading_timeoutable(timeout_param='timeout')
 def start_selenium(site, headless=True):
     """
     Lancement d'un driver selenium

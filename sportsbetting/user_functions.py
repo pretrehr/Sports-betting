@@ -8,6 +8,7 @@ import copy
 import datetime
 import inspect
 import sqlite3
+import stopit
 import sys
 import termcolor
 import time
@@ -75,7 +76,7 @@ def parse_competition(competition, sport="football", *sites):
                 except urllib3.exceptions.MaxRetryError:
                     selenium_init.DRIVER[site].quit()
                     print("Redémarrage de selenium")
-                    selenium_init.start_selenium(site)
+                    selenium_init.start_selenium(site, timeout=20)
                     res_parsing[site] = parse(site, url)
                 except sqlite3.OperationalError:
                     print("Erreur dans la base de données, redémarrage en cours")
@@ -130,7 +131,12 @@ def parse_competitions(competitions, sport="football", *sites):
     sportsbetting.PROGRESS = 0
     if selenium_required:
         for site in selenium_sites.intersection(sites):
-            selenium_init.start_selenium(site)
+            while True:
+                try:
+                    selenium_init.start_selenium(site, timeout=20)
+                    break
+                except stopit.utils.TimeoutException:
+                    print("Timeout : redémarrage de selenium")
             sportsbetting.PROGRESS += 100/len(selenium_sites.intersection(sites))
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
