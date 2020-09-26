@@ -527,8 +527,13 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     return
 
 def get_time_next_match(id_competition, id_team):
-    if id_team>0:
+    if id_competition >= 9999:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
+    elif id_team > 0:
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)
+    else:
+        return 0
+    try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         for line in soup.find_all("a"):
             if "href" in line.attrs:
@@ -537,7 +542,8 @@ def get_time_next_match(id_competition, id_team):
                     for string in strings:
                         if " à " in string:
                             return datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
-    return 0
+    except urllib.error.HTTPError:
+        return 0
 
 def is_matching_next_match(id_competition, id_team, name_team, matches):
     if id_team < 0:
