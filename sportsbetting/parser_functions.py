@@ -1286,6 +1286,7 @@ def parse_unibet(url):
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"unibet": odds}
                     match_odds_hash[match]['date'] = date_time
+                    match = None
         if match_odds_hash:
             return match_odds_hash
     return match_odds_hash
