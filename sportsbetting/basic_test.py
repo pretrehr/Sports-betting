@@ -26,5 +26,5 @@ def test_parsing():
                 names.append(link.text.strip())
             break
     name_competition = random.choice(names)
-    parse_competitions([name_competition], "football", "betclic", "winamax")
+    parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sportsbetting.ODDS) > 0

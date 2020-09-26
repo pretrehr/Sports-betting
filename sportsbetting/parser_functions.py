@@ -35,60 +35,42 @@ else:  # sys.platform == "linux"
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
 
-def parse_betclic(url=""):
-    """
-    Retourne les cotes disponibles sur betclic
-    """
-    if url in ["tennis", "rugby-a-xv", "football", "basket-ball", "hockey-sur-glace", "handball"]:
-        return parse_sport_betclic(url)
-    if not url:
-        url = "https://www.betclic.fr/football/ligue-1-conforama-e4"
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+def parse_betclic(url):
+    selenium_init.DRIVER["betclic"].get(url)
     match_odds_hash = {}
-    one_match_page = False
-    date = ""
-    hour = ""
-    match = ""
+    match = None
     date_time = None
-    for line in soup.find_all():
-        if "Nous nous excusons pour cette interruption momentanée du site." in line.text:
-            raise sportsbetting.UnavailableSiteException
-        if "Vous allez être redirigé sur notre page calendrier dans 5 secondes" in line.text:
+    today = datetime.datetime.today().strftime("%d/%m/%Y")
+    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y")
+    WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
+        EC.presence_of_all_elements_located((By.TAG_NAME, "app-date"))
+    )
+    selenium_init.scroll(selenium_init.DRIVER["betclic"], 5)
+    for _ in range(10):
+        inner_html = selenium_init.DRIVER["betclic"].execute_script("return document.body.innerHTML")
+        soup = BeautifulSoup(inner_html, features="lxml")
+        if "Désolé, cette compétition n'est plus disponible." in str(soup):
             raise sportsbetting.UnavailableCompetitionException
-        if line.name == "time":
-            date = line["datetime"]
-        elif "class" in line.attrs and "hour" in line["class"]:
-            hour = line.text
-        elif "class" in line.attrs and "match-name" in line["class"]:
-            match = list(line.stripped_strings)[0]
-            date_time = datetime.datetime.strptime(date + " " + hour, "%Y-%m-%d %H:%M")
-        elif "class" in line.attrs and "match-odds" in line["class"]:
-            odds = list(map(lambda x: float(x.replace(",", ".").replace("---", "1")),
-                            list(line.stripped_strings)))
-            match_odds_hash[match] = {}
-            match_odds_hash[match]['odds'] = {"betclic": odds}
-            match_odds_hash[match]['date'] = date_time
-        elif "class" in line.attrs and "section-header-left" in line["class"]:
-            strings = list(line.stripped_strings)
-            date_time = datetime.datetime.strptime(strings[0], "%A %d %B %Y - %H:%M")
-            match = strings[1]
-            one_match_page = True
-        elif (one_match_page and "class" in line.attrs and "expand-selection-bet" in line["class"]
-              and " - " in match):
-            try:
-                opponents = match.split(" - ")
-                if opponents[0].isnumeric() or opponents[1].isnumeric():
-                    break
-                odds = list(map(lambda x: float(x.replace(",", ".")),
-                                list(line.stripped_strings)[1::2]))
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {"betclic": odds}
-                match_odds_hash[match]['date'] = date_time
-            except ValueError:
-                pass
-            break
+        for line in soup.findAll():
+            if "class" in line.attrs and "betBox_matchName" in line["class"]:
+                match = " - ".join(list(line.stripped_strings))
+            if line.name == "app-date":
+                string = " ".join(line.text.replace("Aujourd'hui", today).replace("Demain", tomorrow).split())
+                date_time = datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
+            if "class" in line.attrs and "betBox_odds" in line["class"]:
+                try:
+                    odds = list(map(lambda x: float(x.text.replace(",", ".")),
+                                    list(line.findChildren("span", {"class": "oddValue"}))))
+                    if match:
+                        match_odds_hash[match] = {}
+                        match_odds_hash[match]['odds'] = {"betclic": odds}
+                        match_odds_hash[match]['date'] = date_time
+                        match = None
+                except ValueError:
+                    pass
+        if match_odds_hash:
+            return match_odds_hash
     return match_odds_hash
-
 
 def parse_sport_betclic(sport):
     """
@@ -119,7 +101,6 @@ def parse_sport_betclic(sport):
                 if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
                     odds.append(parse_betclic(link))
     return merge_dicts(odds)
-
 
 def parse_betstars(url=""):
     """

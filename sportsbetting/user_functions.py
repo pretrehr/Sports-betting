@@ -121,7 +121,7 @@ def parse_competitions(competitions, sport="football", *sites):
     if not sites:
         sites = sites_order
     sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
     selenium_required = ((inspect.currentframe().f_back.f_code.co_name
                           in ["<module>", "parse_thread"]
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
@@ -166,81 +166,6 @@ def parse_competitions(competitions, sport="football", *sites):
         colorama.Style.RESET_ALL
         colorama.deinit()
     sportsbetting.ABORT = False
-
-
-def parse_football(*sites):
-    """
-    Stocke les cotes des principaux championnats de football en global
-    """
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        selenium_init.start_selenium()
-    competitions = ["france ligue 1", "angleterre premier league",
-                    "espagne liga", "italie serie", "allemagne bundesliga",
-                    "ligue des champions"]
-    parse_competitions(competitions, "football", *sites)
-    if selenium_required:
-        selenium_init.DRIVER.quit()
-
-
-def parse_tennis(*sites):
-    """
-    Stocke les cotes des tournois de tennis en global
-    """
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        selenium_init.start_selenium()
-    sportsbetting.ODDS["tennis"] = parse_competition("tennis", "tennis", *sites)
-    if selenium_required:
-        selenium_init.DRIVER.quit()
-
-
-def parse_nba(*sites):
-    """
-    Stocke les cotes de la NBA en global
-    """
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        selenium_init.start_selenium()
-    sportsbetting.ODDS["nba"] = parse_competition("nba", "basketball", *sites)
-    sportsbetting.ODDS["basketball"] = sportsbetting.ODDS["nba"]
-    if selenium_required:
-        selenium_init.DRIVER.quit()
-
-
-def parse_handball(*sites):
-    """
-    Stocke les cotes de handball en global
-    """
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        selenium_init.start_selenium()
-    sportsbetting.ODDS["handball"] = parse_competition("champions", "handball", *sites)
-    if selenium_required:
-        selenium_init.DRIVER.quit()
-
-
-def parse_nhl(*sites):
-    """
-    Stocke les cotes de NHL en global
-    """
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        selenium_init.start_selenium()
-    sportsbetting.ODDS["nhl"] = parse_competition("nhl", "hockey-sur-glace", *sites)
-    sportsbetting.ODDS["hockey-sur-glace"] = sportsbetting.ODDS["nhl"]
-    if selenium_required:
-        selenium_init.DRIVER.quit()
 
 
 def parse_buteurs():
