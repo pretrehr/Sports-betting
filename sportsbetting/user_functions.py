@@ -8,7 +8,6 @@ import copy
 import datetime
 import inspect
 import sqlite3
-import stopit
 import sys
 import termcolor
 import time
@@ -133,11 +132,9 @@ def parse_competitions(competitions, sport="football", *sites):
     if selenium_required:
         for site in selenium_sites.intersection(sites):
             while True:
-                try:
-                    selenium_init.start_selenium(site, timeout=20)
+                if selenium_init.start_selenium(site, timeout=20):
                     break
-                except stopit.utils.TimeoutException:
-                    print("Timeout : redémarrage de selenium")
+                print("Redémarrage")
             sportsbetting.PROGRESS += 100/len(selenium_sites.intersection(sites))
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
