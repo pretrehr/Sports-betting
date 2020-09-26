@@ -732,7 +732,7 @@ def parse_netbet(url=""):
     """
     Retourne les cotes disponibles sur netbet
     """
-    if url in sportsbetting.SPORTS:
+    if url in ["football", "tennis", "basketball", "hockey-glace", "rugby", "handball"]:
         return parse_sport_netbet(url)
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
@@ -1139,7 +1139,9 @@ def parse_pmu(url=""):
     Retourne les cotes disponibles sur pmu
     """
     if "http" not in url:
-        if url in ["basket", "hockey-sur-glace"]:
+        if url == "basket":
+            return merge_dicts([parse_sport_pmu(url+"-us"), parse_sport_pmu(url+"-euro")])
+        elif url == "hockey-sur-glace":
             return merge_dicts([parse_sport_pmu(url+"-us"), parse_sport_pmu(url+"-eu")])
         return parse_sport_pmu(url)
     if not url:
