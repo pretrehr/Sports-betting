@@ -344,7 +344,7 @@ def best_matches_combine_interface(window, values):
                 window["INDICATORS_COMBINE" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_COMBINE" + str(i)].update(elem[1], visible=True)
         buffer.close()
-        return what_was_printed
+        sportsbetting.ODDS_INTERFACE = what_was_printed
     except IndexError:
         pass
     except ValueError:

@@ -194,11 +194,7 @@ def cotes_combine(cotes):
     """
     Calcule les cotes de plusieurs matches combines
     """
-    out = []
-    res = list(product(*cotes))
-    for i in res:
-        out.append(round(float(np.prod(i)), 4))
-    return out
+    return [round(np.prod(i), 4) for i in product(*cotes)]
 
 
 def gain_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False,

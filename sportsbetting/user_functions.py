@@ -37,9 +37,10 @@ from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_bu
                                             parse_buteurs_betclic_match)
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
-                                               cotes_combine_all_sites, defined_bets,
+                                               cotes_combine_all_sites, defined_bets, binomial,
                                                best_match_base, generate_sites, filter_dict_dates,
-                                               combine_reduit, get_nb_issues, best_combine_reduit)
+                                               combine_reduit, get_nb_issues, best_combine_reduit,
+                                               filter_dict_minimum_odd)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2,
                                            mises_freebet2, mises_pari_rembourse_si_perdant,
@@ -116,8 +117,8 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport="football", *sites):
-    sites_order = ['bwin', 'parionssport', 'betstars', 'pasinobet', 'joa', 'unibet', 'pmu',
-                   'betclic', 'france_pari', 'netbet', 'winamax', 'zebet']
+    sites_order = ['bwin', 'parionssport', 'betstars', 'pasinobet', 'joa', 'unibet', 'betclic',
+                   'pmu', 'france_pari', 'netbet', 'winamax', 'zebet']
     if not sites:
         sites = sites_order
     sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -153,13 +154,13 @@ def parse_competitions(competitions, sport="football", *sites):
     list_odds = []
     try:
         sportsbetting.IS_PARSING = True
-        list_odds = ThreadPool(6).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+        list_odds = ThreadPool(7).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
         sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
     sportsbetting.IS_PARSING = False
     if selenium_required:
-        ThreadPool(6).map(lambda x: selenium_init.DRIVER[x].quit(),
+        ThreadPool(7).map(lambda x: selenium_init.DRIVER[x].quit(),
                           selenium_sites.intersection(sites))
         colorama.init()
         print(termcolor.colored('Drivers closed', 'green'))
@@ -372,20 +373,24 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     donnée à une cote donnée sur un combiné
     """
     all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min, time_min)
+    all_odds = filter_dict_minimum_odd(all_odds, minimum_odd_selection, site)
     sportsbetting.ALL_ODDS_COMBINE = {}
-    for combine in combinations(all_odds.items(), nb_matches):
+    nb_combine = binomial(len(all_odds), nb_matches)
+    sportsbetting.PROGRESS = 0
+    print(nb_combine, file=sys.stderr)
+
+    def compute_all_odds_combine(nb_combine, combine):
+        sportsbetting.PROGRESS += 100/nb_combine
         try:
-            if all([odd >= minimum_odd_selection for odds in list(all_odds[match[0]]["odds"][site]
-                                                                  for match in combine)
-                    for odd in odds]):
-                (sportsbetting.ALL_ODDS_COMBINE[" / "
-                    .join([match[0]
-                           for match
-                           in combine])]) = cotes_combine_all_sites(*[match[1]
-                                                                      for match
-                                                                      in combine])
+            sportsbetting.ALL_ODDS_COMBINE[" / ".join([match[0] for match in combine])] = cotes_combine_all_sites(*[match[1]
+                                                                                        for match
+                                                                                        in combine])
         except KeyError:
             pass
+    
+    ThreadPool(4).map(lambda x: compute_all_odds_combine(nb_combine, x),
+                      combinations(all_odds.items(), nb_matches))
+    sportsbetting.PROGRESS = 0
     odds_function = lambda best_odds, odds_site, i: ((best_odds[:i] + [odds_site[i]]
                                                       + best_odds[i + 1:]) if not one_site
                                                      else odds_site)

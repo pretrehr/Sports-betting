@@ -8,6 +8,7 @@ from pprint import pprint
 import datetime
 import copy
 import itertools
+import math
 import baseconvert
 import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -475,7 +476,9 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
     best_match = None
     best_overall_odds = None
     sites = None
+    nb_matches = len(all_odds)
     for match in all_odds:
+        sportsbetting.PROGRESS += 100 / nb_matches
         if site in all_odds[match]['odds']:
             odds_site = all_odds[match]['odds'][site]
             best_odds = copy.deepcopy(odds_site)
@@ -575,10 +578,14 @@ def datetime_from_strings(date_max=None, time_max=None, date_min=None, time_min=
 def filter_dict_dates(odds, date_max=None, time_max=None, date_min=None, time_min=None):
     all_odds = copy.deepcopy(odds)
     datetime_max, datetime_min = datetime_from_strings(date_max, time_max, date_min, time_min)
-    if datetime_max:
-        all_odds = {k: v for k, v in all_odds.items() if v["date"] <= datetime_max}
-    if datetime_min:
-        all_odds = {k: v for k, v in all_odds.items() if v["date"] >= datetime_min}
+    def check(datetime_min, datetime_max, date):
+        return ((not datetime_min) or datetime_min <= date) and ((not datetime_max) or datetime_max >= date)
+    all_odds = {k: v for k, v in all_odds.items() if check(datetime_min, datetime_max, v["date"])}
+    return all_odds
+
+def filter_dict_minimum_odd(odds, minimum_odd, site):
+    all_odds = copy.deepcopy(odds)
+    all_odds = {k: v for k, v in all_odds.items() if site in v["odds"] and all([odd >= minimum_odd for odd in v["odds"][site]])}
     return all_odds
 
 def combine_reduit(nb_matches, combi_to_keep, sport):
@@ -628,3 +635,9 @@ def combine_reduit_rec(combi_to_keep, sport):
 
 def get_nb_issues(sport):
     return 2+(sport not in ["basketball", "tennis"])
+
+def binomial(x, y):
+    try:
+        return math.factorial(x) // math.factorial(y) // math.factorial(x - y)
+    except ValueError:
+        return 0

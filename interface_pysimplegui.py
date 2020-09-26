@@ -235,7 +235,8 @@ column_results_combine = [[sg.Text("", size=(6, 1), key="RESULTS_COMBINE" + str(
                                    visible=False)] for _ in range(5)]
 combine_layout = [[sg.Listbox(sites, size=(20, 12), key="SITE_COMBINE"), sg.Column(column_combine),
                    sg.Column(options_combine)],
-                  [sg.Button("Calculer", key="BEST_MATCHES_COMBINE")],
+                  [sg.Button("Calculer", key="BEST_MATCHES_COMBINE"),
+                   sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_COMBINE', visible=False)],
                   [sg.Text("", size=(100, 1), key="MATCH_COMBINE")],
                   [sg.Text("", size=(30, 1), key="DATE_COMBINE")],
                   [sg.Column([[sg.Button("Voir les cotes combinées", key="ODDS_COMBINE",
@@ -441,6 +442,7 @@ event, values = window.read(timeout=0)
 sportsbetting.PROGRESS = 0
 thread = None
 thread_stakes = None
+thread_combine = None
 window_odds_active = False
 sport = ''
 old_stdout = sys.stdout
@@ -507,6 +509,14 @@ while True:
             thread_stakes = None
         else:
             window["PROGRESS_STAKES"].update(ceil(sportsbetting.PROGRESS), 100)
+    except AttributeError:
+        pass
+    try:
+        if not thread_combine.is_alive():
+            window["PROGRESS_COMBINE"].update(0, 100, visible=False)
+            thread_combine = None
+        else:
+            window["PROGRESS_COMBINE"].update(ceil(sportsbetting.PROGRESS), 100)
     except AttributeError:
         pass
     try:  # see if something has been posted to Queue
@@ -576,7 +586,13 @@ while True:
     elif event == "BEST_MATCH_CASHBACK":
         best_match_cashback_interface(window, values)
     elif event == "BEST_MATCHES_COMBINE":
-        sportsbetting.ODDS_INTERFACE = best_matches_combine_interface(window, values)
+        def combine_thread():
+            best_matches_combine_interface(window, values)
+
+
+        thread_combine = threading.Thread(target=combine_thread)
+        thread_combine.start()
+        window["PROGRESS_COMBINE"].update(0, 100, visible=True)
     elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS", "ODDS_COMBI_OPT", "ODDS_COMBINE_GAGNANT"]:
         window_odds_active = True
         table = odds_table_combine(sportsbetting.ODDS_INTERFACE)
