@@ -7,6 +7,7 @@ import colorama
 import copy
 import datetime
 import inspect
+import socket
 import sqlite3
 import sys
 import termcolor
@@ -89,6 +90,8 @@ def parse_competition(competition, sport="football", *sites):
             print("Element non trouvé par selenium ({} sur {})".format(competition, site))
         except sportsbetting.UnavailableCompetitionException:
             print("{} non disponible sur {}".format(competition, site))
+        except socket.timeout:
+            print("{} non accessible sur {} (timeout socket)".format(competition, site))
     res = format_team_names(res_parsing, sport, competition)
     out = valid_odds(merge_dict_odds(res), sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
@@ -134,7 +137,10 @@ def parse_competitions(competitions, sport="football", *sites):
             while True:
                 if selenium_init.start_selenium(site, timeout=20):
                     break
-                print("Redémarrage")
+                colorama.init()
+                print(termcolor.colored('Restarting', 'orange'))
+                colorama.Style.RESET_ALL
+                colorama.deinit()
             sportsbetting.PROGRESS += 100/len(selenium_sites.intersection(sites))
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
