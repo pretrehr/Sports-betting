@@ -42,9 +42,9 @@ def parse_betclic(url):
     date_time = None
     today = datetime.datetime.today().strftime("%d/%m/%Y")
     tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y")
-    WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
-        EC.presence_of_all_elements_located((By.TAG_NAME, "app-date"))
-    )
+    if (selenium_init.DRIVER["betclic"].current_url
+            == "https://www.betclic.fr/"):
+        raise sportsbetting.UnavailableCompetitionException
     selenium_init.scroll(selenium_init.DRIVER["betclic"], 5)
     for _ in range(10):
         inner_html = selenium_init.DRIVER["betclic"].execute_script("return document.body.innerHTML")
