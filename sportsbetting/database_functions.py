@@ -283,9 +283,11 @@ def add_name_to_db(_id, name, site, check=False):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
+    sport = get_sport_by_id(_id)
+    if is_in_db_site(name, sport, site): #Pour éviter les ajouts intempestifs
+        return True
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
-    sport = get_sport_by_id(_id)
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
     formatted_name = get_formatted_name_by_id(_id)
     id_is_potential_double = "&" in formatted_name
@@ -333,7 +335,7 @@ def add_name_to_db(_id, name, site, check=False):
                             "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
                             .format(formatted_name, site, name_site, name))
             if ans in ['y', 'Yes']:
-                if name_site:
+                if name_site and not is_id_available_for_site(_id, site):
                     c.execute("""
                     INSERT INTO names (id, name, sport, name_{})
                     VALUES ({}, "{}", "{}", "{}")
@@ -796,3 +798,28 @@ def create_new_db():
     for _id in get_all_ids():
         if _id>133300:
             add_id_to_new_db(_id)
+
+def is_id_consistent(_id):
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    select * from names where id={} order by _rowid_
+    """.format(_id))
+    results = c.fetchall()
+    n = len(results)
+    list_sites = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport", "pasinobet", "pmu", "unibet", "winamax", "zebet"]
+    out = True
+    for j in range(3, len(results[0])):
+        null = False
+        previous = None
+        for i in range(n):
+            if results[i][j] and results[i][j] == previous:
+                print("Valeurs identiques", _id, previous, list_sites[j-3])
+                out = False
+            elif not null and not results[i][j]:
+                null = True
+            elif i>0 and not previous and results[i][j]:
+                print("Valeurs alternées", _id, list_sites[j-3])
+                out = False
+            previous = results[i][j]
+    return out
