@@ -49,6 +49,7 @@ def add_matches_to_db(odds, sport, site, id_competition):
     teams = set(map(lambda x: x.strip(), teams))
     teams_not_in_db_site = set()
     teams_sets = []
+    not_matching_teams = {}
     for team in teams:
         line = is_in_db_site(team, sport, site)
         if not line:
@@ -59,13 +60,15 @@ def add_matches_to_db(odds, sport, site, id_competition):
     i = 0
     teams_sets.append(set())
     for team in teams_not_in_db_site:
+        success = False
+        not_matching_teams[team] = []
         line = is_in_db(team, sport, site)
         if line:
             check = not is_matching_next_match(id_competition, line[0], team, odds)
             success = add_name_to_db(line[0], team, site, check)
             if not success:
-                teams_sets[i].add(team)
-        else:
+                not_matching_teams[team].append(line[0])
+        if not success:
             teams_sets[i].add(team)
     print(i, list(teams_sets[i]), site)
     if not teams_sets[i]:
@@ -79,14 +82,16 @@ def add_matches_to_db(odds, sport, site, id_competition):
             i += 1
             teams_sets.append(set())
             for team in teams_sets[i - 1]:
+                success = False
                 lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
-                if lines:
-                    for line in lines:
+                for line in lines:
+                    if line[0] not in not_matching_teams[team]:
                         check = not is_matching_next_match(id_competition, line[0], team, odds)
                         success = add_name_to_db(line[0], team, site, check)
-                        if not success:
-                            teams_sets[i].add(team)
-                else:
+                        if success:
+                            break
+                        not_matching_teams[team].append(line[0])
+                if not success:
                     teams_sets[i].add(team)
             print(i, list(teams_sets[i]), site)
             if not teams_sets[i]:
@@ -106,6 +111,7 @@ def add_matches_to_db(odds, sport, site, id_competition):
                         success = add_name_to_db(id_to_find, team, site)
                         if success:
                             break
+                        not_matching_teams[team].append(id_to_find)
                 if not success:
                     teams_sets[i].add(team)
             print(i, list(teams_sets[i]), site)
