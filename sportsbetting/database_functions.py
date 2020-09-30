@@ -809,6 +809,10 @@ def is_id_consistent(_id):
     n = len(results)
     list_sites = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport", "pasinobet", "pmu", "unibet", "winamax", "zebet"]
     out = True
+    for i in range(n):
+        if not(any(results[i][3:])):
+            print("Ligne vide", _id)
+            out = False
     for j in range(3, len(results[0])):
         null = False
         previous = None

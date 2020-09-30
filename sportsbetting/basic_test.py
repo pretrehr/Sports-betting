@@ -37,7 +37,7 @@ def test_consistency():
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
     c.execute("""
-    select id, count(*) as c from names group by names.id having c>2
+    select id, count(*) as c from names group by names.id having c>1
     """)
     results = c.fetchall()
     for result in results:
