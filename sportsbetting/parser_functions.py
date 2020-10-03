@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 
 import sportsbetting
 from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import merge_dicts, add_matches_to_db
+from sportsbetting.auxiliary_functions import merge_dicts, add_matches_to_db, scroll
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 
@@ -45,7 +45,10 @@ def parse_betclic(url):
     if (selenium_init.DRIVER["betclic"].current_url
             == "https://www.betclic.fr/"):
         raise sportsbetting.UnavailableCompetitionException
-    selenium_init.scroll(selenium_init.DRIVER["betclic"], 5)
+    WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
+        EC.invisibility_of_element_located((By.TAG_NAME, "app-preloader"))
+    )
+    scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
     for _ in range(10):
         inner_html = selenium_init.DRIVER["betclic"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
@@ -829,7 +832,7 @@ def parse_parionssport(url=""):
     elif (not is_sport_page) and selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
         raise sportsbetting.UnavailableCompetitionException
     if is_sport_page:
-        selenium_init.scroll(selenium_init.DRIVER["parionssport"], 5)
+        scroll(selenium_init.DRIVER["parionssport"], "parionssport", "wpsel-desc", 5)
     match_odds_hash = {}
     urls_basket = []
     today = datetime.datetime.today()
@@ -1004,6 +1007,10 @@ def parse_pasinobet(url=""):
 def parse_pasinobet_sport(sport):
 #     selenium_init.start_selenium("pasinobet", False)
     selenium_init.DRIVER["pasinobet"].get("https://www.pasinobet.fr/#/sport/?type=0")
+    promotion = WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
+        EC.element_to_be_clickable((By.XPATH, "//button[@ng-click='closeDialog(activeDialog, 'okButton');$event.stopPropagation();']"))
+    )
+    promotion.click()
     cookies = WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@ng-click='acceptCookies()']"))
     )
@@ -1244,7 +1251,7 @@ def parse_unibet(url):
     WebDriverWait(selenium_init.DRIVER["unibet"], 15).until(
         EC.invisibility_of_element_located((By.CLASS_NAME, "ui-spinner"))
     )
-    selenium_init.scroll(selenium_init.DRIVER["unibet"], 5)
+    scroll(selenium_init.DRIVER["unibet"], "unibet", "calendar-event", 1)
     for _ in range(10):
         inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")

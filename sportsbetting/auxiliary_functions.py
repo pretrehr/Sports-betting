@@ -9,6 +9,7 @@ import datetime
 import copy
 import itertools
 import math
+import time
 import baseconvert
 import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -647,3 +648,18 @@ def binomial(x, y):
         return math.factorial(x) // math.factorial(y) // math.factorial(x - y)
     except ValueError:
         return 0
+
+def scroll(driver, site, element_to_reach_class, timeout):
+    last_height = 0
+    new_height = 1
+    while last_height != new_height:
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        print("Scrolling", site)
+        driver.execute_script("""
+        a = document.getElementsByClassName("{}");
+        a[a.length-1].scrollIntoView(true);
+        """.format(element_to_reach_class))
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        start_time = time.time()
+        while new_height == last_height and time.time() - start_time < timeout:
+            new_height = driver.execute_script("return document.body.scrollHeight")
