@@ -10,3 +10,4 @@ baseconvert>=1.0.0a4
 termcolor>=1.1.0
 chromedriver-autoinstaller>=0.2.2
 stopit>=1.1.2
+colorama>=0.4.1
