@@ -27,7 +27,7 @@ import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import (merge_dicts, add_matches_to_db, scroll,
                                                format_bwin_names, format_bwin_time,
-                                               reverse_match_odds)
+                                               reverse_match_odds, format_joa_time)
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 
@@ -321,73 +321,83 @@ def parse_sport_france_pari(sport):
                     pass
     return merge_dicts(odds)
 
-    
+def parse_joa_html(inner_html):
+    match_odds_hash = {}
+    match = None
+    date_time = None
+    soup = BeautifulSoup(inner_html, features="lxml")
+    for line in soup.findAll():
+        if "class" in line.attrs and "bet-event-name" in line["class"]:
+            match = " - ".join(map(lambda x : x.replace(" - ", "-"), list(line.stripped_strings)))
+        if "class" in line.attrs and "bet-event-date-info" in line["class"]:
+            date_time = format_joa_time(line.text)
+        if "class" in line.attrs and "bet-outcome-list" in line["class"]:
+            if match:
+                try:
+                    odds = list(map(float, list(line.stripped_strings)))
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"joa": odds}
+                    match_odds_hash[match]['date'] = date_time
+                except ValueError:
+                    pass
+                match = None
+    return match_odds_hash
 
 def parse_joa(url):
-    """
-    Retourne les cotes disponibles sur joa
-    """
-    if not url:
-        url = "https://www.joa-online.fr/fr/sport/paris-sportifs/844/54287323"
-    selenium_init.DRIVER["joa"].get("about:blank")
+    if "sport/sport" in url:
+        return parse_joa_sport(url)
     selenium_init.DRIVER["joa"].get(url)
     match_odds_hash = {}
-    today = datetime.datetime.today()
-    today = datetime.datetime(today.year, today.month, today.day)
-    year = str(today.year)
-    date_time = ""
-    odds_class = ""
-    match = ""
+    try:
+        WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
+        )
+    except selenium.common.exceptions.TimeoutException:
+        raise sportsbetting.UnavailableCompetitionException
     for _ in range(10):
+        inner_html = selenium_init.DRIVER["joa"].execute_script("return document.body.innerHTML")
+        match_odds_hash = parse_joa_html(inner_html)
+        if match_odds_hash:
+            return match_odds_hash
+    return match_odds_hash
+
+def parse_joa_sport(url):
+    selenium_init.DRIVER["joa"].maximize_window()
+    selenium_init.DRIVER["joa"].get(url)
+    list_odds = []
+    cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
+        EC.element_to_be_clickable((By.CLASS_NAME, "cc-cookie-accept"))
+    )
+    cookies.click()
+    try:
+        filtres = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "Filtres"))
+        )
+    except selenium.common.exceptions.TimeoutException:
+        raise sportsbetting.UnavailableCompetitionException
+    for i, _ in enumerate(filtres):
+        selenium_init.DRIVER["joa"].execute_script("window.scrollTo(0, 0)")
+        selenium_init.DRIVER["joa"].execute_script('document.getElementsByClassName("Filtres")[{}].click()'.format(i))
+        match_odds_hash = {}
         try:
             WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
             )
         except selenium.common.exceptions.TimeoutException:
             raise sportsbetting.UnavailableCompetitionException
+        while True:
+            try:
+                show_more = WebDriverWait(selenium_init.DRIVER["joa"], 5).until(
+                    EC.presence_of_all_elements_located((By.CLASS_NAME, "show-more-leagues"))
+                )[0]
+                show_more.find_element_by_tag_name("button").click()
+            except selenium.common.exceptions.TimeoutException:
+                break
         inner_html = selenium_init.DRIVER["joa"].execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        for line in soup.find_all():
-            if "class" in line.attrs and "bet-event-name" in line["class"]:
-                match = " - ".join(line.stripped_strings)
-                match = match.replace("Nouvelle - Zélande Breakers", "Nouvelle-Zélande Breakers")
-            elif "class" in line.attrs and "bet-outcomes-caption-list" in line["class"]:
-                if (["1", "2"] == list(line.stripped_strings)
-                        or ["1", "X", "2"] == list(line.stripped_strings)):
-                    odds_class = line.attrs["class"][-1]
-            elif ("class" in line.attrs
-                  and "bet-outcome-list" in line["class"]
-                  and odds_class in line["class"]):
-                odds = []
-                for odd in line.stripped_strings:
-                    odds.append(float(odd.replace("-", "1")))
-                if odds:
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"joa": odds}
-                    match_odds_hash[match]['date'] = date_time
-            elif "class" in line.attrs and "bet-event-date-col" in line["class"]:
-                strings = list(line.stripped_strings)
-                if strings[0] == "Demain":
-                    date = (datetime.datetime.today()
-                            + datetime.timedelta(days=1)).strftime("%d %b %Y")
-                    hour = strings[1]
-                    date_time = datetime.datetime.strptime(date + " " + hour, "%d %b %Y %H:%M")
-                elif strings[0] == "Aujourd'hui":
-                    date = datetime.datetime.today().strftime("%d %b %Y")
-                    hour = strings[1]
-                    date_time = datetime.datetime.strptime(date + " " + hour, "%d %b %Y %H:%M")
-                else:
-                    date = strings[0] + "/" + year
-                    hour = strings[1]
-                    try:
-                        date_time = datetime.datetime.strptime(date + " " + hour, "%d/%m/%Y %H:%M")
-                    except ValueError:
-                        date = datetime.datetime.today().strftime("%d/%m/%Y")
-                        hour = strings[0]
-                        date_time = datetime.datetime.strptime(date + " " + hour, "%d/%m/%Y %H:%M")
-                    if date_time < today:
-                        date_time = date_time.replace(year=date_time.year + 1)
-        return match_odds_hash
+        match_odds_hash = parse_joa_html(inner_html)
+        if match_odds_hash:
+            list_odds.append(match_odds_hash)
+    return merge_dicts(list_odds)
 
 
 def parse_netbet(url=""):

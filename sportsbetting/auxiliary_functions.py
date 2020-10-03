@@ -694,4 +694,19 @@ def reverse_match_odds(match, odds):
     match = " - ".join(reversed(match.split(" - ")))
     odds.reverse()
     return match, odds
+
+
+def format_joa_time(string):
+    if "Aujourd'hui" in string or "Demain" in string:
+        today = datetime.datetime.today().strftime("%d/%m/%Y ")
+        tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
+        string = " ".join(string.replace("Aujourd'hui", today).replace("Demain", tomorrow).split())
+        return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
+    date_time = None
+    year = str(datetime.datetime.today().year)
+    string += year
+    date_time = datetime.datetime.strptime(string, "%d/%m%H:%M%Y")
+    if date_time < datetime.datetime.today():
+        date_time = date_time.replace(year=date_time.year + 1)
+    return date_time
     
