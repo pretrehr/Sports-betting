@@ -649,17 +649,49 @@ def binomial(x, y):
     except ValueError:
         return 0
 
-def scroll(driver, site, element_to_reach_class, timeout):
+def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="body"):
     last_height = 0
     new_height = 1
     while last_height != new_height:
-        last_height = driver.execute_script("return document.body.scrollHeight")
+        last_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
         print("Scrolling", site)
         driver.execute_script("""
         a = document.getElementsByClassName("{}");
         a[a.length-1].scrollIntoView(true);
         """.format(element_to_reach_class))
-        new_height = driver.execute_script("return document.body.scrollHeight")
+        new_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
         start_time = time.time()
         while new_height == last_height and time.time() - start_time < timeout:
-            new_height = driver.execute_script("return document.body.scrollHeight")
+            new_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
+
+def format_bwin_names(string):
+    if string.count(" - ") == 3:
+        string = string.replace(" - ", " (", 1)
+        string = string.replace(" - ", ") - ", 1)
+        string = " (".join(string.rsplit(" - ", 1))
+        string += ")"
+    string = string.replace("@ - ", "")
+    return string
+
+def format_bwin_time(string):
+    today = datetime.datetime.today().strftime("%d/%m/%Y")
+    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y")
+    string = " ".join(string.replace("Aujourd'hui /", today).replace("Demain /", tomorrow).split())
+    if "Commence dans" in string:
+        date_time = datetime.datetime.strptime(datetime.datetime.today()
+                                                .strftime("%d %b %Y %H:%M"),
+                                                "%d %b %Y %H:%M")
+        date_time += datetime.timedelta(minutes=int(string.split("dans ")[1]
+                                                    .split("min")[0]))
+        return date_time
+    if "Commence maintenant" in string:
+        return datetime.datetime.strptime(datetime.datetime.today()
+                                                .strftime("%d %b %Y %H:%M"),
+                                                "%d %b %Y %H:%M")
+    return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
+
+def reverse_match_odds(match, odds):
+    match = " - ".join(reversed(match.split(" - ")))
+    odds.reverse()
+    return match, odds
+    
