@@ -9,6 +9,7 @@ import datetime
 import copy
 import itertools
 import math
+import re
 import time
 import baseconvert
 import sportsbetting
@@ -709,4 +710,23 @@ def format_joa_time(string):
     if date_time < datetime.datetime.today():
         date_time = date_time.replace(year=date_time.year + 1)
     return date_time
+
+def format_zebet_names(match):
+    strings = match.split(" / ")
+    if len(strings) == 2:
+        return " - ".join(strings)
+    elif len(strings) == 4:
+        return " - ".join(map(lambda x: " / ".join(x), [strings[0:2], strings[2:4]]))
+    elif len(strings) == 3:
+        reg_exp = r'[A-z]+\.[A-z\-]+\-[A-z]+\.[A-z\-]+'
+        if re.findall(reg_exp, strings[0]):
+            return " - ".join([strings[0], " / ".join(strings[1:3])])
+        elif re.findall(reg_exp, strings[2]):
+            return " - ".join([" / ".join(strings[0:2]), strings[2]])
+        elif len(strings[0]) > max(len(strings[1]), len(strings[2])):
+            return " - ".join([strings[0], " / ".join(strings[1:3])])
+        elif len(strings[2]) > max(len(strings[1]), len(strings[0])):
+            return " - ".join([" / ".join(strings[0:2]), strings[2]])
+    return ""
+        
     

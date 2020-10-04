@@ -27,7 +27,8 @@ import sportsbetting
 from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import (merge_dicts, add_matches_to_db, scroll,
                                                format_bwin_names, format_bwin_time,
-                                               reverse_match_odds, format_joa_time)
+                                               reverse_match_odds, format_joa_time,
+                                               format_zebet_names)
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 
@@ -1020,7 +1021,7 @@ def parse_zebet(url=""):
     """
     if not url:
         url = "https://www.zebet.fr/fr/competition/96-ligue_1_conforama"
-    if url in sportsbetting.SPORTS:
+    if "/sport/" in url:
         return parse_sport_zebet(url)
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
@@ -1055,34 +1056,32 @@ def parse_zebet(url=""):
     return match_odds_hash
 
 
-def parse_sport_zebet(sport):
-    """
-    Retourne les cotes disponibles sur zebet pour un sport donné
-    """
-    id_sports = {
-        "football": 13,
-        "tennis": 21,
-        "basketball": 4,
-        "rugby": 12,
-        "handball": 9,
-        "hockey-sur-glace": 10
-    }
-    url = "https://www.zebet.fr"
-    soup = BeautifulSoup(urllib.request.urlopen(url+"/fr/sport/{}-{}".format(id_sports[sport], sport)), features="lxml")
-    odds = []
-    for line in soup.find_all(attrs={"class":"uk-accordion-wrapper"}):
-        strings = list(line.stripped_strings)
-        country = strings[0]
-        for child in line.findChildren("a"):
-            link = url + child["href"]
-            name = child.text.strip()
-            print("\t"+country+" - "+name)
+def parse_sport_zebet(url):
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    match_odds_hash = {}
+    today = datetime.datetime.today()
+    today = datetime.datetime(today.year, today.month, today.day)
+    year = str(today.year) + "/"
+    date_time = None
+    for line in soup.find_all():
+        if "Zebet rencontre actuellement des difficultés techniques." in line.text:
+            raise sportsbetting.UnavailableSiteException
+        if "class" in line.attrs and "bet-event" in line["class"]:
+            match = format_zebet_names(line.text.strip())
+        if "class" in line.attrs and "bet-time" in line["class"]:
             try:
-                odds.append(parse_zebet(link))
-            except sportsbetting.UnavailableCompetitionException:
-                pass
-    return merge_dicts(odds)
-
+                date_time = datetime.datetime.strptime(year + " ".join(line.text.strip().split()),
+                                                       "%Y/%d/%m %H:%M")
+                if date_time < today:
+                    date_time = date_time.replace(year=date_time.year + 1)
+            except ValueError:
+                date_time = "undefined"
+        if "class" in line.attrs and "pari-1" in line["class"]:
+            odds = list(map(lambda x:float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
+            match_odds_hash[match] = {}
+            match_odds_hash[match]['odds'] = {"zebet": odds}
+            match_odds_hash[match]['date'] = date_time
+    return match_odds_hash
 
 def parse(site, url=""):
     """
