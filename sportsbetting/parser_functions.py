@@ -39,6 +39,7 @@ else:  # sys.platform == "linux"
 
 def parse_betclic(url):
     selenium_init.DRIVER["betclic"].get(url)
+    is_sport_page = len([x for x in url.split("/") if x]) == 3
     match_odds_hash = {}
     match = None
     date_time = None
@@ -50,7 +51,8 @@ def parse_betclic(url):
     WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
         EC.invisibility_of_element_located((By.TAG_NAME, "app-preloader"))
     )
-    scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
+    if is_sport_page:
+        scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
     for _ in range(10):
         inner_html = selenium_init.DRIVER["betclic"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
@@ -199,11 +201,13 @@ def parse_bwin(url):
     match = None
     date_time = None
     index_column_result_odds = 1 if "handball" in url else 0
+    is_sport_page = "/0" in url
     reversed_odds = False
     WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, "participants-pair-game"))
     )
-    scroll(selenium_init.DRIVER["bwin"], "bwin", "grid-event-detail", 3, 'getElementById("main-view")')
+    if is_sport_page:
+        scroll(selenium_init.DRIVER["bwin"], "bwin", "grid-event-detail", 3, 'getElementById("main-view")')
     for _ in range(10):
         inner_html = selenium_init.DRIVER["bwin"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
@@ -815,15 +819,11 @@ def parse_pmu(url=""):
     Retourne les cotes disponibles sur pmu
     """
     if "http" not in url:
-        if url == "basket":
-            return merge_dicts([parse_sport_pmu(url+"-us"), parse_sport_pmu(url+"-euro")])
-        elif url == "hockey-sur-glace":
-            return merge_dicts([parse_sport_pmu(url+"-us"), parse_sport_pmu(url+"-eu")])
         return parse_sport_pmu(url)
-    if not url:
-        url = "https://paris-sportifs.pmu.fr/pari/competition/169/football/ligue-1-conforama"
-    #     url = "https://paris-sportifs.pmu.fr/pari/competition/441/tennis/open-daustralie-h"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    return parse_pmu_html(soup)
+
+def parse_pmu_html(soup):
     match_odds_hash = {}
     match = ""
     date_time = "undefined"
@@ -843,36 +843,21 @@ def parse_pmu(url=""):
                 date_time = "undefined"
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
-            try:
-                if "//" in string:
-                    live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
-                    if not live:
-                        handicap = False
-                        if "Egalité" in string:
-                            handicap = True
-                            match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                               + line.parent["href"])
-                            match_odds_hash[match] = {}
-                            match_odds_hash[match]['odds'] = {"pmu": odds}
-                            match_odds_hash[match]['date'] = date_time
-                        elif "hockey-sur-glace-us" in url:
-                            handicap = True
-                            odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                        + line.parent["href"])[1]
-                            if "nhl" in url:
-                                odds.reverse()
-                            match = string.replace("//", "-")
-                            match_odds_hash[match] = {}
-                            match_odds_hash[match]['odds'] = {"pmu": odds}
-                            match_odds_hash[match]['date'] = date_time
-                        else:
-                            match = string.replace(" - ", "-")
-                            match = match.replace("//", "-")
-            except TypeError:
-                pass
-        elif "class" in line.attrs and "event-list-odds-list" in line["class"] and not handicap:
+            if "//" in string:
+                live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
+                if not live:
+                    handicap = False
+                    if "+" in string:
+                        handicap = True
+                        match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                            + line.parent["href"])
+                    else:
+                        match = string.replace(" - ", "-")
+                        match = match.replace("//", "-")
+        elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
             if not live:
-                odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+                if not handicap:
+                    odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
                 match_odds_hash[match] = {}
                 match_odds_hash[match]['odds'] = {"pmu": odds}
                 match_odds_hash[match]['date'] = date_time
@@ -902,27 +887,21 @@ def parse_sport_pmu(sport):
     """
     Retourne les cotes disponibles sur pmu pour un sport donné
     """
-    url = "https://paris-sportifs.pmu.fr/pari/sport/25/football"
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    odds = []
-    links = []
-    competitions = []
-    for line in soup.find_all(["a"], {"class": "tc-track-element-events"}):
-        if "/" + sport + "/" in line["href"]:
-            if "http" not in line["href"]:
-                link = "https://paris-sportifs.pmu.fr" + line["href"]
-            else:
-                link = line["href"]
-            if link not in links:
-                links.append(link)
-                competitions.append(line.text)
-    for line, competition in zip(links, competitions):
-        print("\t" + competition)
+    list_odds = []
+    id_sport = {"football": 8, "tennis" : 11, "rugby" : 7, "hockey-sur-glace":44, "basketball" : 5}
+    i = 0
+    id = id_sport[sport]
+    while True:
+        url = "https://paris-sportifs.pmu.fr/pservices/more_events/{0}/{1}/pmu-event-list-load-more-{0}".format(id, i)
+        response = urllib.request.urlopen(url)
+        data = json.loads(response.read())
+        soup = BeautifulSoup(data[1]["html"], features="lxml")
         try:
-            odds.append(parse_pmu(line))
+            list_odds.append(parse_pmu_html(soup))
+            i += 1
         except sportsbetting.UnavailableCompetitionException:
-            pass
-    return merge_dicts(odds)
+            break
+    return merge_dicts(list_odds)
 
 
 def parse_unibet(url):
@@ -931,6 +910,7 @@ def parse_unibet(url):
     """
     selenium_init.DRIVER["unibet"].get(url)
     match_odds_hash = {}
+    is_sport_page = len([x for x in url.split("/") if x]) == 4
     match = ""
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -939,7 +919,8 @@ def parse_unibet(url):
     WebDriverWait(selenium_init.DRIVER["unibet"], 15).until(
         EC.invisibility_of_element_located((By.CLASS_NAME, "ui-spinner"))
     )
-    scroll(selenium_init.DRIVER["unibet"], "unibet", "calendar-event", 1)
+    if is_sport_page:
+        scroll(selenium_init.DRIVER["unibet"], "unibet", "calendar-event", 1)
     for _ in range(10):
         inner_html = selenium_init.DRIVER["unibet"].execute_script("return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
