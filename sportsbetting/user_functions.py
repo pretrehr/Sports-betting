@@ -114,7 +114,7 @@ def parse_competitions_site(competitions, sport, site):
     except sportsbetting.AbortException:
         print("Interruption", site)
     except sqlite3.OperationalError:
-        print("Database is locked")
+        print("Database is locked", site)
     return merge_dict_odds(list_odds)
 
 
@@ -301,7 +301,7 @@ def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
     """
     stakes = []
     n = 2 + (sport not in ["tennis", "volleyball", "basketball", "nba"])
-    for _ in range(n*nb_matches_combine):
+    for _ in range(n**nb_matches_combine):
         stakes.append([bet, site, minimum_odd])
     best_match_stakes_to_bet(stakes, nb_matches_combine, sport, date_max, time_max, True)
 
