@@ -848,7 +848,7 @@ def parse_pmu_html(soup):
                 live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
                 if not live:
                     handicap = False
-                    if "+" in string:
+                    if "+" in string or "Egalité" in string:
                         handicap = True
                         match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
                                                             + line.parent["href"])
