@@ -1000,6 +1000,8 @@ def parse_winamax(url=""):
                             and match['sportId'] == sport_id):
                         try:
                             match_name = match["title"]
+                            if "-" not in match_name or "Compétition" in match_name:
+                                continue
                             date_time = datetime.datetime.fromtimestamp(match["matchStart"])
                             main_bet_id = match["mainBetId"]
                             odds_ids = dict_matches["bets"][str(main_bet_id)]["outcomes"]
