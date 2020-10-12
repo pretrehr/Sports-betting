@@ -18,7 +18,7 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
                                               get_close_name3, get_double_team_tennis,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
-                                              is_matching_next_match)
+                                              is_matching_next_match, get_time_next_match)
 
 from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
 
@@ -89,7 +89,9 @@ def add_matches_to_db(odds, sport, site, id_competition):
                 for line in lines:
                     if line[0] not in not_matching_teams[team]:
                         check = not is_matching_next_match(id_competition, line[0], team, odds)
-                        success = add_name_to_db(line[0], team, site, check)
+                        date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                        date_next_match_db = get_time_next_match(id_competition, line[0])
+                        success = add_name_to_db(line[0], team, site, check, date_next_match, date_next_match_db)
                         if success:
                             break
                         not_matching_teams[team].append(line[0])

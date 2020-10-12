@@ -279,7 +279,7 @@ def get_sport_by_id(_id):
         return c.fetchone()[0]
 
 
-def add_name_to_db(_id, name, site, check=False):
+def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next_match_db=None):
     """
     Ajoute le nom de l'équipe/joueur tel qu'il est affiché sur un site dans la base de données
     """
@@ -296,8 +296,10 @@ def add_name_to_db(_id, name, site, check=False):
         if check:
             if sportsbetting.INTERFACE:
                 sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} ({}) sur {}\n"
-                                               "Nouvelle donnée : {}"
-                                               .format(formatted_name, _id, site, name))
+                                               "Nouvelle donnée : {}\n"
+                                               "Date du prochain match de l'équipe à ajouter : {}\n"
+                                               "Date du prochain match de l'équipe existant dans la db : {}\n"
+                                               .format(formatted_name, _id, site, name, date_next_match, date_next_match_db))
                 ans = sportsbetting.QUEUE_FROM_GUI.get(True)
             else:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
