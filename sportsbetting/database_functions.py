@@ -170,17 +170,21 @@ def is_id_in_db(_id):
         return line
 
 
-def is_in_db(name, sport, site):
+def is_in_db(name, sport, site, only_null=True):
     """
     Vérifie si le nom uniformisé de l'équipe est dans la base de données
     """
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
-    c.execute("""
-    SELECT id FROM names WHERE sport="{}" AND name="{}" and name_{} IS NULL
-    """.format(sport, name, site))
-    for line in c.fetchall():
-        return line
+    if only_null:
+        c.execute("""
+        SELECT id, name FROM names WHERE sport="{}" AND name="{}" and name_{} IS NULL
+        """.format(sport, name, site))
+    else:
+        c.execute("""
+        SELECT id FROM names WHERE sport="{}" AND name="{}"
+        """.format(sport, name))
+    return list(c.fetchall())
 
 
 def is_in_db_site(name, sport, site):

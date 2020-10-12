@@ -49,33 +49,19 @@ def add_matches_to_db(odds, sport, site, id_competition):
     matches = odds.keys()
     teams = set(chain.from_iterable(list(map(lambda x: x.split(" - "), list(matches)))))
     teams = set(map(lambda x: x.strip(), teams))
-    teams_not_in_db_site = set()
     teams_sets = []
     not_matching_teams = {}
-    for team in teams:
-        line = is_in_db_site(team, sport, site)
-        if not line:
-            teams_not_in_db_site.add(team)
-    if not teams_not_in_db_site:
-        return
-    print(list(teams_not_in_db_site), site)
     i = 0
     teams_sets.append(set())
-    for team in teams_not_in_db_site:
-        success = False
+    for team in teams:
         not_matching_teams[team] = []
-        line = is_in_db(team, sport, site)
-        if line:
-            check = not is_matching_next_match(id_competition, line[0], team, odds)
-            success = add_name_to_db(line[0], team, site, check)
-            if not success:
-                not_matching_teams[team].append(line[0])
-        if not success:
+        line = is_in_db_site(team, sport, site)
+        if not line:
             teams_sets[i].add(team)
-    print(i, list(teams_sets[i]), site)
     if not teams_sets[i]:
         return
-    get_close_name_functions = [get_close_name, get_close_name2]
+    print(i, list(teams_sets[i]), site)
+    get_close_name_functions = [is_in_db, get_close_name, get_close_name2]
     if sport == "tennis":
         get_close_name_functions.append(get_close_name3)
         get_close_name_functions.append(get_double_team_tennis)
@@ -111,7 +97,7 @@ def add_matches_to_db(odds, sport, site, id_competition):
                         id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
                     else:
                         id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                    if id_to_find:
+                    if id_to_find and id_to_find not in not_matching_teams[team]:
                         success = add_name_to_db(id_to_find, team, site)
                         if success:
                             break
