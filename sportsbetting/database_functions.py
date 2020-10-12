@@ -406,6 +406,8 @@ def get_close_name2(name, sport, site, only_null=True):
     split_name = re.split('[ .\-,]', name)
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
+    if not split_name2:
+        return []
     set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
@@ -423,6 +425,8 @@ def get_close_name2(name, sport, site, only_null=True):
         split_line = re.split('[ .\-,]', string_line)
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
                                                                     or string != string.upper())])
+        if not split_line2:
+            continue
         if (unidecode.unidecode(split_name2.lower()) in unidecode.unidecode(split_line2.lower())
                 or unidecode.unidecode(split_line2.lower()) in unidecode.unidecode(split_name2
                                                                                    .lower())):
