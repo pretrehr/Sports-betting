@@ -463,7 +463,7 @@ def parse_netbet(url=""):
         elif "class" in line.attrs and "nb-event_odds_wrapper" in line["class"]:
             try:
                 odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
-                if match not in match_odds_hash:
+                if match and match not in match_odds_hash:
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"netbet": odds}
                     if not date_time:
