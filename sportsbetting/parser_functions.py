@@ -560,7 +560,7 @@ def parse_parionssport(url=""):
                     except ValueError:
                         date_time = "undefined"
                 if "class" in line.attrs and "wpsel-desc" in line["class"]:
-                    match = line.text.split(" À")[0].strip()
+                    match = line.text.split(" À")[0].strip().replace("  ", " ")
                 if "class" in line.attrs and "buttonLine" in line["class"]:
                     try:
                         odds = list(map(lambda x: float(x.replace(",", ".")),
