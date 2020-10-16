@@ -537,6 +537,8 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
                     valid_perm = False
                     break
             if not valid_perm:
+                if identical_stakes:
+                    break
                 continue
             defined_bets_temp = defined_bets(main_site_odds, dict_combine_odds,
                                              main_sites_distribution,
