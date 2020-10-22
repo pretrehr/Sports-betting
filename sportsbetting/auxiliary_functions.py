@@ -98,7 +98,10 @@ def add_matches_to_db(odds, sport, site, id_competition):
                     else:
                         id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                     if id_to_find and id_to_find not in not_matching_teams[team]:
-                        success = add_name_to_db(id_to_find, team, site)
+                        check = not is_matching_next_match(id_competition, id_to_find, team, odds)
+                        date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                        date_next_match_db = get_time_next_match(id_competition, id_to_find)
+                        success = add_name_to_db(id_to_find, team, site, check, date_next_match, date_next_match_db)
                         if success:
                             break
                         not_matching_teams[team].append(id_to_find)

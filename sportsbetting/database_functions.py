@@ -330,17 +330,20 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
         """.format(site, _id))
         sport, formatted_name, name_site = c.fetchone()
         if name and name != name_site:
-            if sportsbetting.INTERFACE:
-                sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
-                                               "Nouvelle donnée : {}\n"
-                                               "Donnée déjà existante : {}"
-                                               .format(formatted_name, site, name, name_site))
-                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-            else:
-                ans = input("Créer une nouvelle entrée pour {} sur {} "
-                            "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
-                            .format(formatted_name, site, name_site, name))
-            if ans in ['y', 'Yes']:
+            if check:
+                if sportsbetting.INTERFACE:
+                    sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
+                                                   "Nouvelle donnée : {}\n"
+                                                   "Donnée déjà existante : {}\n"
+                                                   "Date du prochain match de l'équipe à ajouter : {}\n"
+                                                   "Date du prochain match de l'équipe existant dans la db : {}\n"
+                                                   .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db))
+                    ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+                else:
+                    ans = input("Créer une nouvelle entrée pour {} sur {} "
+                                "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
+                                .format(formatted_name, site, name_site, name))
+            if not check or ans in ['y', 'Yes']:
                 if name_site and not is_id_available_for_site(_id, site):
                     c.execute("""
                     INSERT INTO names (id, name, sport, name_{})
@@ -503,7 +506,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
     for line in soup.find_all(["a", "table"]):
         if get_next_id and "class" in line.attrs and "otn" in line["class"]:
             if line["href"].split("-td")[1] != str(id_opponent):
-                return line["href"].split("-td")[1]
+                return int(line["href"].split("-td")[1])
         if "class" in line.attrs and "bettable" in line["class"]:
             for string in list(line.stripped_strings):
                 if "à" in string:

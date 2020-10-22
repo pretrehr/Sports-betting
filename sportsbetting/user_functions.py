@@ -381,7 +381,6 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     sportsbetting.ALL_ODDS_COMBINE = {}
     nb_combine = binomial(len(all_odds), nb_matches)
     sportsbetting.PROGRESS = 0
-    print(nb_combine, file=sys.stderr)
 
     def compute_all_odds_combine(nb_combine, combine):
         sportsbetting.PROGRESS += 100/nb_combine
