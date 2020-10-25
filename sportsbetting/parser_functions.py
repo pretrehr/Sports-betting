@@ -519,6 +519,9 @@ def parse_parionssport(url=""):
     is_sport_page = "paris-" in url.split("/")[-1] and "?" not in url
     is_basket = "basket" in url
     selenium_init.DRIVER["parionssport"].get(url)
+    if "maintenance technique" in selenium_init.DRIVER["parionssport"].execute_script(
+            "return document.body.innerHTML"):
+        raise sportsbetting.UnavailableSiteException
     if (selenium_init.DRIVER["parionssport"].current_url
             == "https://www.enligne.parionssport.fdj.fr/"):
         raise sportsbetting.UnavailableSiteException

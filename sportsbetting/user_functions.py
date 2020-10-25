@@ -92,6 +92,8 @@ def parse_competition(competition, sport="football", *sites):
             print("{} non disponible sur {}".format(competition, site))
         except socket.timeout:
             print("{} non accessible sur {} (timeout socket)".format(competition, site))
+        except selenium.common.exceptions.StaleElementReferenceException:
+            print("StaleElement non trouvé par selenium ({} sur {})".format(competition, site))
     res = format_team_names(res_parsing, sport, competition)
     out = valid_odds(merge_dict_odds(res), sport)
     if inspect.currentframe().f_back.f_code.co_name != "<module>":
