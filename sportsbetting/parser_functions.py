@@ -409,8 +409,10 @@ def parse_netbet(url=""):
     """
     Retourne les cotes disponibles sur netbet
     """
+    sport = None
     if url in ["football", "tennis", "basketball", "hockey-glace", "rugby", "handball"]:
-        return parse_sport_netbet(url)
+        sport = url
+        url = "https://www.netbet.fr/top-paris"
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
     headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}
@@ -442,7 +444,10 @@ def parse_netbet(url=""):
     year = " " + str(today.year)
     match = ""
     date_time = None
+    valid_match = True
     for line in soup.find_all():
+        if sport and "class" in line.attrs and "nb-link-event" in line["class"] and "href" in line.attrs:
+            valid_match = sport in line["href"]
         if "class" in line.attrs and "nb-event_datestart" in line["class"]:
             date = list(line.stripped_strings)[0] + year
             if "Auj." in date:
@@ -463,7 +468,7 @@ def parse_netbet(url=""):
         elif "class" in line.attrs and "nb-event_odds_wrapper" in line["class"]:
             try:
                 odds = list(map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)[1::2]))
-                if match and match not in match_odds_hash:
+                if valid_match and match and match not in match_odds_hash:
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"netbet": odds}
                     if not date_time:
@@ -472,42 +477,6 @@ def parse_netbet(url=""):
             except ValueError:  # match live (cotes non disponibles)
                 pass
     return match_odds_hash
-
-
-def parse_sport_netbet(sport):
-    """
-    Retourne les cotes disponibles sur netbet pour un sport donné
-    """
-    url = "https://www.netbet.fr"
-    odds = []
-    headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}    
-    request=urllib.request.Request(url+"/"+sport, None, headers)
-    response = urllib.request.urlopen(request)
-    soup = BeautifulSoup(response, features="lxml")
-    country = ""
-    h2_found = False
-    for line in soup.find_all("h2"):
-        if line.text == "A-Z catégories":
-            h2_found = True
-            competitions_part = line.find_next_sibling("ul")
-            break
-    for line in competitions_part.find_all(attrs={"class":["uk-accordion-title", "uk-accordion-content"]}):
-        strings = list(line.stripped_strings)
-        if "uk-accordion-title" in line["class"]:
-            country = strings[0]
-        elif "uk-accordion-content" in line["class"]:
-            for child in line.findChildren("a"):
-                link = url+child["href"]
-                substrings = list(child.stripped_strings)
-                name = substrings[0]
-                nb_bets = int(substrings[1])
-                if nb_bets>1:
-                    print("\t"+country+" - "+name)
-                    try:
-                        odds.append(parse_netbet(link))
-                    except sportsbetting.UnavailableCompetitionException:
-                        pass
-    return merge_dicts(odds)
 
 
 def parse_parionssport(url=""):
