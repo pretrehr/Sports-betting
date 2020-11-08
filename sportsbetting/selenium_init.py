@@ -38,7 +38,7 @@ def start_selenium(site, headless=True):
         colorama.Style.RESET_ALL
         colorama.deinit()
         return True
-    except stopit.utils.TimeoutException:
+    except (stopit.utils.TimeoutException, selenium.common.exceptions.SessionNotCreatedException) as e:
         colorama.init()
         print(termcolor.colored('Driver not started for {}'.format(site), 'red'))
         colorama.Style.RESET_ALL

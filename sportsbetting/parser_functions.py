@@ -169,7 +169,7 @@ def parse_sport_betstars(sport):
     urls = []
     competitions = []
     WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "match-time"))
+        EC.presence_of_element_located((By.CLASS_NAME, "basicList__item"))
     )
     inner_html = selenium_init.DRIVER["betstars"].execute_script(
         "return document.body.innerHTML")
@@ -354,7 +354,7 @@ def parse_joa(url):
     selenium_init.DRIVER["joa"].get(url)
     match_odds_hash = {}
     try:
-        WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
+        WebDriverWait(selenium_init.DRIVER["joa"], 30).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
         )
     except selenium.common.exceptions.TimeoutException:
@@ -416,7 +416,7 @@ def parse_netbet(url=""):
     if not url:
         url = "https://www.netbet.fr/football/france/96-ligue-1-conforama"
     headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"}
-    for i in range(10):
+    for i in range(3):
         try:
             request = urllib.request.Request(url,None,headers)
             response = urllib.request.urlopen(request, timeout=5)
@@ -889,7 +889,7 @@ def parse_unibet(url):
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year) + "/"
     date_time = None
-    WebDriverWait(selenium_init.DRIVER["unibet"], 15).until(
+    WebDriverWait(selenium_init.DRIVER["unibet"], 30).until(
         EC.invisibility_of_element_located((By.CLASS_NAME, "ui-spinner"))
     )
     if is_sport_page:

@@ -522,6 +522,8 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
 def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     url = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id=" + str(-id_opponent)
     date_match = matches[name_site_match]["date"]
+    if date_match == "undefined":
+        date_match = datetime.datetime.today()
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     except urllib.error.HTTPError:
