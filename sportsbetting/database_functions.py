@@ -542,6 +542,22 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
                 elif id_away == id_opponent:
                     return id_home
     return
+    
+
+def get_time_next_match_thesportsdb(id_competition, id_team):
+    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-id_competition)
+    try:
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+        dict_competition = json.loads(soup.text)
+        if dict_competition["events"]:
+            for event in dict_competition["events"]:
+                if str(-id_team) in [event["idHomeTeam"], event["idAwayTeam"]]:
+                    date_time = event["dateEvent"]+event["strTime"]
+                    return datetime.datetime.strptime(date_time, "%Y-%m-%d%H:%M:%S")+datetime.timedelta(hours=1)
+        return 0
+    except urllib.error.HTTPError:
+        return 0
+
 
 def get_time_next_match(id_competition, id_team):
     if id_competition >= 9999:
@@ -549,7 +565,7 @@ def get_time_next_match(id_competition, id_team):
     elif id_team > 0:
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)
     else:
-        return 0
+        return get_time_next_match_thesportsdb(id_competition, id_team)
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         for line in soup.find_all("a"):
@@ -559,6 +575,7 @@ def get_time_next_match(id_competition, id_team):
                     for string in strings:
                         if " à " in string:
                             return datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
+        return 0
     except urllib.error.HTTPError:
         return 0
 
