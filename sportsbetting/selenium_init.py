@@ -3,6 +3,7 @@ Initialisation de selenium
 """
 
 import colorama
+import chromedriver_autoinstaller.utils
 import os
 import selenium
 import selenium.webdriver
@@ -14,6 +15,11 @@ import time
 
 PATH_DRIVER = os.path.dirname(sportsbetting.__file__) + "/resources/chromedriver"
 DRIVER = {}
+
+def get_path():
+    return (chromedriver_autoinstaller.utils.get_chromedriver_path()
+            + "/" + chromedriver_autoinstaller.utils.get_major_version(chromedriver_autoinstaller.utils.get_chrome_version())
+            + "/chromedriver")
 
 
 @stopit.threading_timeoutable(timeout_param='timeout')
@@ -32,7 +38,8 @@ def start_selenium(site, headless=True):
         options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     try:
-        DRIVER[site] = selenium.webdriver.Chrome(options=options)
+        print(get_path())
+        DRIVER[site] = selenium.webdriver.Chrome(get_path(), options=options)
         colorama.init()
         print(termcolor.colored('Driver started for {}'.format(site), 'green'))
         colorama.Style.RESET_ALL
