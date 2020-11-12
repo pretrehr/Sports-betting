@@ -6,7 +6,6 @@ beautifulsoup4>=4.9.1
 lxml>=4.5.1
 pysimplegui>=4.29.0
 fake-useragent>=0.1.11
-baseconvert>=1.0.0a4
 termcolor>=1.1.0
 chromedriver-autoinstaller>=0.2.2
 stopit>=1.1.2

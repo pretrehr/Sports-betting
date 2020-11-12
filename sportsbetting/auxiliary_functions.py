@@ -11,7 +11,6 @@ import itertools
 import math
 import re
 import time
-import baseconvert
 import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
@@ -445,6 +444,15 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         print(name_combine + " " * diff + "\t", sites_bet_combinaison)
 
 
+def convert_decimal_to_base(num, base):
+    assert(2 <= base <= 9)
+    newNum = ''
+    while num > 0:
+        newNum = str(num % base) + newNum
+        num //= base
+    return list(map(int, newNum))
+
+
 def best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport="football", date_max=None,
                     time_max=None, date_min=None, time_min=None, combine=False,
@@ -507,7 +515,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                         pass
     if best_match:
         if combine_opt and combine:
-            ref_combinaison = list(reversed(baseconvert.base(best_rank, 10, get_nb_issues(sport))))
+            ref_combinaison = list(reversed(convert_decimal_to_base(best_rank, get_nb_issues(sport))))
             n_combi = len(ref_combinaison)
             for _ in range(nb_matches_combine - n_combi):
                 ref_combinaison.append(0)

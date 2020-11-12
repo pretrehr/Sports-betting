@@ -38,7 +38,6 @@ def start_selenium(site, headless=True):
         options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     try:
-        print(get_path())
         DRIVER[site] = selenium.webdriver.Chrome(get_path(), options=options)
         colorama.init()
         print(termcolor.colored('Driver started for {}'.format(site), 'green'))
