@@ -652,7 +652,7 @@ def binomial(x, y):
 def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="body"):
     last_height = 0
     new_height = 1
-    while last_height != new_height:
+    while last_height != new_height and not sportsbetting.ABORT:
         last_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
         print("Scrolling", site)
         driver.execute_script("""

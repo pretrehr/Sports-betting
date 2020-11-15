@@ -50,8 +50,10 @@ def parse_betclic(url):
             == "https://www.betclic.fr/"):
         raise sportsbetting.UnavailableCompetitionException
     WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
-        EC.invisibility_of_element_located((By.TAG_NAME, "app-preloader"))
+        EC.invisibility_of_element_located((By.TAG_NAME, "app-preloader")) or sportsbetting.ABORT
     )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
     for _ in range(10):
@@ -100,8 +102,10 @@ def parse_betstars(url=""):
     year = str(today.year)
     try:
         WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time"))
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "match-time")) or sportsbetting.ABORT
         )
+        if sportsbetting.ABORT:
+            raise sportsbetting.AbortException
         inner_html = (selenium_init.DRIVER["betstars"]
                       .execute_script("return document.body.innerHTML"))
         soup = BeautifulSoup(inner_html, features="lxml")
@@ -169,8 +173,10 @@ def parse_sport_betstars(sport):
     urls = []
     competitions = []
     WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "basicList__item"))
+        EC.presence_of_element_located((By.CLASS_NAME, "basicList__item")) or sportsbetting.ABORT
     )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     inner_html = selenium_init.DRIVER["betstars"].execute_script(
         "return document.body.innerHTML")
     if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
@@ -205,8 +211,10 @@ def parse_bwin(url):
     is_sport_page = "/0" in url
     reversed_odds = False
     WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
-        EC.presence_of_all_elements_located((By.CLASS_NAME, "participants-pair-game"))
+        EC.presence_of_all_elements_located((By.CLASS_NAME, "participants-pair-game")) or sportsbetting.ABORT
     )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["bwin"], "bwin", "grid-event-detail", 3, 'getElementById("main-view")')
     for _ in range(10):
@@ -251,8 +259,6 @@ def parse_france_pari(url=""):
     """
     if not url:
         url = "https://www.france-pari.fr/competition/96-parier-sur-ligue-1-conforama"
-    if url in sportsbetting.SPORTS:
-        return parse_sport_france_pari(url)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     match_odds_hash = {}
     today = datetime.datetime.today()
@@ -297,35 +303,6 @@ def parse_france_pari(url=""):
     return match_odds_hash
 
 
-def parse_sport_france_pari(sport):
-    id_sports = {
-        "football": 13,
-        "tennis": 21,
-        "basketball": 4,
-        "rugby": 12,
-        "handball": 9,
-        "hockey-sur-glace": 10
-    }
-    url = "https://www.france-pari.fr"
-    soup = BeautifulSoup(urllib.request.urlopen(url+"/sport/sport-list-"+str(id_sports[sport])), features="lxml")
-    odds = []
-    for line in soup.find_all(attrs={"class":["odd-event", "item-subheader"]}):
-        strings = list(line.stripped_strings)
-        if "item-subheader" in line["class"]:
-            country = strings[0]
-        else:
-            name = strings[0]
-            nb_bets = int(strings[1])
-            if nb_bets>1:
-                child = line.findChild().findChild().findChild()
-                print("\t"+country+" - "+name)
-                link = url+child["href"]
-                try:
-                    odds.append(parse_france_pari(link))
-                except sportsbetting.UnavailableCompetitionException:
-                    pass
-    return merge_dicts(odds)
-
 def parse_joa_html(inner_html):
     match_odds_hash = {}
     match = None
@@ -355,8 +332,10 @@ def parse_joa(url):
     match_odds_hash = {}
     try:
         WebDriverWait(selenium_init.DRIVER["joa"], 30).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name")) or sportsbetting.ABORT
         )
+        if sportsbetting.ABORT:
+            raise sportsbetting.AbortException
     except selenium.common.exceptions.TimeoutException:
         raise sportsbetting.UnavailableCompetitionException
     for _ in range(10):
@@ -371,13 +350,17 @@ def parse_joa_sport(url):
     selenium_init.DRIVER["joa"].get(url)
     list_odds = []
     cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
-        EC.element_to_be_clickable((By.CLASS_NAME, "cc-cookie-accept"))
+        EC.element_to_be_clickable((By.CLASS_NAME, "cc-cookie-accept")) or sportsbetting.ABORT
     )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     cookies.click()
     try:
         filtres = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "Filtres"))
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "Filtres")) or sportsbetting.ABORT
         )
+        if sportsbetting.ABORT:
+            raise sportsbetting.AbortException
     except selenium.common.exceptions.TimeoutException:
         raise sportsbetting.UnavailableCompetitionException
     for i, _ in enumerate(filtres):
@@ -386,15 +369,19 @@ def parse_joa_sport(url):
         match_odds_hash = {}
         try:
             WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name"))
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "bet-event-name")) or sportsbetting.ABORT
             )
+            if sportsbetting.ABORT:
+                raise sportsbetting.AbortException
         except selenium.common.exceptions.TimeoutException:
             raise sportsbetting.UnavailableCompetitionException
         while True:
             try:
                 show_more = WebDriverWait(selenium_init.DRIVER["joa"], 5).until(
-                    EC.presence_of_all_elements_located((By.CLASS_NAME, "show-more-leagues"))
+                    EC.presence_of_all_elements_located((By.CLASS_NAME, "show-more-leagues")) or sportsbetting.ABORT
                 )[0]
+                if sportsbetting.ABORT:
+                    raise sportsbetting.AbortException
                 show_more.find_element_by_tag_name("button").click()
             except selenium.common.exceptions.TimeoutException:
                 break
@@ -447,7 +434,7 @@ def parse_netbet(url=""):
     valid_match = True
     for line in soup.find_all():
         if sport and "class" in line.attrs and "nb-link-event" in line["class"] and "href" in line.attrs:
-            valid_match = sport in line["href"]
+            valid_match = sport+"/" in line["href"]
         if "class" in line.attrs and "nb-event_datestart" in line["class"]:
             date = list(line.stripped_strings)[0] + year
             if "Auj." in date:
@@ -890,8 +877,10 @@ def parse_unibet(url):
     year = str(today.year) + "/"
     date_time = None
     WebDriverWait(selenium_init.DRIVER["unibet"], 30).until(
-        EC.invisibility_of_element_located((By.CLASS_NAME, "ui-spinner"))
+        EC.invisibility_of_element_located((By.CLASS_NAME, "ui-spinner")) or sportsbetting.ABORT
     )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["unibet"], "unibet", "calendar-event", 1)
     for _ in range(10):
@@ -955,9 +944,12 @@ def parse_winamax(url=""):
     except IndexError:
         tournament_id = -1
     sport_id = int(ids.split("/")[0])
-    req = urllib.request.Request(url, headers={'User-Agent': sportsbetting.USER_AGENT})
-    webpage = urllib.request.urlopen(req, timeout=10).read()
-    soup = BeautifulSoup(webpage, features="lxml")
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': sportsbetting.USER_AGENT})
+        webpage = urllib.request.urlopen(req, timeout=10).read()
+        soup = BeautifulSoup(webpage, features="lxml")
+    except urllib.error.HTTPError:
+        raise sportsbetting.UnavailableSiteException
     match_odds_hash = {}
     for line in soup.find_all(['script']):
         if "PRELOADED_STATE" in str(line.string):
