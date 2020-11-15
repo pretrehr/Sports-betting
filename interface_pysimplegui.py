@@ -40,6 +40,16 @@ sports = get_all_sports()
 sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
          'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
 
+
+print("""
+   _____                  __             __         __  __  _            
+  / ___/____  ____  _____/ /______      / /_  ___  / /_/ /_(_)___  ____ _
+  \__ \/ __ \/ __ \/ ___/ __/ ___/_____/ __ \/ _ \/ __/ __/ / __ \/ __ `/
+ ___/ / /_/ / /_/ / /  / /_(__  )_____/ /_/ /  __/ /_/ /_/ / / / / /_/ / 
+/____/ .___/\____/_/   \__/____/     /_.___/\___/\__/\__/_/_/ /_/\__, /  
+    /_/                                                         /____/   
+""")
+
 try:
     sportsbetting.ODDS = pickle.load(open(PATH_DATA, "rb"))
 except FileNotFoundError:
