@@ -575,82 +575,40 @@ def parse_match_nba_parionssport(url):
     return match_odds
 
 
-def parse_pasinobet(url=""):
+def parse_pasinobet(url):
     """
     Retourne les cotes disponibles sur pasinobet
     """
-    if not url:
-        url = "https://www.pasinobet.fr/#/sport/?type=0&competition=20896&sport=1&region=830001"
-    if "http" not in url:
-        return parse_pasinobet_sport(url)
     selenium_init.DRIVER["pasinobet"].get("about:blank")
     selenium_init.DRIVER["pasinobet"].get(url)
-    is_basketball = "sport=3" in url
-    is_us = "region=5000" in url
-    date = ""
-    iter_odds = None
-    if is_basketball:
-        all_odds = []
-        links = []
-        for _ in range(100):
-            links = selenium_init.DRIVER["pasinobet"].find_elements_by_class_name('team-name-tc')
-            if links:
-                break
-        for match_link in links:
-            match_link.click()
-            time.sleep(0.8)
-            inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
-                "return document.body.innerHTML")
-            soup = BeautifulSoup(inner_html, features="lxml")
-            for line in soup.findAll():
-                if "data-title" in line.attrs and "Vainqueur du match" in line["data-title"]:
-                    odds = list(map(float, list(line.find_parent().stripped_strings)[1::2]))
-                    all_odds.append(odds)
-                    break
-            else:
-                all_odds.append([])
-        iter_odds = iter(all_odds)
     match_odds_hash = {}
-    for _ in range(100):
-        inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
-            "return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        if (url.split("competition=")[1].split("&")[0]
-                !=
-                selenium_init.DRIVER["pasinobet"].current_url.split("competition=")[1].split("&")[
-                    0]):
-            raise sportsbetting.UnavailableCompetitionException
-        for line in soup.findAll():
-            if ("class" in line.attrs and "game-events-view-v3" in line["class"]
-                    and "vs" in line.text):
-                strings = list(line.stripped_strings)
-                date_time = datetime.datetime.strptime(date + " " + strings[0], "%d.%m.%y %H:%M")
-                i = strings.index("vs")
-                match = (strings[i + 1] + " - " + strings[i - 1] if is_us
-                         else strings[i - 1] + " - " + strings[i + 1])
-                odds = []
-                next_odd = False
-                for string in strings:
-                    if string == "Max:":
-                        next_odd = True
-                    elif next_odd:
-                        odds.append(float(string))
-                        next_odd = False
-                if is_basketball:
-                    try:
-                        odds = next(iter_odds)
-                    except StopIteration:
-                        pass
-                if is_us:
-                    odds.reverse()
-                if odds:
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"pasinobet": odds}
-                    match_odds_hash[match]['date'] = date_time
-            elif "class" in line.attrs and "time-title-view-v3" in line["class"]:
-                date = line.text
-        if match_odds_hash:
-            return match_odds_hash
+    match = None
+    date_time = None
+    WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
+        EC.invisibility_of_element_located((By.CLASS_NAME, "skeleton-line")) or sportsbetting.ABORT
+    )
+    if sportsbetting.ABORT:
+        raise sportsbetting.AbortException
+    inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
+    soup = BeautifulSoup(inner_html, features="lxml")
+    for line in soup.findAll():
+        if sportsbetting.ABORT:
+            raise sportsbetting.AbortException
+        if "class" in line.attrs and "category-date" in line["class"]:
+            date = line.text.lower()
+            date = date.replace("nov", "novembre")
+            date = date.replace("déc", "décembre")
+        if "class" in line.attrs and "event-title" in line["class"]:
+            match = " - ".join(map(lambda x: list(x.stripped_strings)[0],
+                                    line.findChildren("div", {"class":"teams-container"})))
+        if "class" in line.attrs and "time" in line["class"]:
+            date_time = datetime.datetime.strptime(date+line.text.strip(), "%A, %d %B %Y%H:%M")
+        if "class" in line.attrs and "event-list" in line["class"]:
+            if "---" not in list(line.stripped_strings):
+                odds = list(map(float, line.stripped_strings))
+                match_odds_hash[match] = {}
+                match_odds_hash[match]["date"] = date_time
+                match_odds_hash[match]["odds"] = {"pasinobet" : odds}
     return match_odds_hash
 
 
@@ -805,7 +763,8 @@ def parse_pmu_html(soup):
             string = "".join(list(line.stripped_strings))
             if "//" in string:
                 live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
-                if not live:
+                is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
+                if not (live or is_rugby_13):
                     handicap = False
                     if "+" in string or "Egalité" in string:
                         handicap = True
