@@ -303,7 +303,8 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                "Nouvelle donnée : {}\n"
                                                "Date du prochain match de l'équipe à ajouter : {}\n"
                                                "Date du prochain match de l'équipe existant dans la db : {}\n"
-                                               .format(formatted_name, _id, site, name, date_next_match, date_next_match_db))
+                                               "Prochaine compétition jouée dans la db : {}\n"
+                                               .format(formatted_name, _id, site, name, date_next_match, date_next_match_db, get_next_competition(_id)))
                 ans = sportsbetting.QUEUE_FROM_GUI.get(True)
             else:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -337,7 +338,8 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                    "Donnée déjà existante : {}\n"
                                                    "Date du prochain match de l'équipe à ajouter : {}\n"
                                                    "Date du prochain match de l'équipe existant dans la db : {}\n"
-                                                   .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db))
+                                                   "Prochaine compétition jouée dans la db : {}\n"
+                                                   .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db, get_next_competition(_id)))
                     ans = sportsbetting.QUEUE_FROM_GUI.get(True)
                 else:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -578,6 +580,17 @@ def get_time_next_match(id_competition, id_team):
         return 0
     except urllib.error.HTTPError:
         return 0
+
+def get_next_competition(id_team):
+    if id_team > 0:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
+    try:
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+        for line in soup.find_all("h1"):
+            return line.text.strip()
+        return
+    except urllib.error.HTTPError:
+        return
 
 def is_matching_next_match(id_competition, id_team, name_team, matches):
     if id_team < 0:
