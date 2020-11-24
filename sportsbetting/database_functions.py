@@ -534,7 +534,7 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     if dict_events["events"]:
         for event in dict_events["events"]:
             date_time = (datetime.datetime(*(map(int, event["dateEvent"].split("-"))),
-                                           *(map(int, event["strTime"].split(":"))))
+                                           *(map(int, event["strTime"].split(":")[:2])))
                          + datetime.timedelta(hours=2))
             if abs(date_time - date_match) < datetime.timedelta(days=0.5):
                 id_home = -int(event["idHomeTeam"])
