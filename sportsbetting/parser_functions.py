@@ -534,10 +534,9 @@ def parse_parionssport(url=""):
         elif urls_basket:
             list_odds = []
             for match_url in urls_basket:
-                try:
-                    list_odds.append(parse_match_nba_parionssport(match_url))
-                except KeyboardInterrupt:
+                if sportsbetting.ABORT:
                     break
+                list_odds.append(parse_match_nba_parionssport(match_url))
             return merge_dicts(list_odds)
     return match_odds_hash
 
@@ -591,6 +590,7 @@ def parse_pasinobet(url):
         raise sportsbetting.AbortException
     inner_html = selenium_init.DRIVER["pasinobet"].execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
+    date = ""
     for line in soup.findAll():
         if sportsbetting.ABORT:
             raise sportsbetting.AbortException
@@ -602,7 +602,10 @@ def parse_pasinobet(url):
             match = " - ".join(map(lambda x: list(x.stripped_strings)[0],
                                     line.findChildren("div", {"class":"teams-container"})))
         if "class" in line.attrs and "time" in line["class"]:
-            date_time = datetime.datetime.strptime(date+line.text.strip(), "%A, %d %B %Y%H:%M")
+            try:
+                date_time = datetime.datetime.strptime(date+line.text.strip(), "%A, %d %B %Y%H:%M")
+            except ValueError:
+                date_time = "undefined"
         if "class" in line.attrs and "event-list" in line["class"]:
             if "---" not in list(line.stripped_strings):
                 odds = list(map(float, line.stripped_strings))
@@ -614,7 +617,6 @@ def parse_pasinobet(url):
 
 
 
-def parse_pasinobet_sport(sport):
 #     selenium_init.start_selenium("pasinobet", False)
     selenium_init.DRIVER["pasinobet"].get("https://www.pasinobet.fr/#/sport/?type=0")
     promotion = WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
