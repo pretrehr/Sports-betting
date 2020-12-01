@@ -674,15 +674,15 @@ def format_bwin_names(string):
     return string
 
 def format_bwin_time(string):
-    today = datetime.datetime.today().strftime("%d/%m/%Y")
-    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y")
-    string = " ".join(string.replace("Aujourd'hui /", today).replace("Demain /", tomorrow).split())
+    today = datetime.datetime.today().strftime("%d/%m/%Y ")
+    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
+    string = " ".join(string.replace("Aujourd'hui/", today).replace("Demain/", tomorrow).split())
     if "Commence dans" in string:
         date_time = datetime.datetime.strptime(datetime.datetime.today()
                                                 .strftime("%d %b %Y %H:%M"),
                                                 "%d %b %Y %H:%M")
         date_time += datetime.timedelta(minutes=int(string.split("dans ")[1]
-                                                    .split("min")[0]))
+                                                    .split("min")[0]) + 1)
         return date_time
     if "Commence maintenant" in string:
         return datetime.datetime.strptime(datetime.datetime.today()
