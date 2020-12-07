@@ -179,9 +179,10 @@ def parse_sport_betstars(sport):
         raise sportsbetting.AbortException
     inner_html = selenium_init.DRIVER["betstars"].execute_script(
         "return document.body.innerHTML")
-    if "Nous procédons à une mise à jour afin d'améliorer votre expérience." in inner_html:
-        print("Betstars inaccessible")
-        return dict()
+    if ("Nous procédons à une mise à jour" in inner_html or
+            "Nous devons procéder à la correction ou à la mise à jour d’un élément"
+            in inner_html):
+        raise sportsbetting.UnavailableSiteException
     soup = BeautifulSoup(inner_html, features="lxml")
     for line in soup.findAll(["a"]):
         if ("href" in line.attrs and sport + "/competitions/" in line["href"]
