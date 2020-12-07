@@ -140,7 +140,7 @@ def parse_competitions(competitions, sport="football", *sites):
         for site in selenium_sites.intersection(sites):
             while True:
                 headless = sport != "handball" or site != "bwin"
-                if selenium_init.start_selenium(site, headless, timeout=20):
+                if sportsbetting.ABORT or selenium_init.start_selenium(site, headless, timeout=20):
                     break
                 colorama.init()
                 print(termcolor.colored('Restarting', 'yellow'))
