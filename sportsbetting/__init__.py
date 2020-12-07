@@ -23,6 +23,7 @@ INTERFACE = False
 IS_PARSING = False
 ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
+PATH_DRIVER = ""
 
 class UnavailableCompetitionException(Exception):
     """
@@ -60,6 +61,6 @@ def grp(pat, txt):
 ua = UserAgent()
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
 try:
-    chromedriver_autoinstaller.install(True)
+    PATH_DRIVER = chromedriver_autoinstaller.install(True)
 except IndexError:
     pass
