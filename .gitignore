@@ -6,7 +6,6 @@ tts.py
 doc/*
 docs/*
 .pylintrc
-.github/*
 build/*
 dist/*
 debug.log
@@ -18,7 +17,5 @@ source/*
 sportsbetting/resources/*.png
 sportsbetting/resources/*.jpg
 sportsbetting/resources/*.pub
-chromedriver
-chromedriver.exe
 TODO.txt
 teams2.db

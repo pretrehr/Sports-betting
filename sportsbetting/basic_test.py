@@ -31,6 +31,25 @@ def test_parsing():
     name_competition = random.choice(names)
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sportsbetting.ODDS) > 0
+    
+
+def test_parsing_chromedriver():
+    """
+    :return:Test simple
+    """
+    url = "http://www.comparateur-de-cotes.fr/comparateur/football"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    sportsbetting.ODDS = {}
+    names = []
+    for line in soup.find_all(attrs={"class": "subhead"}):
+        if "Principaux championnats" in str(line):
+            for link in line.findParent().find_all(["a"]):
+                names.append(link.text.strip())
+            break
+    name_competition = random.choice(names)
+    parse_competitions([name_competition], "football", "betclic", "unibet")
+    assert len(sportsbetting.ODDS) > 0    
+
 
 def test_consistency():
     PATH_DB = os.path.dirname(sportsbetting.__file__) + "/resources/teams.db"

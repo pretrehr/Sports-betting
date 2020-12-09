@@ -3,6 +3,7 @@ initialisation du module
 """
 import chromedriver_autoinstaller
 import collections
+import os
 import queue
 import re
 
@@ -57,10 +58,15 @@ def grp(pat, txt):
     r = re.search(pat, txt)
     return r.group(0) if r else '&'
 
+def find_files(filename, search_path):
+    for root, dir, files in os.walk(search_path):
+        if filename in files:
+            return os.path.abspath(os.path.join(root, filename))
+
 
 ua = UserAgent()
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
 try:
     PATH_DRIVER = chromedriver_autoinstaller.install(True)
 except IndexError:
-    pass
+    PATH_DRIVER = find_files("chromedriver.exe", ".")
