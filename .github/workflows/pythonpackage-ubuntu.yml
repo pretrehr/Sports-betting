@@ -30,9 +30,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        export LC_ALL="fr_FR.UTF-8"
-        export LC_CTYPE="fr_FR.UTF-8"
-        export LC_TIME="fr_FR.UTF-8"
+        sudo locale-gen "fr_FR.utf8"
         sudo dpkg-reconfigure locales
         pip install pytest
         pytest
