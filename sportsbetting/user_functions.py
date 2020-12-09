@@ -176,25 +176,6 @@ def parse_competitions(competitions, sport="football", *sites):
     sportsbetting.ABORT = False
 
 
-def parse_buteurs():
-    """
-    Stocke les cotes des duels de buteurs disponibles sur Betclic
-    """
-    competitions = ["france ligue 1", "espagne liga", "italie serie", "allemagne bundesliga"]
-    list_odds = []
-    for competition in competitions:
-        print(get_id_formatted_competition_name(competition, "football")[1])
-        url = get_competition_url(competition, "football", "betclic")
-        list_odds.append(parse_buteurs_betclic(url))
-    if inspect.currentframe().f_back.f_code.co_name != "<module>":
-        return merge_dicts(list_odds)
-    sportsbetting.ODDS["buteurs"] = merge_dicts(list_odds)
-
-
-def parse_buteurs_match(url):
-    sportsbetting.ODDS["buteurs"] = parse_buteurs_betclic_match(url)
-
-
 def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
@@ -709,85 +690,6 @@ def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, t
 def best_combine_booste(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee):
     best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee)
 
-
-
-def add_names_to_db(competition, sport="football", *sites):
-    """
-    Ajoute à la base de données les noms d'équipe/joueur pour une competition donnée sur tous les
-    sites
-    """
-    try:
-        id_competition, formatted_name = get_id_formatted_competition_name(competition, sport)
-    except TypeError:
-        print("Competition inconnue")
-        return {}
-    print(formatted_name)
-    if competition == sport or "Tout le" in competition:
-        import_teams_by_sport(sport)
-    else:
-        import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport + "/a-ed"
-                            + str(id_competition))
-    if not sites:
-        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-                 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
-    selenium_sites = {"betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
-    selenium_required = (inspect.currentframe().f_back.f_code.co_name == "<module>"
-                         and (selenium_sites.intersection(sites) or not sites))
-    if selenium_required:
-        for site in selenium_sites.intersection(sites):
-            selenium_init.start_selenium(site)
-    for site in sites:
-        print(site)
-        url = get_competition_url(competition, sport, site)
-        if url:
-            try:
-                teams = parse_and_add_to_db(site, sport, url)
-                if teams:
-                    sportsbetting.TEAMS_NOT_FOUND.append(teams)
-            except KeyboardInterrupt:
-                print("Recommencez pour arrêter le parsing")
-                time.sleep(1)
-            except urllib3.exceptions.MaxRetryError:
-                selenium_init.DRIVER.quit()
-                print("Redémarrage de selenium")
-                selenium_init.start_selenium()
-                teams = parse_and_add_to_db(site, sport, url)
-                if teams:
-                    sportsbetting.TEAMS_NOT_FOUND.append(teams)
-            except selenium.common.exceptions.TimeoutException:
-                pass
-            except urllib.error.HTTPError:
-                pass
-    if selenium_required:
-        for site in selenium_sites.intersection(sites):
-            selenium_init.DRIVER[site].quit()
-
-
-def update_all_database(start="", *sites):
-    """
-    Ajoute les noms manquants dans toute la base de données
-    """
-    conn = sqlite3.connect("sportsbetting/resources/teams.db")
-    c = conn.cursor()
-    c.execute("""
-    SELECT sport, competition FROM competitions
-    """)
-    if start:
-        start_found = False
-    else:
-        start_found = True
-    selenium_init.start_selenium()
-    for line in c.fetchall():
-        try:
-            if start in line[1]:
-                start_found = True
-            if start_found:
-                add_names_to_db(line[1], line[0], *sites)
-        except KeyboardInterrupt:
-            pass
-        except sportsbetting.UnavailableCompetitionException:
-            pass
-    selenium_init.DRIVER.quit()
 
 
 def add_competition_to_db(sport):

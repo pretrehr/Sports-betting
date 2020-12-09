@@ -799,9 +799,6 @@ def get_main_competitions(sport):
                 break
     return names
 
-def get_google_results(query):
-    for site in googlesearch.search(query+"site:wikipedia.org", lang="fr", num=1, stop=1, pause=2):
-        return site
 
 def check_consistency(team1, team2):
     return get_google_results(team1) != get_google_results(team2)
