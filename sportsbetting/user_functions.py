@@ -33,8 +33,7 @@ from sportsbetting.database_functions import (get_id_formatted_competition_name,
                                               get_competition_by_id, get_competition_url,
                                               import_teams_by_sport, import_teams_by_url,
                                               import_teams_by_competition_id_thesportsdb)
-from sportsbetting.parser_functions import (parse_and_add_to_db, parse, parse_buteurs_betclic,
-                                            parse_buteurs_betclic_match)
+from sportsbetting.parser_functions import parse
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
                                                merge_dicts, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets, binomial,
