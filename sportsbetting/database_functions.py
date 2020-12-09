@@ -800,10 +800,6 @@ def get_main_competitions(sport):
     return names
 
 
-def check_consistency(team1, team2):
-    return get_google_results(team1) != get_google_results(team2)
-
-
 def get_all_names_from_id(_id):
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
