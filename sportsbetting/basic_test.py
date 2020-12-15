@@ -28,7 +28,11 @@ def test_parsing():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
+    main_competitions = ['France - Ligue 1', 'Angleterre - Premier League', 'Espagne - LaLiga',
+                         'Allemagne - Bundesliga', 'Italie - Serie A']
+    competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
+    print(name_competition)
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sportsbetting.ODDS) > 0
     
@@ -46,7 +50,11 @@ def test_parsing_chromedriver():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
+    main_competitions = ['France - Ligue 1', 'Angleterre - Premier League', 'Espagne - LaLiga',
+                         'Allemagne - Bundesliga', 'Italie - Serie A']
+    competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
+    print(name_competition)
     parse_competitions([name_competition], "football", "betclic", "unibet")
     assert len(sportsbetting.ODDS) > 0    
 
