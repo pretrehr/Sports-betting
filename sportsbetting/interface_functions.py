@@ -14,7 +14,7 @@ import PySimpleGUI as sg
 import sportsbetting
 from sportsbetting.auxiliary_functions import get_nb_issues
 from sportsbetting.database_functions import get_all_current_competitions, get_main_competitions, get_all_competitions
-from sportsbetting.user_functions import (best_match_under_conditions,
+from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
                                           best_matches_freebet, best_matches_combine,
                                           best_match_cashback, best_match_stakes_to_bet,
@@ -135,8 +135,12 @@ def best_match_under_conditions_interface(window, values):
         one_site = values["ONE_SITE_UNDER_CONDITION"]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
-        best_match_under_conditions(site, minimum_odd, bet, sport, date_max, time_max, date_min,
-                                    time_min, one_site)
+        if one_site:
+            best_match_under_conditions2(site, minimum_odd, bet, sport, date_max, time_max,
+                                         date_min, time_min)
+        else:
+            best_match_under_conditions(site, minimum_odd, bet, sport, date_max, time_max, date_min,
+                                        time_min, one_site)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()  # contains the entire contents of the buffer.
         match, date = infos(what_was_printed)

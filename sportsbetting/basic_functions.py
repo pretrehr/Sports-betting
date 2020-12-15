@@ -4,6 +4,8 @@ Assistant de paris sportifs
 """
 
 from itertools import product
+import copy
+from itertools import product, combinations
 import numpy as np
 
 
@@ -96,6 +98,67 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
         print("mises arrondies =", mis)
         return
     return mises_reelles
+
+
+def mises3(odds, best_odds, stake, minimum_odd, output=False):
+    assert len(odds) == len(best_odds)
+    n = len(odds)
+    indices_valid_odds = [i for i in range(n) if odds[i] >= minimum_odd]
+    n_valid_odds = len(indices_valid_odds)
+    profit = -stake
+    stakes = []
+    odds_best_profit = []
+    best_combination = []
+    reference_stake = []
+    for i in range(n_valid_odds):
+        for combination in combinations(indices_valid_odds, i+1):
+            odds_to_check = []
+            for j in range(n):
+                odd = odds[j] if j in combination else best_odds[j]
+                odds_to_check.append(odd)
+            odds_site = [odds[k] for k in combination]
+            first_stake_site = mises(odds_site, stake)[0]
+            profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            if profit_combination > profit:
+                reference_stake = first_stake_site
+                stakes = mises2(odds_to_check, first_stake_site, combination[0])
+                odds_best_profit = copy.deepcopy(odds_to_check)
+                best_combination = copy.deepcopy(combination)
+                profit = profit_combination
+    if output:
+        mises2(odds_best_profit, reference_stake, best_combination[0], True)
+        print("cotes =", odds_best_profit)
+        return
+    if best_combination:
+        return mises2(odds_best_profit, reference_stake, best_combination[0]), best_combination
+    return
+        
+def gain3(odds, best_odds, stake, minimum_odd):
+    assert len(odds) == len(best_odds)
+    n = len(odds)
+    indices_valid_odds = [i for i in range(n) if odds[i] >= minimum_odd]
+    n_valid_odds = len(indices_valid_odds)
+    profit = -float("inf")
+    stakes = []
+    odds_best_profit = []
+    best_combnation = []
+    reference_stake = []
+    for i in range(n_valid_odds):
+        for combination in combinations(indices_valid_odds, i+1):
+            odds_to_check = []
+            for j in range(n):
+                odd = odds[j] if j in combination else best_odds[j]
+                odds_to_check.append(odd)
+            odds_site = [odds[k] for k in combination]
+            first_stake_site = mises(odds_site, stake)[0]
+            profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            if profit_combination > profit:
+                reference_stake = first_stake_site
+                stakes = mises2(odds_to_check, first_stake_site, combination[0])
+                odds_best_profit = copy.deepcopy(odds_to_check)
+                best_combination = copy.deepcopy(combination)
+                profit = profit_combination
+    return profit
 
 
 def cotes_freebet(cotes):

@@ -41,11 +41,11 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
                                                combine_reduit, get_nb_issues, best_combine_reduit,
                                                filter_dict_minimum_odd)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
-                                           gain_pari_rembourse_si_perdant, gain_freebet2,
-                                           mises_freebet2, mises_pari_rembourse_si_perdant,
-                                           gain_promo_gain_cote,
-                                           mises_promo_gain_cote, gain_gains_nets_boostes,
-                                           mises_gains_nets_boostes)
+                                           gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
+                                           mises_pari_rembourse_si_perdant, gain_promo_gain_cote, mises_promo_gain_cote,
+                                           gain_gains_nets_boostes, mises_gains_nets_boostes, gain3, mises3)
+from sportsbetting.lambda_functions import get_best_odds, get_profit
+
 
 def parse_competition(competition, sport="football", *sites):
     """
@@ -274,6 +274,47 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_m
     best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport, date_max, time_max, date_min,
                     time_min, one_site=one_site)
+
+def best_match_under_conditions2(site, minimum_odd, stake, sport="football", date_max=None,
+                                time_max=None, date_min=None, time_min=None):
+    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min, time_min)
+    best_profit = -float("inf")
+    best_match = None
+    best_overall_odds = None
+    sites = None
+    nb_matches = len(all_odds)
+    n = get_nb_issues(sport)
+    for match in all_odds:
+        sportsbetting.PROGRESS += 100 / nb_matches
+        if site in all_odds[match]['odds']:
+            odds_site = all_odds[match]['odds'][site]
+            best_odds = copy.deepcopy(odds_site)
+            best_sites = [site for _ in range(n)]
+            for odds in all_odds[match]['odds'].items():
+                for i in range(n):
+                    if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
+                        best_odds[i] = odds[1][i]
+                        best_sites[i] = odds[0]
+            for odd_i, site_i in zip(best_odds, best_sites):
+                if odd_i < 1.1 and site_i != "pmu":
+                    break
+            else:
+                profit = gain3(odds_site, best_odds, stake, minimum_odd)
+                if profit > best_profit:
+                    best_profit = profit
+                    best_odds_site = copy.deepcopy(odds_site)
+                    best_best_odds = copy.deepcopy(best_odds)
+                    best_match = match
+                    stakes, best_indices = mises3(odds_site, best_odds, stake, minimum_odd)
+                    sites = [site if i in best_indices else best_sites[i] for i in range(n)]
+    if best_match:
+        print(best_match)
+        pprint(all_odds[best_match])
+        mises3(best_odds_site, best_best_odds, stake, minimum_odd, True)
+        afficher_mises_combine([best_match], [sites], [stakes],
+                               all_odds[best_match]["odds"], sport)
+    else:
+        print("No match found")
 
 
 def best_match_pari_gagnant(site, minimum_odd, bet, sport="football",
