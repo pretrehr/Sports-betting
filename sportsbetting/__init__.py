@@ -25,6 +25,8 @@ IS_PARSING = False
 ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 PATH_DRIVER = ""
+SELENIUM_SITES = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+
 
 class UnavailableCompetitionException(Exception):
     """
