@@ -5,7 +5,6 @@ Fonctions principales d'assistant de paris
 
 import colorama
 import copy
-import datetime
 import inspect
 import socket
 import sqlite3
@@ -26,20 +25,14 @@ import unidecode
 import urllib3
 from bs4 import BeautifulSoup
 from multiprocessing.pool import ThreadPool
-from itertools import product
 import sportsbetting
 from sportsbetting import selenium_init
-from sportsbetting.database_functions import (get_id_formatted_competition_name,
-                                              get_competition_by_id, get_competition_url,
-                                              import_teams_by_sport, import_teams_by_url,
-                                              import_teams_by_competition_id_thesportsdb)
+from sportsbetting.database_functions import (get_id_formatted_competition_name, get_competition_by_id, import_teams_by_url,
+                                              import_teams_by_sport, import_teams_by_competition_id_thesportsdb)
 from sportsbetting.parser_functions import parse
-from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds,
-                                               merge_dicts, afficher_mises_combine,
-                                               cotes_combine_all_sites, defined_bets, binomial,
-                                               best_match_base, generate_sites, filter_dict_dates,
-                                               combine_reduit, get_nb_issues, best_combine_reduit,
-                                               filter_dict_minimum_odd)
+from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds, afficher_mises_combine,
+                                               cotes_combine_all_sites, defined_bets, binomial, best_match_base,
+                                               filter_dict_dates, get_nb_issues, best_combine_reduit, filter_dict_minimum_odd)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
                                            mises_pari_rembourse_si_perdant, gain_promo_gain_cote, mises_promo_gain_cote,
@@ -118,6 +111,8 @@ def parse_competitions_site(competitions, sport, site):
         print("Interruption", site)
     except sqlite3.OperationalError:
         print("Database is locked", site)
+    if site in sportsbetting.SELENIUM_SITES:
+        selenium_init.DRIVER[site].quit()
     return merge_dict_odds(list_odds)
 
 
@@ -127,25 +122,25 @@ def parse_competitions(competitions, sport="football", *sites):
     if not sites:
         sites = sites_order
     sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
-    selenium_sites = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+    selenium_sites = sportsbetting.SELENIUM_SITES.intersection(sites)
     selenium_required = ((inspect.currentframe().f_back.f_code.co_name
                           in ["<module>", "parse_thread"]
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
-                         and (selenium_sites.intersection(sites) or not sites))
+                         and (selenium_sites or not sites))
     sportsbetting.SELENIUM_REQUIRED = selenium_required
     sites = [site for site in sites_order if site in sites]
     sportsbetting.PROGRESS = 0
     if selenium_required:
-        for site in selenium_sites.intersection(sites):
+        for site in selenium_sites:
             while True:
                 headless = sport != "handball" or site != "bwin"
-                if sportsbetting.ABORT or selenium_init.start_selenium(site, headless, timeout=20):
+                if sportsbetting.ABORT or selenium_init.start_selenium(site, headless, timeout=15):
                     break
                 colorama.init()
                 print(termcolor.colored('Restarting', 'yellow'))
                 colorama.Style.RESET_ALL
                 colorama.deinit()
-            sportsbetting.PROGRESS += 100/len(selenium_sites.intersection(sites))
+            sportsbetting.PROGRESS += 100/len(selenium_sites)
     sportsbetting.PROGRESS = 0
     sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
@@ -167,8 +162,6 @@ def parse_competitions(competitions, sport="football", *sites):
         print(traceback.format_exc(), file=sys.stderr)
     sportsbetting.IS_PARSING = False
     if selenium_required:
-        ThreadPool(7).map(lambda x: selenium_init.DRIVER[x].quit(),
-                          selenium_sites.intersection(sites))
         colorama.init()
         print(termcolor.colored('Drivers closed', 'green'))
         colorama.Style.RESET_ALL
@@ -185,8 +178,7 @@ def odds_match(match, sport="football"):
     opponents = match.split('-')
     for match_name in all_odds:
         if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
-                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1]
-                                                                                .lower())):
+                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1].lower())):
             break
     else:
         for match_name in all_odds:
@@ -250,16 +242,8 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_m
     (one_site=True), auquel cas, chacune des cotes du match doivent respecter le
     critère de cote minimale.
     """
-    odds_function = lambda best_odds, odds_site, i: ((best_odds[:i]
-                                                      + [odds_site[i] * 0.9 if live else odds_site[
-                i]]
-                                                      + best_odds[i + 1:]) if not one_site
-                                                     else (odds_site[:i]
-                                                           + [odds_site[i] * 0.9 if live
-                                                              else odds_site[i]]
-                                                           + odds_site[i + 1:]))
-    profit_function = lambda odds_to_check, i: (gain(odds_to_check, bet) - bet if one_site
-                                                else gain2(odds_to_check, i, bet))
+    odds_function = get_best_odds(one_site)
+    profit_function = get_profit(bet, one_site)
     criteria = lambda odds_to_check, i: ((not one_site and odds_to_check[i] >= minimum_odd)
                                          or (one_site and all(odd >= minimum_odd
                                                               for odd in odds_to_check)))
@@ -419,11 +403,8 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     ThreadPool(4).map(lambda x: compute_all_odds_combine(nb_combine, x),
                       combinations(all_odds.items(), nb_matches))
     sportsbetting.PROGRESS = 0
-    odds_function = lambda best_odds, odds_site, i: ((best_odds[:i] + [odds_site[i]]
-                                                      + best_odds[i + 1:]) if not one_site
-                                                     else odds_site)
-    profit_function = lambda odds_to_check, i: (gain(odds_to_check, bet) - bet if one_site
-                                                else gain2(odds_to_check, i, bet))
+    odds_function = get_best_odds(one_site)
+    profit_function = get_profit(bet, one_site)
     criteria = lambda odds_to_check, i: ((not one_site and odds_to_check[i] >= minimum_odd)
                                          or (one_site and all(odd >= minimum_odd for
                                                               odd in odds_to_check)))
@@ -626,11 +607,6 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
     progress = 10
     start = time.time()
     for i, combine in enumerate(combis):
-        #         if i == 20:
-        #             print("appr. time to wait:", int((time.time()-start)*nb_combis/20), "s")
-        #         if i/nb_combis*100 > progress:
-        #             print(str(progress)+"%")
-        #             progress += 10
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine],
                                                                   freebet=True)
@@ -701,8 +677,7 @@ def best_match_gain_cote(site, bet, sport="football", date_max=None, time_max=No
     """
     Retourne le match sur lequel miser pour optimiser une promotion du type "gain de la cote gagnée"
     """
-    odds_function = lambda best_odds, odds_site, i: best_odds[:i] + [odds_site[i]] + best_odds[
-                                                                                     i + 1:]
+    odds_function = get_best_odds(False)
     profit_function = lambda odds_to_check, i: gain_promo_gain_cote(odds_to_check, bet, i)
     criteria = lambda odds_to_check, i: True
     display_function = lambda best_overall_odds, best_rank: mises_promo_gain_cote(best_overall_odds,
@@ -717,7 +692,7 @@ def best_match_gain_cote(site, bet, sport="football", date_max=None, time_max=No
 
 def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, time_max=None,
                               date_min=None, time_min=None):
-    odds_function = lambda best_odds, odds_site, i: odds_site
+    odds_function = get_best_odds(True)
     profit_function = lambda odds_to_check, i: gain_gains_nets_boostes(odds_to_check, gain_max,
                                                                        False)
     criteria = lambda odds_to_check, i: odds_to_check[i] >= 1.5
@@ -754,40 +729,3 @@ def add_competition_to_db(sport):
                 pass
     conn.commit()
     c.close()
-
-
-def add_urls_to_db():
-    """
-    Complète les url France-pari et ZEbet manquants à partir des url NetBet existants
-    """
-    conn = sqlite3.connect("sportsbetting/resources/teams.db")
-    c = conn.cursor()
-    c.execute("""
-    SELECT url_netbet
-    FROM competitions 
-    WHERE ((url_zebet ISNULL OR url_france_pari ISNULL) AND url_netbet IS NOT NULL)
-    """)
-    for line in c.fetchall():
-        try:
-            url_netbet = line[0]
-            url_france_pari, url_zebet = generate_sites(url_netbet)
-            c_2 = conn.cursor()
-            c_2.execute("""
-            UPDATE competitions
-            SET url_france_pari = "{0}" WHERE url_netbet = "{1}"
-            """.format(url_france_pari, url_netbet))
-            c_3 = conn.cursor()
-            c_3.execute("""
-            UPDATE competitions
-            SET url_zebet = "{0}" WHERE url_netbet = "{1}"
-            """.format(url_zebet, url_netbet))
-            c_2.close()
-            c_3.close()
-        except TypeError:
-            pass
-    conn.commit()
-    c.close()
-
-
-def get_promotions(site):
-    exec("get_promotions_" + site + "()")

@@ -162,7 +162,7 @@ def merge_dict_odds(dict_odds):
                             date_found = True
                         new_dict[match]["odds"][site] = odds[match]["odds"][site]
                 except IndexError:
-                    print("ERREUR :", odds)
+                    print("ERREUR :", match, odds["match"])
         if not date_found:
             new_dict[match]["date"] = datetime.datetime.today()
     return new_dict
