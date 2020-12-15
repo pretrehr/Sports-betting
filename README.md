@@ -27,8 +27,8 @@ Assistant de paris sportifs avec optimisation des gains en fonction des cotes et
 </details>
 
 ## Prérequis
-- Python 3.4 ou ultérieur
-- Google Chrome à jour
+- Python 3.6 ou ultérieur
+- Google Chrome
 
 ## Installation
 - Téléchargez ou clonez le dépôt
