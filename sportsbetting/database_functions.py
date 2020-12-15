@@ -307,7 +307,6 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                "Prochaine compétition jouée dans la db : {}\n"
                                                .format(formatted_name, _id, site, name, date_next_match, date_next_match_db, get_next_competition(_id)))
                 ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-            else:
             elif not sportsbetting.TEST:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
                             "(nouvelle entrée : {}) (y/n)"
@@ -343,7 +342,6 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                    "Prochaine compétition jouée dans la db : {}\n"
                                                    .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db, get_next_competition(_id)))
                     ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-                else:
                 elif not sportsbetting.TEST:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
                                 "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
