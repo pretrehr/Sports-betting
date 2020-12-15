@@ -815,8 +815,9 @@ def parse_unibet(url):
                 match = match.replace("Rostov - Don (F)", "Rostov-Don (F)")
                 match = match.replace("CS Hammam - Lif", "CS Hammam-Lif")
                 if match.count(" - ") > 1:
-                    print(match)
-                    match = input("Réentrez le nom du match :")
+                    if not sportsbetting.TEST:
+                        print(match)
+                        match = input("Réentrez le nom du match :")
                 if "-" not in match:
                     break
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)|\([0-7]\-[0-7](\s[0-7]\-[0-7])*\)'

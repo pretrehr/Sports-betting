@@ -295,6 +295,7 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
     formatted_name = get_formatted_name_by_id(_id)
     id_is_potential_double = "&" in formatted_name
+    ans = None
     if (name and is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
         if check:
@@ -307,6 +308,7 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                .format(formatted_name, _id, site, name, date_next_match, date_next_match_db, get_next_competition(_id)))
                 ans = sportsbetting.QUEUE_FROM_GUI.get(True)
             else:
+            elif not sportsbetting.TEST:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
                             "(nouvelle entrée : {}) (y/n)"
                             .format(formatted_name, site, name))
@@ -342,6 +344,7 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                                    .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db, get_next_competition(_id)))
                     ans = sportsbetting.QUEUE_FROM_GUI.get(True)
                 else:
+                elif not sportsbetting.TEST:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
                                 "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
                                 .format(formatted_name, site, name_site, name))

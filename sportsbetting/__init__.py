@@ -26,6 +26,7 @@ ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 PATH_DRIVER = ""
 SELENIUM_SITES = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+TEST = False
 
 
 class UnavailableCompetitionException(Exception):

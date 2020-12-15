@@ -19,6 +19,7 @@ def test_parsing():
     """
     :return:Test simple
     """
+    sportsbetting.TEST = True
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sportsbetting.ODDS = {}
@@ -32,15 +33,16 @@ def test_parsing():
                          'Allemagne - Bundesliga', 'Italie - Serie A']
     competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
-    print(name_competition)
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sportsbetting.ODDS) > 0
+    sportsbetting.TEST = False
     
 
 def test_parsing_chromedriver():
     """
     :return:Test simple
     """
+    sportsbetting.TEST = True
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sportsbetting.ODDS = {}
@@ -56,10 +58,12 @@ def test_parsing_chromedriver():
     name_competition = random.choice(names)
     print(name_competition)
     parse_competitions([name_competition], "football", "betclic", "unibet")
-    assert len(sportsbetting.ODDS) > 0    
+    assert len(sportsbetting.ODDS) > 0
+    sportsbetting.TEST = False  
 
 
 def test_consistency():
+    sportsbetting.TEST = True
     PATH_DB = os.path.dirname(sportsbetting.__file__) + "/resources/teams.db"
     conn = sqlite3.connect(PATH_DB)
     c = conn.cursor()
@@ -70,3 +74,4 @@ def test_consistency():
     for result in results:
         id = result[0]
         assert is_id_consistent(id)
+    sportsbetting.TEST = False
