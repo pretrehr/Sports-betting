@@ -240,9 +240,18 @@ def parse_bwin(url):
                     index_column_result_odds = strings.index(
                         "Pari sur le vainqueur")
             if "class" in line.attrs and "participants-pair-game" in line["class"]:
-                match = " - ".join(list(line.stripped_strings))
-                reversed_odds = "@" in match
-                match = format_bwin_names(match)
+                teams = []
+                if line.findChildren(attrs={"class": "participant-container"}):
+                    names_and_countries = list(line.findChildren(attrs={"class": "participant-container"}))
+                    for name_and_country in names_and_countries:
+                        strings = list(name_and_country.stripped_strings)
+                        if len(strings) == 2 and strings[1] != '@':
+                            teams.append(strings[0] + " ("+strings[1]+") ")
+                        else:
+                            teams.append(strings[0])
+                
+                match = " - ".join(teams)
+                reversed_odds = True if line.findChildren(attrs={"class": "away-indicator"}) else False
             if "class" in line.attrs and "starting-time" in line["class"]:
                 date_time = format_bwin_time(line.text)
             if "class" in line.attrs and "grid-group-container" in line["class"]:
