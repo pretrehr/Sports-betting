@@ -585,21 +585,22 @@ def get_time_next_match(id_competition, id_team):
 def get_next_competition(id_team):
     if id_team > 0:
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
-    try:
-        soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-        for line in soup.find_all("h1"):
-            return line.text.strip()
-        return
-    except urllib.error.HTTPError:
-        return
+        try:
+            soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+            for line in soup.find_all("h1"):
+                return line.text.strip()
+            return
+        except urllib.error.HTTPError:
+            return
+    return
 
 def is_matching_next_match(id_competition, id_team, name_team, matches):
-    if id_team < 0:
-        return True
     try:
         date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+        if id_team < 0:
+            return date_next_match == get_time_next_match_thesportsdb(id_competition, id_team)
         return date_next_match == get_time_next_match(id_competition, id_team)
-    except IndexError:
+    except (IndexError, TypeError): #TypeError si date undefined
         return False
         
 
