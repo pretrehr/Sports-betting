@@ -74,7 +74,11 @@ def add_matches_to_db(odds, sport, site, id_competition):
                 for line in lines:
                     if line[0] not in not_matching_teams[team]:
                         check = not is_matching_next_match(id_competition, line[0], team, odds)
-                        date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                        date_next_match = datetime.datetime.today()
+                        try:
+                            date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                        except IndexError:
+                            pass
                         date_next_match_db = get_time_next_match(id_competition, line[0])
                         success = add_name_to_db(line[0], team, site, check, date_next_match, date_next_match_db)
                         if success:
@@ -153,16 +157,14 @@ def merge_dict_odds(dict_odds):
         date_found = False
         for odds in dict_odds:
             if odds:
-                try:
-                    site = list(list(odds.values())[0]["odds"].keys())[0]
-                    if match in odds.keys() and odds[match]["odds"] and odds[match]["odds"][site]:
-                        if (not date_found and odds[match]["date"] != "undefined"
-                                and odds[match]["date"]):  # Si la date est None
-                            new_dict[match]["date"] = odds[match]["date"]
-                            date_found = True
+                site = list(list(odds.values())[0]["odds"].keys())[0]
+                if match in odds.keys() and odds[match]["odds"] and odds[match]["odds"][site]:
+                    if (not date_found and odds[match]["date"] != "undefined"
+                            and odds[match]["date"]):  # Si la date est None
+                        new_dict[match]["date"] = odds[match]["date"]
+                        date_found = True
+                    if site in odds[match]["odds"]:
                         new_dict[match]["odds"][site] = odds[match]["odds"][site]
-                except IndexError:
-                    print("ERREUR :", match, odds["match"])
         if not date_found:
             new_dict[match]["date"] = datetime.datetime.today()
     return new_dict

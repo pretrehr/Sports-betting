@@ -3,7 +3,6 @@
 Assistant de paris sportifs
 """
 
-from itertools import product
 import copy
 from itertools import product, combinations
 import numpy as np
