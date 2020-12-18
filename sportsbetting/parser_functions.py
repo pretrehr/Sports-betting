@@ -875,7 +875,7 @@ def parse_winamax(url=""):
                     if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
                             and match['sportId'] == sport_id):
                         try:
-                            match_name = match["title"]
+                            match_name = match["title"].strip().replace("  ", " ")
                             if "-" not in match_name or "Compétition" in match_name:
                                 continue
                             date_time = datetime.datetime.fromtimestamp(
