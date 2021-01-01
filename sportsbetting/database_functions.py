@@ -67,7 +67,7 @@ def get_formatted_name(name, site, sport):
         return res[0][0]
     except IndexError:
         colorama.init()
-        print(termcolor.colored('{} {}'.format(name, site), 'red'))
+        print(termcolor.colored('{}\t{}'.format(site, name), 'red'))
         colorama.Style.RESET_ALL
         colorama.deinit()
         return "unknown team/player ".upper() + name
@@ -548,13 +548,13 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
     
 
 def get_time_next_match_thesportsdb(id_competition, id_team):
-    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-id_competition)
+    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id=" + str(-id_team)
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         dict_competition = json.loads(soup.text)
         if dict_competition["events"]:
             for event in dict_competition["events"]:
-                if str(-id_team) in [event["idHomeTeam"], event["idAwayTeam"]]:
+                if id_competition >= 9999 or str(-id_competition) == event["idLeague"]:
                     date_time = event["dateEvent"]+event["strTime"]
                     return datetime.datetime.strptime(date_time, "%Y-%m-%d%H:%M:%S")+datetime.timedelta(hours=1)
         return 0
@@ -563,12 +563,12 @@ def get_time_next_match_thesportsdb(id_competition, id_team):
 
 
 def get_time_next_match(id_competition, id_team):
-    if id_competition >= 9999:
-        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
-    elif id_team > 0:
-        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)
-    else:
+    if id_team < 0:
         return get_time_next_match_thesportsdb(id_competition, id_team)
+    elif id_competition >= 9999:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
+    else:
+        url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
         for line in soup.find_all("a"):
