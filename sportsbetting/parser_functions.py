@@ -748,6 +748,9 @@ def parse_page_match_pmu(url):
     _id = "-1"
     odds = []
     name = soup.find("title").text.split(" - ")[0].replace("//", "-")
+    if "chez les" in name:
+        teams = name.split(" chez les ")
+        name = teams[1] + " - " + teams[0]
     print("\t" + name)
     for line in soup.find_all(["option", "a"]):
         if line.text in ["Vainqueur du match", "1N2 à la 60e minute"]:
@@ -882,11 +885,9 @@ def parse_winamax(url=""):
             if "matches" in dict_matches:
                 for match in dict_matches["matches"].values():
                     if (tournament_id in (match['tournamentId'], -1) and match["competitor1Id"] != 0
-                            and match['sportId'] == sport_id):
+                            and match['sportId'] == sport_id and 'isOutright' not in match.keys()):
                         try:
                             match_name = match["title"].strip().replace("  ", " ")
-                            if "-" not in match_name or "Compétition" in match_name:
-                                continue
                             date_time = datetime.datetime.fromtimestamp(
                                 match["matchStart"])
                             main_bet_id = match["mainBetId"]
