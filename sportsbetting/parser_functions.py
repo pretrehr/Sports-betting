@@ -809,27 +809,10 @@ def parse_unibet(url):
             raise sportsbetting.UnavailableCompetitionException
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
-                match = line.text.strip().replace("Bordeaux - Bègles", "Bordeaux-Bègles")
-                match = match.replace(
-                    "Flensburg - Handewitt", "Flensburg-Handewitt")
-                match = match.replace(
-                    "TSV Hannovre - Burgdorf", "TSV Hannovre-Burgdorf")
-                match = match.replace(
-                    "Tremblay - en - France", "Tremblay-en-France")
-                match = match.replace("FC Vion Zlate Moravce - Vrable",
-                                      "FC Vion Zlate Moravce-Vrable")
-                match = match.replace(
-                    "Toulon St - Cyr Var (F)", "Toulon St-Cyr Var (F)")
-                match = match.replace("Châlons - Reims", "Châlons-Reims")
-                match = match.replace("Colo - Colo", "Colo-Colo")
-                match = match.replace("Bourg - en - Bresse", "Bourg-en-Bresse")
-                match = match.replace("Grande - Bretagne", "Grande-Bretagne")
-                match = match.replace("Rostov - Don (F)", "Rostov-Don (F)")
-                match = match.replace("CS Hammam - Lif", "CS Hammam-Lif")
+                match = line.text.strip()
                 if match.count(" - ") > 1:
-                    if not sportsbetting.TEST:
-                        print(match)
-                        match = input("Réentrez le nom du match :")
+                    opponents = list(line.find_parent(attrs={"class":"calendar-event"}).findChildren(attrs={"class":"odd-longlabel"}))
+                    match = opponents[0].text.replace(" - ", "-") + " - " + opponents[1].text.replace(" - ", "-")
                 if "-" not in match:
                     break
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)|\([0-7]\-[0-7](\s[0-7]\-[0-7])*\)'
