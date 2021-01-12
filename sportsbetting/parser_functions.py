@@ -826,8 +826,7 @@ def parse_unibet(url):
                 if date_time < today:
                     date_time = date_time.replace(year=date_time.year + 1)
             if "class" in line.attrs and "oddsbox" in line["class"]:
-                odds = list(map(lambda x: float(x.text),
-                                list(line.findChildren("span", {"class": "price"}))))
+                odds = [float(child.text) for child in line.findChildren("span", {"class": "price"}) if child.text]
                 if match:
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"unibet": odds}
