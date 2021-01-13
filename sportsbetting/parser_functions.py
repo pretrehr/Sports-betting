@@ -812,7 +812,7 @@ def parse_unibet(url):
                 match = line.text.strip()
                 if match.count(" - ") > 1:
                     opponents = list(line.find_parent(attrs={"class":"calendar-event"}).findChildren(attrs={"class":"odd-longlabel"}))
-                    match = opponents[0].text.replace(" - ", "-") + " - " + opponents[1].text.replace(" - ", "-")
+                    match = opponents[0].text.replace(" - ", "-") + " - " + opponents[-1].text.replace(" - ", "-")
                 if "-" not in match:
                     break
                 reg_exp = r'\(\s?[0-7]-[0-7]\s?(,\s?[0-7]-[0-7]\s?)*([1-9]*[0-9]\/[1-9]*[0-9])*\)|\([0-7]\-[0-7](\s[0-7]\-[0-7])*\)'
