@@ -726,7 +726,8 @@ def parse_pmu_html(soup):
                                                            + line.parent["href"])
                     else:
                         match = string.replace(" - ", "-")
-                        match = match.replace("//", "-")
+                        match = match.replace(" // ", " - ")
+                        match = match.replace("//", " - ")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
             if not live:
                 if not handicap:
