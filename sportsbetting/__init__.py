@@ -26,6 +26,8 @@ ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 PATH_DRIVER = ""
 SELENIUM_SITES = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+BOOKMAKERS = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport",
+              "pasinobet", "pmu", "unibet", "winamax", "zebet"]
 TEST = False
 
 

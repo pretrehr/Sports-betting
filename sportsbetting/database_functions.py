@@ -478,6 +478,25 @@ def get_close_name3(name, sport, site, only_null=True):
     return results
 
 
+def get_close_name4(name, sport, site, only_null=True):
+    results = set()
+    conn = sqlite3.connect(PATH_DB)
+    c = conn.cursor()
+    for bookmaker in sportsbetting.BOOKMAKERS:
+        if only_null:
+            c.execute("""
+            SELECT id, name FROM names WHERE sport='{}' AND name_{}="{}" AND name_{} IS NULL
+            """.format(sport, bookmaker, name, site))
+        else:
+            c.execute("""
+            SELECT id, name FROM names WHERE sport='{}' AND name_{}="{}"
+            """.format(sport, bookmaker, name))
+        for line in c.fetchall():
+            results.add(line)
+    return list(results)
+    
+    
+
 def get_id_by_site(name, sport, site):
     """
     Retourne l'id d'une équipe/joueur sur un site donné
@@ -512,7 +531,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                 return int(line["href"].split("-td")[1])
         if "class" in line.attrs and "bettable" in line["class"]:
             for string in list(line.stripped_strings):
-                if "à" in string:
+                if " à " in string:
                     date_time = datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
                     try:
                         if abs(date_time - date_match) < datetime.timedelta(days=0.5):

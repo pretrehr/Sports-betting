@@ -109,8 +109,6 @@ def parse_competitions_site(competitions, sport, site):
         sportsbetting.SITE_PROGRESS[site] = 100
     except sportsbetting.AbortException:
         print("Interruption", site)
-    except sqlite3.OperationalError:
-        print("Database is locked", site)
     if site in sportsbetting.SELENIUM_SITES:
         selenium_init.DRIVER[site].quit()
     return merge_dict_odds(list_odds)

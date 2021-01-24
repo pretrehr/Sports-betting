@@ -15,11 +15,13 @@ import sportsbetting
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
-                                              get_close_name3, get_double_team_tennis,
+                                              get_close_name3, get_close_name4, 
+                                              get_double_team_tennis,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
 from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
+import sqlite3
 
 
 def valid_odds(all_odds, sport):
@@ -60,7 +62,7 @@ def add_matches_to_db(odds, sport, site, id_competition):
     if not teams_sets[i]:
         return
     print(i, list(teams_sets[i]), site)
-    get_close_name_functions = [is_in_db, get_close_name, get_close_name2]
+    get_close_name_functions = [is_in_db, get_close_name, get_close_name2, get_close_name4]
     if sport == "tennis":
         get_close_name_functions.append(get_close_name3)
         get_close_name_functions.append(get_double_team_tennis)
@@ -124,7 +126,19 @@ def adapt_names(odds, site, sport, competition):
     """
     new_dict = {}
     id_competition = get_competition_id(competition, sport)
-    add_matches_to_db(odds, sport, site, id_competition)
+    ans = ""
+    while ans not in ["n", "No"]:
+        try:
+            add_matches_to_db(odds, sport, site, id_competition)
+            break
+        except sqlite3.OperationalError:
+            if sportsbetting.INTERFACE:
+                sportsbetting.QUEUE_TO_GUI.put("Database is locked, try again ?")
+                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+            elif not sportsbetting.TEST:
+                ans = input("Database is locked, try again ? (y/n)")
+            else:
+                ans = "No"
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
                                         match.split(" - "))))
