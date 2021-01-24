@@ -148,13 +148,12 @@ def import_teams_by_sport(sport):
 
 
 def import_teams_by_competition_id_thesportsdb(_id):
-    url = "https://www.thesportsdb.com/api/v1/json/1/eventsnextleague.php?id=" + str(-_id)
+    url = "https://www.thesportsdb.com/api/v1/json/1/lookup_all_teams.php?id=" + str(-_id)
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     dict_competition = json.loads(soup.text)
-    if dict_competition["events"]:
-        for event in dict_competition["events"]:
-            for _id in [event["idHomeTeam"], event["idAwayTeam"]]:
-                add_id_to_db_thesportsdb(-int(_id))
+    if dict_competition["teams"]:
+        for team in dict_competition["teams"]:
+            add_id_to_db_thesportsdb(-int(team["idTeam"]))
 
 
 def is_id_in_db(_id):
@@ -240,6 +239,18 @@ def add_id_to_db(_id):
             conn.commit()
             c.close()
             break
+    else:
+        if "Aucun évènement n'est programmé pour" in soup.text:
+            name = soup.text.split("Aucun évènement n'est programmé pour")[1].split("\n")[0].strip()
+            sport = soup.find("div", {"class": "head"}).text.split("(")[-1].strip(")").lower()
+            conn = sqlite3.connect(PATH_DB)
+            c = conn.cursor()
+            c.execute("""
+            INSERT INTO names (id, name, sport)
+            VALUES ({}, "{}", "{}")
+            """.format(_id, name, sport))
+            conn.commit()
+            c.close()
 
 
 def add_id_to_db_thesportsdb(_id):
