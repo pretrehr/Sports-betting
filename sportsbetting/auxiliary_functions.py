@@ -683,6 +683,10 @@ def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="bo
         while new_height == last_height and time.time() - start_time < timeout:
             new_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
 
+
+def truncate_datetime(date_time):
+    return datetime.datetime.strptime(date_time.strftime("%d %b %Y %H:%M"), "%d %b %Y %H:%M")
+
 def format_bwin_names(string):
     if string.count(" - ") == 3:
         string = string.replace(" - ", " (", 1)
@@ -697,16 +701,12 @@ def format_bwin_time(string):
     tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
     string = " ".join(string.replace("Aujourd'hui/", today).replace("Demain/", tomorrow).split())
     if "Commence dans" in string:
-        date_time = datetime.datetime.strptime(datetime.datetime.today()
-                                                .strftime("%d %b %Y %H:%M"),
-                                                "%d %b %Y %H:%M")
+        date_time = truncate_datetime(datetime.datetime.today())
         date_time += datetime.timedelta(minutes=int(string.split("dans ")[1]
                                                     .split("min")[0]) + 1)
         return date_time
     if "Commence maintenant" in string:
-        return datetime.datetime.strptime(datetime.datetime.today()
-                                                .strftime("%d %b %Y %H:%M"),
-                                                "%d %b %Y %H:%M")
+        return truncate_datetime(datetime.datetime.today())
     return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
 
 def reverse_match_odds(match, odds):

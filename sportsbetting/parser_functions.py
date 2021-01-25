@@ -27,7 +27,7 @@ from sportsbetting.auxiliary_functions import (merge_dicts, reverse_match_odds,
                                                scroll, format_bwin_names,
                                                format_bwin_time,
                                                format_joa_time,
-                                               format_zebet_names)
+                                               format_zebet_names, truncate_datetime)
 
 
 if sys.platform == "win32":
@@ -220,6 +220,7 @@ def parse_bwin(url):
     index_column_result_odds = 1 if "handball" in url else 0
     is_sport_page = "/0" in url
     reversed_odds = False
+    live = False
     WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
         EC.presence_of_all_elements_located(
             (By.CLASS_NAME, "participants-pair-game")) or sportsbetting.ABORT
@@ -254,6 +255,8 @@ def parse_bwin(url):
                 reversed_odds = True if line.findChildren(attrs={"class": "away-indicator"}) else False
             if "class" in line.attrs and "starting-time" in line["class"]:
                 date_time = format_bwin_time(line.text)
+            if "class" in line.attrs and "live-icon" in line["class"]:
+                live = True
             if "class" in line.attrs and "grid-group-container" in line["class"]:
                 if line.findChildren(attrs={"class": "grid-option-group"}) and "Pariez maintenant !" not in list(line.stripped_strings):
                     odds_line = line.findChildren(
@@ -267,9 +270,12 @@ def parse_bwin(url):
                     if match:
                         if reversed_odds:
                             match, odds = reverse_match_odds(match, odds)
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"bwin": odds}
-                        match_odds_hash[match]['date'] = date_time
+                        if not live:
+                            match_odds_hash[match] = {}
+                            match_odds_hash[match]['odds'] = {"bwin": odds}
+                            match_odds_hash[match]['date'] = date_time
+                        else:
+                            live = False
                         match = None
                         date_time = "undefined"
         if match_odds_hash:
@@ -479,6 +485,10 @@ def parse_netbet(url=""):
                 date = datetime.datetime.today().strftime("%d/%m %Y")
         elif "class" in line.attrs and "nb-event_timestart" in line["class"]:
             hour = line.text
+            if " min" in hour:
+                date_time = datetime.datetime.today()+datetime.timedelta(minutes=int(hour.strip(" min")))
+                date_time = truncate_datetime(date_time)
+                continue
             try:
                 date_time = datetime.datetime.strptime(
                     date + " " + hour, "%d/%m %Y %H:%M")
@@ -535,6 +545,7 @@ def parse_parionssport(url=""):
     date = ""
     match = ""
     date_time = None
+    live = False
     for _ in range(10):
         inner_html = selenium_init.DRIVER["parionssport"].execute_script(
             "return document.body.innerHTML")
@@ -549,7 +560,7 @@ def parse_parionssport(url=""):
                 if "Nous vous prions de bien vouloir nous en excuser" in line:
                     raise sportsbetting.UnavailableCompetitionException
                 if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
-                    if line.text.strip() == "Aujourd'hui":
+                    if line.text.strip() == "aujourd'hui":
                         date = datetime.date.today().strftime("%A %d %B %Y")
                     else:
                         date = line.text.strip().lower() + year
@@ -564,15 +575,17 @@ def parse_parionssport(url=""):
                         date_time = "undefined"
                 if "class" in line.attrs and "wpsel-desc" in line["class"]:
                     match = line.text.split(" À")[0].strip().replace("  ", " ")
+                if "class" in line.attrs and "tag__stateLive" in line["class"]:
+                    live = True
                 if "class" in line.attrs and "buttonLine" in line["class"]:
-                    try:
-                        odds = list(map(lambda x: float(x.replace(",", ".")),
-                                        list(line.stripped_strings)))
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"parionssport": odds}
-                        match_odds_hash[match]['date'] = date_time
-                    except ValueError:  # Live
-                        pass
+                    if live:
+                        live = False
+                        continue
+                    odds = list(map(lambda x: float(x.replace(",", ".")),
+                                    list(line.stripped_strings)))
+                    match_odds_hash[match] = {}
+                    match_odds_hash[match]['odds'] = {"parionssport": odds}
+                    match_odds_hash[match]['date'] = date_time
         if match_odds_hash:
             return match_odds_hash
         elif urls_basket:
@@ -706,6 +719,10 @@ def parse_pmu_html(soup):
             date = line["data-date"]
         elif "class" in line.attrs and "trow--live--remaining-time" in line["class"]:
             hour = line.text
+            if "'" in hour:
+                date_time = datetime.datetime.today()+datetime.timedelta(minutes=int(hour.strip().strip("'")) + 1)
+                date_time = truncate_datetime(date_time)
+                continue
             try:
                 date_time = datetime.datetime.strptime(
                     date + " " + hour, "%Y-%m-%d %Hh%M")
@@ -872,8 +889,9 @@ def parse_winamax(url=""):
                             and match['sportId'] == sport_id and 'isOutright' not in match.keys()):
                         try:
                             match_name = match["title"].strip().replace("  ", " ")
-                            date_time = datetime.datetime.fromtimestamp(
-                                match["matchStart"])
+                            date_time = datetime.datetime.fromtimestamp(match["matchStart"])
+                            if date_time < datetime.datetime.today():
+                                continue
                             main_bet_id = match["mainBetId"]
                             odds_ids = dict_matches["bets"][str(
                                 main_bet_id)]["outcomes"]
