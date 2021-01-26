@@ -581,11 +581,14 @@ def parse_parionssport(url=""):
                     if live:
                         live = False
                         continue
-                    odds = list(map(lambda x: float(x.replace(",", ".")),
-                                    list(line.stripped_strings)))
-                    match_odds_hash[match] = {}
-                    match_odds_hash[match]['odds'] = {"parionssport": odds}
-                    match_odds_hash[match]['date'] = date_time
+                    try:
+                        odds = list(map(lambda x: float(x.replace(",", ".")),
+                                        list(line.stripped_strings)))
+                        match_odds_hash[match] = {}
+                        match_odds_hash[match]['odds'] = {"parionssport": odds}
+                        match_odds_hash[match]['date'] = date_time
+                    except ValueError:
+                        pass
         if match_odds_hash:
             return match_odds_hash
         elif urls_basket:
