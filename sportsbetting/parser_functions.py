@@ -247,7 +247,7 @@ def parse_bwin(url):
                     for name_and_country in names_and_countries:
                         strings = list(name_and_country.stripped_strings)
                         if len(strings) == 2 and strings[1] != '@':
-                            teams.append(strings[0] + " ("+strings[1]+") ")
+                            teams.append(strings[0] + " ("+strings[1]+")")
                         else:
                             teams.append(strings[0])
                 
