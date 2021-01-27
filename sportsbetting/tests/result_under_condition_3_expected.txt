@@ -1,0 +1,25 @@
+Athletic Bilbao - Betis
+{'date': datetime.datetime(2020, 11, 23, 21, 0),
+ 'odds': {'betclic': [2.1, 3.3, 3.55],
+          'betstars': [2.2, 3.15, 3.25],
+          'bwin': [2.05, 3.1, 3.4],
+          'france_pari': [2.07, 3.3, 3.5],
+          'joa': [2.2, 3.3, 3.4],
+          'netbet': [2.05, 3.25, 3.5],
+          'parionssport': [2.1, 3.2, 3.45],
+          'pasinobet': [2.09, 3.2, 3.45],
+          'pmu': [2.1, 3.35, 3.6],
+          'unibet': [2.11, 3.25, 3.48],
+          'winamax': [2.1, 3.3, 3.5],
+          'zebet': [2.05, 3.25, 3.45]}}
+somme des mises = 22.1
+gain min = 20.99
+gain max = 21.0
+plus-value min = -1.11
+plus-value max = -1.1
+mises arrondies = [10.0, 6.27, 5.83]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+Athletic Bilbao	 {'parionssport': {'mise': 10.0, 'cote': 2.1}, 'total': 21.0}
+Nul            	 {'pmu': {'mise': 6.27, 'cote': 3.35}, 'total': 21.0}
+Betis          	 {'pmu': {'mise': 5.83, 'cote': 3.6}, 'total': 20.99}

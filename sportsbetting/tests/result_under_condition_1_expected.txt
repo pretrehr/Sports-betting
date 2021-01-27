@@ -1,0 +1,25 @@
+Liverpool - Leicester City
+{'date': datetime.datetime(2020, 11, 22, 20, 15),
+ 'odds': {'betclic': [1.85, 3.9, 3.8],
+          'betstars': [1.9, 3.6, 3.6],
+          'bwin': [1.8, 3.8, 3.6],
+          'france_pari': [1.81, 3.85, 3.75],
+          'joa': [1.85, 3.9, 3.8],
+          'netbet': [1.8, 3.85, 3.75],
+          'parionssport': [1.88, 4.1, 3.5],
+          'pasinobet': [1.82, 3.8, 3.74],
+          'pmu': [1.85, 3.9, 3.8],
+          'unibet': [1.88, 4.0, 3.9],
+          'winamax': [1.88, 4, 3.9],
+          'zebet': [1.85, 3.95, 3.8]}}
+somme des mises = 19.41
+gain min = 18.8
+gain max = 18.82
+plus-value min = -0.61
+plus-value max = -0.59
+mises arrondies = [10.0, 4.59, 4.82]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+Liverpool     	 {'parionssport': {'mise': 10.0, 'cote': 1.88}, 'total': 18.8}
+Nul           	 {'parionssport': {'mise': 4.59, 'cote': 4.1}, 'total': 18.82}
+Leicester City	 {'unibet': {'mise': 4.82, 'cote': 3.9}, 'total': 18.8}
