@@ -19,7 +19,7 @@ plus-value min = -0.61
 plus-value max = -0.59
 mises arrondies = [10.0, 4.59, 4.82]
 
-Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+RÃ©partition des mises (les totaux affichÃ©s prennent en compte les Ã©ventuels freebets):
 Liverpool     	 {'parionssport': {'mise': 10.0, 'cote': 1.88}, 'total': 18.8}
 Nul           	 {'parionssport': {'mise': 4.59, 'cote': 4.1}, 'total': 18.82}
 Leicester City	 {'unibet': {'mise': 4.82, 'cote': 3.9}, 'total': 18.8}

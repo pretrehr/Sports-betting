@@ -19,7 +19,7 @@ plus-value min = -1.11
 plus-value max = -1.1
 mises arrondies = [10.0, 6.27, 5.83]
 
-Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+RÃ©partition des mises (les totaux affichÃ©s prennent en compte les Ã©ventuels freebets):
 Athletic Bilbao	 {'parionssport': {'mise': 10.0, 'cote': 2.1}, 'total': 21.0}
 Nul            	 {'pmu': {'mise': 6.27, 'cote': 3.35}, 'total': 21.0}
 Betis          	 {'pmu': {'mise': 5.83, 'cote': 3.6}, 'total': 20.99}
