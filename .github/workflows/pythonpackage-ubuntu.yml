@@ -33,4 +33,4 @@ jobs:
         sudo locale-gen "fr_FR.utf8"
         sudo dpkg-reconfigure locales
         pip install pytest
-        pytest
+        pytest -s
