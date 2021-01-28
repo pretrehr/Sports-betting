@@ -30,6 +30,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_matches_freebet_interface,
                                                best_match_pari_gagnant_interface,
                                                odds_match_interface, delete_odds_interface,
+                                               delete_site_interface,
                                                get_current_competitions_interface,
                                                get_main_competitions_interface,
                                                best_combine_reduit_interface)
@@ -389,7 +390,8 @@ odds_layout = [
              [sg.Table([["parionssport", "0000", "0000", "0000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
                        hide_vertical_scroll=True, size=(None, 12))],
-             [sg.Button("Supprimer le match", key="DELETE_ODDS", visible=False)]])
+             [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
+             [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]])
      ]
 ]
 
@@ -656,7 +658,10 @@ while True:
             window['MATCHES_ODDS'].update(values=[])
     elif event == "MATCHES_ODDS":
         odds_match_interface(window, values)
-    elif event == "DELETE_ODDS":
+    elif event == "DELETE_SITE_ODDS":
+        delete_site_interface(window, values)
+        pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+    elif event == "DELETE_MATCH_ODDS":
         delete_odds_interface(window, values)
         pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
     elif event == "ADD_COMBI_OPT":

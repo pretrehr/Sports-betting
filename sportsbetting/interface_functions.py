@@ -508,10 +508,24 @@ def odds_match_interface(window, values):
         else:
             window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(match, visible=True)
-        window["DELETE_ODDS"].update(visible=True)
+        window["DELETE_SITE_ODDS"].update(visible=True)
+        window["DELETE_MATCH_ODDS"].update(visible=True)
     except IndexError:
         pass
 
+def delete_site_interface(window, values):
+    try:
+        match = values["MATCHES_ODDS"][0]
+        sport = values["SPORT_ODDS"][0]
+        i_line = values["ODDS_ODDS"][0]
+        lines = window["ODDS_ODDS"].get()
+        del sportsbetting.ODDS[sport][match]["odds"][lines[i_line][0]]
+        if not sportsbetting.ODDS[sport][match]["odds"]:
+            delete_odds_interface(window, values)
+        else:
+            odds_match_interface(window, values)
+    except IndexError:
+        pass
 
 def delete_odds_interface(window, values):
     try:
@@ -524,7 +538,8 @@ def delete_odds_interface(window, values):
         window["ODDS_ODDS"].update(visible=False)
         window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(visible=False)
-        window["DELETE_ODDS"].update(visible=False)
+        window["DELETE_SITE_ODDS"].update(visible=False)
+        window["DELETE_MATCH_ODDS"].update(visible=False)
     except IndexError:
         pass
 
