@@ -197,6 +197,7 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
     if not all_odds:
         print("No match found")
         return
+    print(best_match)
     pprint(all_odds)
     odds_site = all_odds['odds'][site]
     best_odds = copy.deepcopy(odds_site)
