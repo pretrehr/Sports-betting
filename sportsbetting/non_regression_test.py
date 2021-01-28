@@ -28,7 +28,7 @@ def test_under_condition():
     original_stdout = sys.stdout
     reached = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_1_reached.txt"
     expected = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_1_expected.txt"
-    with open(reached, "w") as f:
+    with open(reached, "w", encoding="utf-8") as f:
         sys.stdout = f
         best_match_under_conditions("parionssport", 1.7, 10)
     sys.stdout = original_stdout
@@ -36,7 +36,7 @@ def test_under_condition():
         
     reached = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_2_reached.txt"
     expected = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_2_expected.txt"
-    with open(reached, "w") as f:
+    with open(reached, "w", encoding="utf-8") as f:
         sys.stdout = f
         best_match_under_conditions("parionssport", 1.7, 10, date_min="23/11/2020")
     sys.stdout = original_stdout
@@ -44,7 +44,7 @@ def test_under_condition():
     
     reached = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_3_reached.txt"
     expected = os.path.dirname(sportsbetting.__file__) + "/tests/result_under_condition_3_expected.txt"
-    with open(reached, "w") as f:
+    with open(reached, "w", encoding="utf-8") as f:
         sys.stdout = f
         best_match_under_conditions("parionssport", 1.7, 10, date_min="23/11/2020", date_max="29/11/2020")
     sys.stdout = original_stdout
