@@ -321,6 +321,10 @@ column_freebets_freebets = [[sg.Text("Mises")],
 
 visible_freebets = 1
 
+column_matches_freebets = [[sg.Checkbox("Matchs définis", key="MATCHES_FREEBETS")],
+                           [sg.Combo([], size=(60, 10), key="MATCH_FREEBETS_0", visible=False)],
+                           [sg.Combo([], size=(60, 10), key="MATCH_FREEBETS_1", visible=False)]]
+
 column_indicators_freebets = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBETS" + str(_),
                                        visible=False)] for _ in range(5)]
 
@@ -329,7 +333,8 @@ column_results_freebets = [[sg.Text("", size=(6, 1), key="RESULTS_FREEBETS" + st
 
 freebets_layout = [[sg.Column(column_sites_freebets),
                     sg.Column(column_freebets_freebets),
-                    sg.Listbox(sites, size=(20, 12), key="SITES_FREEBETS", select_mode='multiple')],
+                    sg.Listbox(sites, size=(20, 12), key="SITES_FREEBETS", select_mode='multiple'),
+                    sg.Column(column_matches_freebets)],
                    [sg.Button("Calculer", key="BEST_MATCH_FREEBETS")],
                    [sg.Text("", size=(100, 1), key="MATCH_FREEBETS")],
                    [sg.Text("", size=(30, 1), key="DATE_FREEBETS")],
@@ -464,6 +469,7 @@ start_time = time.time()
 elapsed_time = 0
 start_parsing = 0
 palier = 0
+matches_freebets = False
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
@@ -645,6 +651,11 @@ while True:
             visible_freebets -= 1
             window["SITE_FREEBETS_" + str(visible_freebets)].update(visible=False)
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
+    elif matches_freebets != values["MATCHES_FREEBETS"]:
+        matches_freebets = values["MATCHES_FREEBETS"]
+        matches = sorted(list(sportsbetting.ODDS["football"])) if matches_freebets else []
+        window["MATCH_FREEBETS_0"].update(visible=matches_freebets, values=matches)
+        window["MATCH_FREEBETS_1"].update(visible=matches_freebets, values=matches)
     elif event == "BEST_MATCH_FREEBETS":
         sportsbetting.ODDS_INTERFACE = best_matches_freebet_interface(window, values,
                                                                       visible_freebets)

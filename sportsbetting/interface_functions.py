@@ -404,9 +404,14 @@ def best_matches_freebet_interface(window, values, visible_freebets):
         freebets_list.append([float(values["STAKE_FREEBETS_" + str(i)]),
                               values["SITE_FREEBETS_" + str(i)]])
     sites = values["SITES_FREEBETS"]
+    match0 = values["MATCH_FREEBETS_0"]
+    match1 = values["MATCH_FREEBETS_1"]
     old_stdout = sys.stdout  # Memorize the default stdout stream
     sys.stdout = buffer = io.StringIO()
-    best_matches_freebet(sites, freebets_list)
+    if match0 and match1:
+        best_matches_freebet(sites, freebets_list, "football", match0, match1)
+    else:
+        best_matches_freebet(sites, freebets_list)
     sys.stdout = old_stdout  # Put the old stream back in place
     what_was_printed = buffer.getvalue()
     match, date = infos(what_was_printed)

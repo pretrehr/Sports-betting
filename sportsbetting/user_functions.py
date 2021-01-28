@@ -185,7 +185,6 @@ def odds_match(match, sport="football"):
                 break
         else:
             return None, None
-    print(match_name)
     return match_name, copy.deepcopy(all_odds[match_name])
 
 
