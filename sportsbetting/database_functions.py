@@ -14,7 +14,7 @@ import datetime
 import re
 import unidecode
 from bs4 import BeautifulSoup
-import sportsbetting
+import sportsbetting as sb
 
 
 def get_id_formatted_competition_name(competition, sport):
@@ -22,7 +22,7 @@ def get_id_formatted_competition_name(competition, sport):
     Retourne l'id et le nom tel qu'affiché sur comparateur-de-cotes.fr. Par
     exemple, "Ligue 1" devient "France - Ligue 1"
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, competition FROM competitions WHERE sport='{}'
@@ -42,7 +42,7 @@ def get_competition_by_id(_id, site):
     """
     Retourne l'url d'une competition donnée sur un site donné
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT url_{} FROM competitions WHERE id='{}'
@@ -55,7 +55,7 @@ def get_formatted_name(name, site, sport):
     Uniformisation d'un nom d'équipe/joueur d'un site donné conformément aux noms disponibles sur
     comparateur-de-cotes.fr. Par exemple, "OM" devient "Marseille"
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     res = list(c.execute("""
     SELECT name FROM names WHERE sport="{}" AND name_{}="{}"
@@ -75,7 +75,7 @@ def get_competition_id(name, sport):
     """
     Retourne l'id d'une compétition
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id, competition FROM competitions WHERE sport='{}'
@@ -95,7 +95,7 @@ def get_competition_url(name, sport, site):
     """
     Retourne l'url d'une compétition sur un site donné
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT competition, url_{} FROM competitions WHERE sport='{}'
@@ -116,7 +116,7 @@ def import_teams_by_url(url):
     Ajout dans la base de données de toutes les équipes/joueurs d'une même compétition (url) ayant
     un match prévu sur comparateur-de-cotes.fr
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sport = soup.find("title").string.split()[-1].lower()
@@ -158,7 +158,7 @@ def is_id_in_db(_id):
     """
     Vérifie si l'id est dans la base de données
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE id="{}"
@@ -171,7 +171,7 @@ def is_in_db(name, sport, site, only_null=True):
     """
     Vérifie si le nom uniformisé de l'équipe est dans la base de données
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     if only_null:
         c.execute("""
@@ -189,7 +189,7 @@ def is_in_db_site(name, sport, site):
     Vérifie si le nom de l'équipe/joueur tel qu'il est affiché sur un site est dans la base de
     données
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE sport="{}" AND name_{}="{}"
@@ -202,7 +202,7 @@ def get_formatted_name_by_id(_id):
     """
     Retourne le nom d'une équipe en fonction de son id dans la base de donbées
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT name FROM names WHERE id='{}'
@@ -228,7 +228,7 @@ def add_id_to_db(_id):
     for line in soup.findAll("a", {"class": "otn"}):
         if str(_id) in line["href"]:
             sport = line["href"].split("/")[1]
-            conn = sqlite3.connect(sportsbetting.PATH_DB)
+            conn = sqlite3.connect(sb.PATH_DB)
             c = conn.cursor()
             c.execute("""
             INSERT INTO names (id, name, sport)
@@ -241,7 +241,7 @@ def add_id_to_db(_id):
         if "Aucun évènement n'est programmé pour" in soup.text:
             name = soup.text.split("Aucun évènement n'est programmé pour")[1].split("\n")[0].strip()
             sport = soup.find("div", {"class": "head"}).text.split("(")[-1].strip(")").lower()
-            conn = sqlite3.connect(sportsbetting.PATH_DB)
+            conn = sqlite3.connect(sb.PATH_DB)
             c = conn.cursor()
             c.execute("""
             INSERT INTO names (id, name, sport)
@@ -260,7 +260,7 @@ def add_id_to_db_thesportsdb(_id):
     name = dict_team["teams"][0]["strTeam"]
     sport = (dict_team["teams"][0]["strSport"].lower().replace("soccer", "football")
              .replace("ice_hockey", "hockey-sur-glace"))
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     INSERT INTO names (id, name, sport)
@@ -274,7 +274,7 @@ def get_sport_by_id(_id):
     """
     Retourne le sport associé à un id d'équipe/joueur dans la base de données
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT sport FROM names WHERE id='{}'
@@ -299,7 +299,7 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
     sport = get_sport_by_id(_id)
     if is_in_db_site(name, sport, site): #Pour éviter les ajouts intempestifs
         return True
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     name_is_potential_double = sport == "tennis" and any(x in name for x in ["-", "/", "&"])
     formatted_name = get_formatted_name_by_id(_id)
@@ -308,15 +308,15 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
     if (name and is_id_available_for_site(_id, site)
             and (not name_is_potential_double ^ id_is_potential_double)):
         if check:
-            if sportsbetting.INTERFACE:
-                sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} ({}) sur {}\n"
+            if sb.INTERFACE:
+                sb.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} ({}) sur {}\n"
                                                "Nouvelle donnée : {}\n"
                                                "Date du prochain match de l'équipe à ajouter : {}\n"
                                                "Date du prochain match de l'équipe existant dans la db : {}\n"
                                                "Prochaine compétition jouée dans la db : {}\n"
                                                .format(formatted_name, _id, site, name, date_next_match, date_next_match_db, get_next_competition(_id)))
-                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-            elif not sportsbetting.TEST:
+                ans = sb.QUEUE_FROM_GUI.get(True)
+            elif not sb.TEST:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
                             "(nouvelle entrée : {}) (y/n)"
                             .format(formatted_name, site, name))
@@ -342,16 +342,16 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
         sport, formatted_name, name_site = c.fetchone()
         if name and name != name_site:
             if check:
-                if sportsbetting.INTERFACE:
-                    sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
+                if sb.INTERFACE:
+                    sb.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
                                                    "Nouvelle donnée : {}\n"
                                                    "Donnée déjà existante : {}\n"
                                                    "Date du prochain match de l'équipe à ajouter : {}\n"
                                                    "Date du prochain match de l'équipe existant dans la db : {}\n"
                                                    "Prochaine compétition jouée dans la db : {}\n"
                                                    .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db, get_next_competition(_id)))
-                    ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-                elif not sportsbetting.TEST:
+                    ans = sb.QUEUE_FROM_GUI.get(True)
+                elif not sb.TEST:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
                                 "(entrée déjà existante : {}, nouvelle entrée : {}) (y/n)"
                                 .format(formatted_name, site, name_site, name))
@@ -385,7 +385,7 @@ def is_id_available_for_site(_id, site):
     Vérifie s'il est possible d'ajouter un nom associé à un site et à un id sans créer de nouvelle
     entrée
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT name_{} FROM names WHERE id = {}
@@ -400,7 +400,7 @@ def get_close_name(name, sport, site, only_null=True):
     """
     Cherche un nom similaire dans la base de données
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     if only_null:
         c.execute("""
@@ -430,7 +430,7 @@ def get_close_name2(name, sport, site, only_null=True):
     if not split_name2:
         return []
     set_name = set(map(lambda x: unidecode.unidecode(x.lower()), split_name))
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     if only_null:
         c.execute("""
@@ -471,7 +471,7 @@ def get_close_name3(name, sport, site, only_null=True):
             init_first_name = split_name[0]
             last_name = split_name[1].strip()
             reg_exp = r'{}[a-z]+\s{}'.format(init_first_name, last_name)
-            conn = sqlite3.connect(sportsbetting.PATH_DB)
+            conn = sqlite3.connect(sb.PATH_DB)
             c = conn.cursor()
             if only_null:
                 c.execute("""
@@ -489,9 +489,9 @@ def get_close_name3(name, sport, site, only_null=True):
 
 def get_close_name4(name, sport, site, only_null=True):
     results = set()
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
-    for bookmaker in sportsbetting.BOOKMAKERS:
+    for bookmaker in sb.BOOKMAKERS:
         if only_null:
             c.execute("""
             SELECT id, name FROM names WHERE sport='{}' AND name_{}="{}" AND name_{} IS NULL
@@ -510,7 +510,7 @@ def get_id_by_site(name, sport, site):
     """
     Retourne l'id d'une équipe/joueur sur un site donné
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names WHERE name_{}="{}" AND sport='{}'
@@ -680,7 +680,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
             else:
                 players = list(map(lambda x: x.split(" ")[0].strip(), complete_names))
         players = list(map(lambda x:x.strip(), players))
-        conn = sqlite3.connect(sportsbetting.PATH_DB)
+        conn = sqlite3.connect(sb.PATH_DB)
         c = conn.cursor()
         if only_null:
             c.execute("""
@@ -701,7 +701,7 @@ def get_all_competitions(sport):
     """
     Retourne toutes les compétitions d'un sport donné
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT competition FROM competitions WHERE sport='{}'
@@ -713,7 +713,7 @@ def get_all_sports():
     """
     Retourne tous les sports disponibles dans la db
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT sport FROM competitions
@@ -725,7 +725,7 @@ def get_competition_name_by_id(_id):
     """
     Retourne l'url d'une competition donnée sur un site donné
     """
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT competition FROM competitions WHERE id='{}'
@@ -748,12 +748,12 @@ def get_all_current_competitions(sport):
             id_leagues.append(id_league)
             league = get_competition_name_by_id(id_league)
             if not league:
-                if sportsbetting.INTERFACE:
-                    sportsbetting.QUEUE_TO_GUI.put("Créer une nouvelle compétition : {}"
+                if sb.INTERFACE:
+                    sb.QUEUE_TO_GUI.put("Créer une nouvelle compétition : {}"
                                                     .format(league_name))
-                    ans = sportsbetting.QUEUE_FROM_GUI.get(True)
+                    ans = sb.QUEUE_FROM_GUI.get(True)
                     if ans == "Yes":
-                        conn = sqlite3.connect(sportsbetting.PATH_DB)
+                        conn = sqlite3.connect(sb.PATH_DB)
                         c = conn.cursor()
                         c.execute("""
                         INSERT INTO competitions (id, sport, competition)
@@ -797,7 +797,7 @@ def get_all_current_competitions_betclic(sport):
                 if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
                     ids.append(link.split("-e")[-1])
     def get_competition_name_by_betclic_id(_id):
-        conn = sqlite3.connect(sportsbetting.PATH_DB)
+        conn = sqlite3.connect(sb.PATH_DB)
         c = conn.cursor()
         c.execute("""
         SELECT competition FROM competitions WHERE url_betclic LIKE "%-e{}"
@@ -817,7 +817,7 @@ def is_played_soon(url):
 def get_main_competitions(sport):
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    sportsbetting.ODDS = {}
+    sb.ODDS = {}
     names = []
     for line in soup.find_all(attrs={"class": "subhead"}):
         if any(x in str(line) for x in ["Événements internationaux", "Coupes européennes", "Principaux championnats", "Coupes nationales"]):
@@ -830,7 +830,7 @@ def get_main_competitions(sport):
 
 
 def get_all_names_from_id(_id):
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT * FROM names WHERE id="{}"
@@ -843,7 +843,7 @@ def get_all_names_from_id(_id):
 
 
 def add_id_to_new_db(_id):
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     for sport, name, name_site in get_all_names_from_id(_id):
         c = conn.cursor()
         c.execute("""
@@ -853,7 +853,7 @@ def add_id_to_new_db(_id):
     conn.commit()
 
 def get_all_ids():
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     SELECT id FROM names
@@ -867,7 +867,7 @@ def create_new_db():
             add_id_to_new_db(_id)
 
 def is_id_consistent(_id):
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     select * from names where id={} order by _rowid_

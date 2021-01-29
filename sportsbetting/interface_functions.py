@@ -11,7 +11,7 @@ import datetime
 import numpy as np
 import PySimpleGUI as sg
 
-import sportsbetting
+import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_issues
 from sportsbetting.database_functions import get_all_current_competitions, get_main_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
@@ -348,7 +348,7 @@ def best_matches_combine_interface(window, values):
                 window["INDICATORS_COMBINE" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_COMBINE" + str(i)].update(elem[1], visible=True)
         buffer.close()
-        sportsbetting.ODDS_INTERFACE = what_was_printed
+        sb.ODDS_INTERFACE = what_was_printed
     except IndexError:
         pass
     except ValueError:
@@ -389,7 +389,7 @@ def best_match_stakes_to_bet_interface(window, values, visible_stakes):
         window["INDICATORS_STAKES" + str(i)].update(elem[0].capitalize(), visible=True)
         window["RESULTS_STAKES" + str(i)].update(elem[1], visible=True)
     buffer.close()
-    sportsbetting.ODDS_INTERFACE = what_was_printed
+    sb.ODDS_INTERFACE = what_was_printed
 
 
 def best_matches_freebet_interface(window, values, visible_freebets):
@@ -477,7 +477,7 @@ def best_match_pari_gagnant_interface(window, values):
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_GAGNANT" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_GAGNANT" + str(i)].update(elem[1], visible=True)
-            sportsbetting.ODDS_INTERFACE = what_was_printed
+            sb.ODDS_INTERFACE = what_was_printed
         buffer.close()
     except IndexError:
         pass
@@ -524,8 +524,8 @@ def delete_site_interface(window, values):
         sport = values["SPORT_ODDS"][0]
         i_line = values["ODDS_ODDS"][0]
         lines = window["ODDS_ODDS"].get()
-        del sportsbetting.ODDS[sport][match]["odds"][lines[i_line][0]]
-        if not sportsbetting.ODDS[sport][match]["odds"]:
+        del sb.ODDS[sport][match]["odds"][lines[i_line][0]]
+        if not sb.ODDS[sport][match]["odds"]:
             delete_odds_interface(window, values)
         else:
             odds_match_interface(window, values)
@@ -536,8 +536,8 @@ def delete_odds_interface(window, values):
     try:
         match = values["MATCHES_ODDS"][0]
         sport = values["SPORT_ODDS"][0]
-        del sportsbetting.ODDS[sport][match]
-        matches = sorted(list(sportsbetting.ODDS[sport]))
+        del sb.ODDS[sport][match]
+        matches = sorted(list(sb.ODDS[sport]))
         window['MATCHES_ODDS'].update(values=matches)
         window["MATCHES"].update(values=matches)
         window["ODDS_ODDS"].update(visible=False)
@@ -602,5 +602,5 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
         window["INDICATORS_COMBI_OPT" + str(i)].update(elem[0].capitalize(), visible=True)
         window["RESULTS_COMBI_OPT" + str(i)].update(elem[1], visible=True)
     buffer.close()
-    sportsbetting.ODDS_INTERFACE = what_was_printed
+    sb.ODDS_INTERFACE = what_was_printed
     

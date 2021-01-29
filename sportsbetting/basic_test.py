@@ -10,7 +10,7 @@ import urllib.request
 
 from bs4 import BeautifulSoup
 
-import sportsbetting
+import sportsbetting as sb
 from sportsbetting.database_functions import is_id_consistent
 from sportsbetting.user_functions import parse_competitions
 
@@ -19,10 +19,10 @@ def test_parsing():
     """
     :return:Test simple
     """
-    sportsbetting.TEST = True
+    sb.TEST = True
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    sportsbetting.ODDS = {}
+    sb.ODDS = {}
     names = []
     for line in soup.find_all(attrs={"class": "subhead"}):
         if "Principaux championnats" in str(line):
@@ -34,18 +34,18 @@ def test_parsing():
     competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
     parse_competitions([name_competition], "football", "pmu", "winamax")
-    assert len(sportsbetting.ODDS) > 0
-    sportsbetting.TEST = False
+    assert len(sb.ODDS) > 0
+    sb.TEST = False
     
 
 def test_parsing_chromedriver():
     """
     :return:Test simple
     """
-    sportsbetting.TEST = True
+    sb.TEST = True
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    sportsbetting.ODDS = {}
+    sb.ODDS = {}
     names = []
     for line in soup.find_all(attrs={"class": "subhead"}):
         if "Principaux championnats" in str(line):
@@ -58,13 +58,13 @@ def test_parsing_chromedriver():
     name_competition = random.choice(names)
     print(name_competition)
     parse_competitions([name_competition], "football", "betclic", "unibet")
-    assert len(sportsbetting.ODDS) > 0
-    sportsbetting.TEST = False  
+    assert len(sb.ODDS) > 0
+    sb.TEST = False  
 
 
 def test_consistency():
-    sportsbetting.TEST = True
-    conn = sqlite3.connect(sportsbetting.PATH_DB)
+    sb.TEST = True
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
     select id, count(*) as c from names group by names.id having c>1
@@ -73,4 +73,4 @@ def test_consistency():
     for result in results:
         id = result[0]
         assert is_id_consistent(id)
-    sportsbetting.TEST = False
+    sb.TEST = False

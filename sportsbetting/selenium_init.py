@@ -9,7 +9,7 @@ import selenium.common
 import stopit
 import termcolor
 
-import sportsbetting
+import sportsbetting as sb
 
 DRIVER = {}
 
@@ -30,7 +30,7 @@ def start_selenium(site, headless=True):
     options.add_argument("--disable-extensions")
     try:
         DRIVER[site] = selenium.webdriver.Chrome(
-            sportsbetting.PATH_DRIVER, options=options)
+            sb.PATH_DRIVER, options=options)
         colorama.init()
         print(termcolor.colored('Driver started for {}{}'
                                 .format(site, colorama.Style.RESET_ALL),

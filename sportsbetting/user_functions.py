@@ -25,7 +25,7 @@ import unidecode
 import urllib3
 from bs4 import BeautifulSoup
 from multiprocessing.pool import ThreadPool
-import sportsbetting
+import sportsbetting as sb
 from sportsbetting import selenium_init
 from sportsbetting.database_functions import (get_id_formatted_competition_name, get_competition_by_id, import_teams_by_url,
                                               import_teams_by_sport, import_teams_by_competition_id_thesportsdb)
@@ -46,8 +46,8 @@ def parse_competition(competition, sport="football", *sites):
     paris. Si aucun site n'est choisi, le parsing se fait sur l'ensemble des
     bookmakers reconnus par l'ARJEL
     """
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     try:
         _id, formatted_name = get_id_formatted_competition_name(competition, sport)
     except TypeError:
@@ -80,7 +80,7 @@ def parse_competition(competition, sport="football", *sites):
             res_parsing[site] = {}
         except selenium.common.exceptions.TimeoutException:
             print("Element non trouvé par selenium ({} sur {})".format(competition, site))
-        except sportsbetting.UnavailableCompetitionException:
+        except sb.UnavailableCompetitionException:
             print("{} non disponible sur {}".format(competition, site))
         except socket.timeout:
             print("{} non accessible sur {} (timeout socket)".format(competition, site))
@@ -98,18 +98,18 @@ def parse_competitions_site(competitions, sport, site):
     list_odds = []
     if len(competitions) > 40 and site == "winamax":  # to avoid being blocked by winamax
         competitions = competitions[:40]
-    sportsbetting.SITE_PROGRESS[site] = 0
+    sb.SITE_PROGRESS[site] = 0
     try:
         for competition in competitions:
             list_odds.append(parse_competition(competition, sport, site))
-            sportsbetting.PROGRESS += 100 / (len(competitions) * sportsbetting.SUB_PROGRESS_LIMIT)
-            sportsbetting.SITE_PROGRESS[site] += 100 / len(competitions)
-    except sportsbetting.UnavailableSiteException:
+            sb.PROGRESS += 100 / (len(competitions) * sb.SUB_PROGRESS_LIMIT)
+            sb.SITE_PROGRESS[site] += 100 / len(competitions)
+    except sb.UnavailableSiteException:
         print("{} non accessible".format(site))
-        sportsbetting.SITE_PROGRESS[site] = 100
-    except sportsbetting.AbortException:
+        sb.SITE_PROGRESS[site] = 100
+    except sb.AbortException:
         print("Interruption", site)
-    if site in sportsbetting.SELENIUM_SITES:
+    if site in sb.SELENIUM_SITES:
         selenium_init.DRIVER[site].quit()
     return merge_dict_odds(list_odds)
 
@@ -119,28 +119,28 @@ def parse_competitions(competitions, sport="football", *sites):
                    'pmu', 'france_pari', 'netbet', 'winamax', 'zebet']
     if not sites:
         sites = sites_order
-    sportsbetting.EXPECTED_TIME = 28 + len(competitions) * 12.5
-    selenium_sites = sportsbetting.SELENIUM_SITES.intersection(sites)
+    sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
+    selenium_sites = sb.SELENIUM_SITES.intersection(sites)
     selenium_required = ((inspect.currentframe().f_back.f_code.co_name
                           in ["<module>", "parse_thread"]
                           or 'test' in inspect.currentframe().f_back.f_code.co_name)
                          and (selenium_sites or not sites))
-    sportsbetting.SELENIUM_REQUIRED = selenium_required
+    sb.SELENIUM_REQUIRED = selenium_required
     sites = [site for site in sites_order if site in sites]
-    sportsbetting.PROGRESS = 0
+    sb.PROGRESS = 0
     if selenium_required:
         for site in selenium_sites:
             while True:
                 headless = sport != "handball" or site != "bwin"
-                if sportsbetting.ABORT or selenium_init.start_selenium(site, headless, timeout=15):
+                if sb.ABORT or selenium_init.start_selenium(site, headless, timeout=15):
                     break
                 colorama.init()
                 print(termcolor.colored('Restarting', 'yellow'))
                 colorama.Style.RESET_ALL
                 colorama.deinit()
-            sportsbetting.PROGRESS += 100/len(selenium_sites)
-    sportsbetting.PROGRESS = 0
-    sportsbetting.SUB_PROGRESS_LIMIT = len(sites)
+            sb.PROGRESS += 100/len(selenium_sites)
+    sb.PROGRESS = 0
+    sb.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
         if competition == sport or "Tout le" in competition:
             import_teams_by_sport(sport)
@@ -153,18 +153,18 @@ def parse_competitions(competitions, sport="football", *sites):
                                     + "/a-ed" + str(id_competition))
     list_odds = []
     try:
-        sportsbetting.IS_PARSING = True
+        sb.IS_PARSING = True
         list_odds = ThreadPool(7).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
-        sportsbetting.ODDS[sport] = merge_dict_odds(list_odds)
+        sb.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
-    sportsbetting.IS_PARSING = False
+    sb.IS_PARSING = False
     if selenium_required:
         colorama.init()
         print(termcolor.colored('Drivers closed', 'green'))
         colorama.Style.RESET_ALL
         colorama.deinit()
-    sportsbetting.ABORT = False
+    sb.ABORT = False
 
 
 def odds_match(match, sport="football"):
@@ -172,7 +172,7 @@ def odds_match(match, sport="football"):
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
     match = unidecode.unidecode(match)
-    all_odds = sportsbetting.ODDS[sport]
+    all_odds = sb.ODDS[sport]
     opponents = match.split('-')
     for match_name in all_odds:
         if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
@@ -259,7 +259,7 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_m
 
 def best_match_under_conditions2(site, minimum_odd, stake, sport="football", date_max=None,
                                 time_max=None, date_min=None, time_min=None):
-    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min, time_min)
+    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max, date_min, time_min)
     best_profit = -float("inf")
     best_match = None
     best_overall_odds = None
@@ -267,7 +267,7 @@ def best_match_under_conditions2(site, minimum_odd, stake, sport="football", dat
     nb_matches = len(all_odds)
     n = get_nb_issues(sport)
     for match in all_odds:
-        sportsbetting.PROGRESS += 100 / nb_matches
+        sb.PROGRESS += 100 / nb_matches
         if site in all_odds[match]['odds']:
             odds_site = all_odds[match]['odds'][site]
             best_odds = copy.deepcopy(odds_site)
@@ -383,16 +383,16 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     Retourne les meilleurs matches sur lesquels miser lorsqu'on doit miser une somme
     donnée à une cote donnée sur un combiné
     """
-    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min, time_min)
+    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max, date_min, time_min)
     all_odds = filter_dict_minimum_odd(all_odds, minimum_odd_selection, site)
-    sportsbetting.ALL_ODDS_COMBINE = {}
+    sb.ALL_ODDS_COMBINE = {}
     nb_combine = binomial(len(all_odds), nb_matches)
-    sportsbetting.PROGRESS = 0
+    sb.PROGRESS = 0
 
     def compute_all_odds_combine(nb_combine, combine):
-        sportsbetting.PROGRESS += 100/nb_combine
+        sb.PROGRESS += 100/nb_combine
         try:
-            sportsbetting.ALL_ODDS_COMBINE[" / ".join([match[0] for match in combine])] = cotes_combine_all_sites(*[match[1]
+            sb.ALL_ODDS_COMBINE[" / ".join([match[0] for match in combine])] = cotes_combine_all_sites(*[match[1]
                                                                                         for match
                                                                                         in combine])
         except KeyError:
@@ -400,7 +400,7 @@ def best_matches_combine(site, minimum_odd, bet, sport="football", nb_matches=2,
     
     ThreadPool(4).map(lambda x: compute_all_odds_combine(nb_combine, x),
                       combinations(all_odds.items(), nb_matches))
-    sportsbetting.PROGRESS = 0
+    sb.PROGRESS = 0
     odds_function = get_best_odds(one_site)
     profit_function = get_profit(bet, one_site)
     criteria = lambda odds_to_check, i: ((not one_site and odds_to_check[i] >= minimum_odd)
@@ -428,14 +428,14 @@ def best_matches_combine_cashback_une_selection_perdante(site, cote_minimale_sel
     """
     sport = "football"
     bet = 10000
-    all_odds = sportsbetting.ODDS[sport]
-    sportsbetting.ALL_ODDS_COMBINE = {}
+    all_odds = sb.ODDS[sport]
+    sb.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
         try:
             if all([odd >= cote_minimale_selection for odds in list(all_odds[match[0]]["odds"][site]
                                                                     for match in combine)
                     for odd in odds]):
-                (sportsbetting
+                (sb
                     .ALL_ODDS_COMBINE[" / "
                     .join([match[0]
                            for match
@@ -463,10 +463,10 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
     """
     Calcule la répartition des mises lorsqu'un unique combiné est remboursé s'il est perdant
     """
-    all_odds = sportsbetting.ODDS[sport]
-    sportsbetting.ALL_ODDS_COMBINE = {}
+    all_odds = sb.ODDS[sport]
+    sb.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
-        (sportsbetting
+        (sb
             .ALL_ODDS_COMBINE[" / "
             .join([match[0]
                    for match
@@ -494,7 +494,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     second_sites = {stake[1] for stake in stakes}
     main_sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                   'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
-    all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max)
+    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max)
     best_profit = -sum(stake[0] for stake in stakes)
     n = get_nb_issues(sport) ** nb_matches
     nb_stakes = len(stakes)
@@ -505,9 +505,9 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
     best_bets = None
     main_site_odds = []
     main_sites_distribution = []
-    sportsbetting.PROGRESS = 0
+    sb.PROGRESS = 0
     for i, combine in enumerate(combis):
-        sportsbetting.PROGRESS += 100 / nb_combis
+        sb.PROGRESS += 100 / nb_combis
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
         for main0 in main_sites:
@@ -588,7 +588,7 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
             match_name, odds = odds_match(match)
             new_odds[match_name] = odds
     else:
-        new_odds = sportsbetting.ODDS[sport]
+        new_odds = sb.ODDS[sport]
     all_odds = {}
     for match in new_odds:
         if (not (any([site not in new_odds[match]["odds"].keys() for site in main_sites])
@@ -652,10 +652,10 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     """
     Calcule la répartition des paris gratuits sur un unique site
     """
-    all_odds = sportsbetting.ODDS[sport]
-    sportsbetting.ALL_ODDS_COMBINE = {}
+    all_odds = sb.ODDS[sport]
+    sb.ALL_ODDS_COMBINE = {}
     for combine in combinations(all_odds.items(), nb_matches):
-        (sportsbetting
+        (sb
             .ALL_ODDS_COMBINE[" / ".join([match[0] for match
                                           in combine])]) = cotes_combine_all_sites(*[match[1]
                                                                                      for match
@@ -711,7 +711,7 @@ def add_competition_to_db(sport):
     Ajout des competitions d'un sport donné disponibles sur comparateur-de-cotes
     """
     url = "http://www.comparateur-de-cotes.fr/comparateur/" + sport
-    conn = sqlite3.connect("sportsbetting/resources/teams.db")
+    conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sport = soup.find("title").string.split()[-1].lower()

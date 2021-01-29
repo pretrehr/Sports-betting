@@ -11,7 +11,7 @@ import itertools
 import math
 import re
 import time
-import sportsbetting
+import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
@@ -20,7 +20,7 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
-from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
+from sb.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
 import sqlite3
 
 
@@ -132,10 +132,10 @@ def adapt_names(odds, site, sport, competition):
             add_matches_to_db(odds, sport, site, id_competition)
             break
         except sqlite3.OperationalError:
-            if sportsbetting.INTERFACE:
-                sportsbetting.QUEUE_TO_GUI.put("Database is locked, try again ?")
-                ans = sportsbetting.QUEUE_FROM_GUI.get(True)
-            elif not sportsbetting.TEST:
+            if sb.INTERFACE:
+                sb.QUEUE_TO_GUI.put("Database is locked, try again ?")
+                ans = sb.QUEUE_FROM_GUI.get(True)
+            elif not sb.TEST:
                 ans = input("Database is locked, try again ? (y/n)")
             else:
                 ans = "No"
@@ -386,8 +386,8 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             odd = 1
             for i, match in zip(combinaison, matches):
                 if i!=float("inf"):
-                    if site in sportsbetting.ODDS[sport][match]["odds"].keys():
-                        odd *= sportsbetting.ODDS[sport][match]["odds"][site][i]
+                    if site in sb.ODDS[sport][match]["odds"].keys():
+                        odd *= sb.ODDS[sport][match]["odds"][site][i]
                     else:
                         break
             if odd > best_odd:
@@ -397,7 +397,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         return best_odd, best_site
     odds = {}
     for match in matches:
-        odds[match] = sportsbetting.ODDS[sport][match]
+        odds[match] = sb.ODDS[sport][match]
     best_combinaison = []
     best_cotes = []
     best_sites = []
@@ -449,7 +449,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
              'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
     odds = {site: [get_odd(combine, matches, site)[0] for combine in best_combinaison] for site in sites}
     
-    pprint({"date" : max(date for date in [sportsbetting.ODDS[sport][match]["date"]
+    pprint({"date" : max(date for date in [sb.ODDS[sport][match]["date"]
                                            for match in matches]),
             "odds" :odds}, compact=True)
     print("plus-value =", round(best_gain, 2))
@@ -483,10 +483,10 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
     """
     try:
         if combine:
-            all_odds = filter_dict_dates(sportsbetting.ALL_ODDS_COMBINE, date_max, time_max,
+            all_odds = filter_dict_dates(sb.ALL_ODDS_COMBINE, date_max, time_max,
                                          date_min, time_min)
         else:
-            all_odds = filter_dict_dates(sportsbetting.ODDS[sport], date_max, time_max, date_min,
+            all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max, date_min,
                                          time_min)
     except NameError:
         print("""
@@ -504,7 +504,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
     sites = None
     nb_matches = len(all_odds)
     for match in all_odds:
-        sportsbetting.PROGRESS += 100 / nb_matches
+        sb.PROGRESS += 100 / nb_matches
         if site in all_odds[match]['odds']:
             odds_site = all_odds[match]['odds'][site]
             best_odds = copy.deepcopy(odds_site)
@@ -671,7 +671,7 @@ def binomial(x, y):
 def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="body"):
     last_height = 0
     new_height = 1
-    while last_height != new_height and not sportsbetting.ABORT:
+    while last_height != new_height and not sb.ABORT:
         last_height = driver.execute_script("return document.{}.scrollHeight".format(scrollable_element))
         print("Scrolling", site)
         driver.execute_script("""

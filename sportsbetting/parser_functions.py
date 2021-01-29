@@ -21,12 +21,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 
-import sportsbetting
+import sportsbetting as sb
 from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import (merge_dicts, reverse_match_odds,
-                                               scroll, format_bwin_names,
-                                               format_bwin_time,
-                                               format_joa_time,
+from sportsbetting.auxiliary_functions import (merge_dicts, reverse_match_odds, scroll,
+                                               format_bwin_names, format_bwin_time, format_joa_time,
                                                format_zebet_names, truncate_datetime)
 
 
@@ -47,13 +45,13 @@ def parse_betclic(url):
                 datetime.timedelta(days=1)).strftime("%d/%m/%Y")
     if (selenium_init.DRIVER["betclic"].current_url
             == "https://www.betclic.fr/"):
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
         EC.invisibility_of_element_located(
-            (By.TAG_NAME, "app-preloader")) or sportsbetting.ABORT
+            (By.TAG_NAME, "app-preloader")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
     for _ in range(10):
@@ -61,7 +59,7 @@ def parse_betclic(url):
             "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         if "Désolé, cette compétition n'est plus disponible." in str(soup):
-            raise sportsbetting.UnavailableCompetitionException
+            raise sb.UnavailableCompetitionException
         for line in soup.findAll():
             if "class" in line.attrs and "betBox_matchName" in line["class"]:
                 match = " - ".join(list(line.stripped_strings))
@@ -106,10 +104,10 @@ def parse_betstars(url=""):
     try:
         WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
             EC.presence_of_all_elements_located(
-                (By.CLASS_NAME, "match-time")) or sportsbetting.ABORT
+                (By.CLASS_NAME, "match-time")) or sb.ABORT
         )
-        if sportsbetting.ABORT:
-            raise sportsbetting.AbortException
+        if sb.ABORT:
+            raise sb.AbortException
         inner_html = (selenium_init.DRIVER["betstars"]
                       .execute_script("return document.body.innerHTML"))
         soup = BeautifulSoup(inner_html, features="lxml")
@@ -166,7 +164,7 @@ def parse_betstars(url=""):
         if ("Nous procédons à une mise à jour" in inner_html or
                 "Nous devons procéder à la correction ou à la mise à jour d’un élément"
                 in inner_html):
-            raise sportsbetting.UnavailableSiteException
+            raise sb.UnavailableSiteException
         else:
             print("Aucun pari prématch disponible")
     return match_odds_hash
@@ -182,16 +180,16 @@ def parse_sport_betstars(sport):
     competitions = []
     WebDriverWait(selenium_init.DRIVER["betstars"], 15).until(
         EC.presence_of_element_located(
-            (By.CLASS_NAME, "basicList__item")) or sportsbetting.ABORT
+            (By.CLASS_NAME, "basicList__item")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     inner_html = selenium_init.DRIVER["betstars"].execute_script(
         "return document.body.innerHTML")
     if ("Nous procédons à une mise à jour" in inner_html or
             "Nous devons procéder à la correction ou à la mise à jour d’un élément"
             in inner_html):
-        raise sportsbetting.UnavailableSiteException
+        raise sb.UnavailableSiteException
     soup = BeautifulSoup(inner_html, features="lxml")
     for line in soup.findAll(["a"]):
         if ("href" in line.attrs and sport + "/competitions/" in line["href"]
@@ -223,10 +221,10 @@ def parse_bwin(url):
     live = False
     WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
         EC.presence_of_all_elements_located(
-            (By.CLASS_NAME, "participants-pair-game")) or sportsbetting.ABORT
+            (By.CLASS_NAME, "participants-pair-game")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["bwin"], "bwin",
                "grid-event-detail", 3, 'getElementById("main-view")')
@@ -331,7 +329,7 @@ def parse_france_pari(url=""):
                 except UnboundLocalError:
                     pass
     if not match_odds_hash:
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     return match_odds_hash
 
 
@@ -367,12 +365,12 @@ def parse_joa(url):
     try:
         WebDriverWait(selenium_init.DRIVER["joa"], 30).until(
             EC.presence_of_all_elements_located(
-                (By.CLASS_NAME, "bet-event-name")) or sportsbetting.ABORT
+                (By.CLASS_NAME, "bet-event-name")) or sb.ABORT
         )
-        if sportsbetting.ABORT:
-            raise sportsbetting.AbortException
+        if sb.ABORT:
+            raise sb.AbortException
     except selenium.common.exceptions.TimeoutException:
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     for _ in range(10):
         inner_html = selenium_init.DRIVER["joa"].execute_script(
             "return document.body.innerHTML")
@@ -388,20 +386,20 @@ def parse_joa_sport(url):
     list_odds = []
     cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
         EC.element_to_be_clickable(
-            (By.CLASS_NAME, "cc-cookie-accept")) or sportsbetting.ABORT
+            (By.CLASS_NAME, "cc-cookie-accept")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     cookies.click()
     try:
         filtres = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
             EC.presence_of_all_elements_located(
-                (By.CLASS_NAME, "Filtres")) or sportsbetting.ABORT
+                (By.CLASS_NAME, "Filtres")) or sb.ABORT
         )
-        if sportsbetting.ABORT:
-            raise sportsbetting.AbortException
+        if sb.ABORT:
+            raise sb.AbortException
     except selenium.common.exceptions.TimeoutException:
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     for i, _ in enumerate(filtres):
         selenium_init.DRIVER["joa"].execute_script("window.scrollTo(0, 0)")
         selenium_init.DRIVER["joa"].execute_script(
@@ -410,20 +408,20 @@ def parse_joa_sport(url):
         try:
             WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
                 EC.presence_of_all_elements_located(
-                    (By.CLASS_NAME, "bet-event-name")) or sportsbetting.ABORT
+                    (By.CLASS_NAME, "bet-event-name")) or sb.ABORT
             )
-            if sportsbetting.ABORT:
-                raise sportsbetting.AbortException
+            if sb.ABORT:
+                raise sb.AbortException
         except selenium.common.exceptions.TimeoutException:
-            raise sportsbetting.UnavailableCompetitionException
+            raise sb.UnavailableCompetitionException
         while True:
             try:
                 show_more = WebDriverWait(selenium_init.DRIVER["joa"], 5).until(
                     EC.presence_of_all_elements_located(
-                        (By.CLASS_NAME, "show-more-leagues")) or sportsbetting.ABORT
+                        (By.CLASS_NAME, "show-more-leagues")) or sb.ABORT
                 )[0]
-                if sportsbetting.ABORT:
-                    raise sportsbetting.AbortException
+                if sb.ABORT:
+                    raise sb.AbortException
                 show_more.find_element_by_tag_name("button").click()
             except selenium.common.exceptions.TimeoutException:
                 break
@@ -463,11 +461,11 @@ def parse_netbet(url=""):
             headers = {"User-Agent": fake_useragent.UserAgent().random}
             print("User agent change (Timeout)")
     else:
-        raise sportsbetting.UnavailableSiteException
+        raise sb.UnavailableSiteException
     if soup.find(attrs={"class": "none"}):
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     if response.geturl() == "https://www.netbet.fr/":
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -528,12 +526,12 @@ def parse_parionssport(url=""):
     selenium_init.DRIVER["parionssport"].get(url)
     if "maintenance technique" in selenium_init.DRIVER["parionssport"].execute_script(
             "return document.body.innerHTML"):
-        raise sportsbetting.UnavailableSiteException
+        raise sb.UnavailableSiteException
     if (selenium_init.DRIVER["parionssport"].current_url
             == "https://www.enligne.parionssport.fdj.fr/"):
-        raise sportsbetting.UnavailableSiteException
+        raise sb.UnavailableSiteException
     elif (not is_sport_page) and selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     if is_sport_page:
         scroll(selenium_init.DRIVER["parionssport"],
                "parionssport", "wpsel-desc", 5)
@@ -558,7 +556,7 @@ def parse_parionssport(url=""):
                         "https://www.enligne.parionssport.fdj.fr" + line["href"])
             else:
                 if "Nous vous prions de bien vouloir nous en excuser" in line:
-                    raise sportsbetting.UnavailableCompetitionException
+                    raise sb.UnavailableCompetitionException
                 if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
                     if line.text.strip() == "aujourd'hui":
                         date = datetime.date.today().strftime("%A %d %B %Y")
@@ -594,7 +592,7 @@ def parse_parionssport(url=""):
         elif urls_basket:
             list_odds = []
             for match_url in urls_basket:
-                if sportsbetting.ABORT:
+                if sb.ABORT:
                     break
                 list_odds.append(parse_match_nba_parionssport(match_url))
             return merge_dicts(list_odds)
@@ -646,17 +644,17 @@ def parse_pasinobet(url):
     date_time = None
     WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
         EC.invisibility_of_element_located(
-            (By.CLASS_NAME, "skeleton-line")) or sportsbetting.ABORT
+            (By.CLASS_NAME, "skeleton-line")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
         "return document.body.innerHTML")
     soup = BeautifulSoup(inner_html, features="lxml")
     date = ""
     for line in soup.findAll():
-        if sportsbetting.ABORT:
-            raise sportsbetting.AbortException
+        if sb.ABORT:
+            raise sb.AbortException
         if "class" in line.attrs and "category-date" in line["class"]:
             date = line.text.lower()
             date = date.replace("nov", "novembre")
@@ -717,7 +715,7 @@ def parse_pmu_html(soup):
     date = ""
     for line in soup.find_all():
         if "n'est pas accessible pour le moment !" in line.text:
-            raise sportsbetting.UnavailableSiteException
+            raise sb.UnavailableSiteException
         if "data-date" in line.attrs and "shadow" in line["class"]:
             date = line["data-date"]
         elif "class" in line.attrs and "trow--live--remaining-time" in line["class"]:
@@ -757,7 +755,7 @@ def parse_pmu_html(soup):
                 match_odds_hash[match]['odds'] = {"pmu": odds}
                 match_odds_hash[match]['date'] = date_time
     if not match_odds_hash:
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     return match_odds_hash
 
 
@@ -798,7 +796,7 @@ def parse_sport_pmu(sport):
         try:
             list_odds.append(parse_pmu_html(soup))
             i += 1
-        except sportsbetting.UnavailableCompetitionException:
+        except sb.UnavailableCompetitionException:
             break
     return merge_dicts(list_odds)
 
@@ -816,10 +814,10 @@ def parse_unibet(url):
     date_time = None
     WebDriverWait(selenium_init.DRIVER["unibet"], 30).until(
         EC.invisibility_of_element_located(
-            (By.CLASS_NAME, "ui-spinner")) or sportsbetting.ABORT
+            (By.CLASS_NAME, "ui-spinner")) or sb.ABORT
     )
-    if sportsbetting.ABORT:
-        raise sportsbetting.AbortException
+    if sb.ABORT:
+        raise sb.AbortException
     if is_sport_page:
         scroll(selenium_init.DRIVER["unibet"], "unibet", "calendar-event", 1)
     for _ in range(10):
@@ -827,7 +825,7 @@ def parse_unibet(url):
             "return document.body.innerHTML")
         soup = BeautifulSoup(inner_html, features="lxml")
         if any(x in str(soup) for x in ["La page à laquelle vous souhaitez accéder n'existe plus.", "Aucun marché trouvé."]):
-            raise sportsbetting.UnavailableCompetitionException
+            raise sb.UnavailableCompetitionException
         for line in soup.findAll():
             if "class" in line.attrs and "cell-event" in line["class"]:
                 match = line.text.strip()
@@ -873,11 +871,11 @@ def parse_winamax(url=""):
     sport_id = int(ids.split("/")[0])
     try:
         req = urllib.request.Request(
-            url, headers={'User-Agent': sportsbetting.USER_AGENT})
+            url, headers={'User-Agent': sb.USER_AGENT})
         webpage = urllib.request.urlopen(req, timeout=10).read()
         soup = BeautifulSoup(webpage, features="lxml")
     except urllib.error.HTTPError:
-        raise sportsbetting.UnavailableSiteException
+        raise sb.UnavailableSiteException
     match_odds_hash = {}
     for line in soup.find_all(['script']):
         if "PRELOADED_STATE" in str(line.string):
@@ -907,9 +905,9 @@ def parse_winamax(url=""):
                         except KeyError:
                             pass
             if not match_odds_hash:
-                raise sportsbetting.UnavailableCompetitionException
+                raise sb.UnavailableCompetitionException
             return match_odds_hash
-    raise sportsbetting.UnavailableSiteException
+    raise sb.UnavailableSiteException
 
 
 def parse_zebet(url=""):
@@ -923,7 +921,7 @@ def parse_zebet(url=""):
     try:
         soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     except urllib.error.URLError:
-        raise sportsbetting.UnavailableCompetitionException
+        raise sb.UnavailableCompetitionException
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
@@ -931,7 +929,7 @@ def parse_zebet(url=""):
     date_time = None
     for line in soup.find_all():
         if "Zebet rencontre actuellement des difficultés techniques." in line.text:
-            raise sportsbetting.UnavailableSiteException
+            raise sb.UnavailableSiteException
         if "class" in line.attrs and "bet-time" in line["class"]:
             try:
                 date_time = datetime.datetime.strptime(year + " ".join(line.text.strip().split()),
@@ -962,7 +960,7 @@ def parse_sport_zebet(url):
     date_time = None
     for line in soup.find_all():
         if "Zebet rencontre actuellement des difficultés techniques." in line.text:
-            raise sportsbetting.UnavailableSiteException
+            raise sb.UnavailableSiteException
         if "class" in line.attrs and "bet-event" in line["class"]:
             match = format_zebet_names(line.text.strip())
         if "class" in line.attrs and "bet-time" in line["class"]:
