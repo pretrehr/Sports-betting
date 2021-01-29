@@ -20,7 +20,7 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
-from sb.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
+from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
 import sqlite3
 
 
