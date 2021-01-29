@@ -76,3 +76,6 @@ try:
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
 print(PATH_DRIVER)
+
+PATH_DB = find_files("teams.db", "sportsbetting")
+print(PATH_DB)

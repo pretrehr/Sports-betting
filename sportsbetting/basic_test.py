@@ -64,8 +64,7 @@ def test_parsing_chromedriver():
 
 def test_consistency():
     sportsbetting.TEST = True
-    PATH_DB = os.path.dirname(sportsbetting.__file__) + "/resources/teams.db"
-    conn = sqlite3.connect(PATH_DB)
+    conn = sqlite3.connect(sportsbetting.PATH_DB)
     c = conn.cursor()
     c.execute("""
     select id, count(*) as c from names group by names.id having c>1
