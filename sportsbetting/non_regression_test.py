@@ -3,7 +3,7 @@ import os
 import pickle
 import sportsbetting as sb
 import sys
-from sb.user_functions import best_match_under_conditions
+from sportsbetting.user_functions import best_match_under_conditions
 
 def are_identical_files(filename1, filename2):
     lines1 = []
