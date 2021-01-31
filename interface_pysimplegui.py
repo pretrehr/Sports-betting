@@ -39,7 +39,7 @@ PATH_DATA = os.path.dirname(sportsbetting.__file__) + "/resources/data.pickle"
 
 sports = get_all_sports()
 sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-         'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+         'pmu', 'unibet', 'winamax', 'zebet']
 
 
 print("""
