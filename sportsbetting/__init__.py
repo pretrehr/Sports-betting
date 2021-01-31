@@ -29,6 +29,7 @@ SELENIUM_SITES = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinob
 BOOKMAKERS = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport",
               "pasinobet", "pmu", "unibet", "winamax", "zebet"]
 TEST = False
+DB_MANAGEMENT = False
 
 
 class UnavailableCompetitionException(Exception):

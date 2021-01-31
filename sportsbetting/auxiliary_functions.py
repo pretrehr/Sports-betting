@@ -127,18 +127,19 @@ def adapt_names(odds, site, sport, competition):
     new_dict = {}
     id_competition = get_competition_id(competition, sport)
     ans = ""
-    while ans not in ["n", "No"]:
-        try:
-            add_matches_to_db(odds, sport, site, id_competition)
-            break
-        except sqlite3.OperationalError:
-            if sb.INTERFACE:
-                sb.QUEUE_TO_GUI.put("Database is locked, try again ?")
-                ans = sb.QUEUE_FROM_GUI.get(True)
-            elif not sb.TEST:
-                ans = input("Database is locked, try again ? (y/n)")
-            else:
-                ans = "No"
+    if sb.DB_MANAGEMENT:
+        while ans not in ["n", "No"]:
+            try:
+                add_matches_to_db(odds, sport, site, id_competition)
+                break
+            except sqlite3.OperationalError:
+                if sb.INTERFACE:
+                    sb.QUEUE_TO_GUI.put("Database is locked, try again ?")
+                    ans = sb.QUEUE_FROM_GUI.get(True)
+                elif not sb.TEST:
+                    ans = input("Database is locked, try again ? (y/n)")
+                else:
+                    ans = "No"
     for match in odds:
         new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
                                         match.split(" - "))))

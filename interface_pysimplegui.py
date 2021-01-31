@@ -56,6 +56,7 @@ try:
 except FileNotFoundError:
     pass
 
+sb.DB_MANAGEMENT = "--db" in sys.argv:
 
 # All the stuff inside your window.
 sg.set_options(enable_treeview_869_patch=False)

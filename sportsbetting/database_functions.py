@@ -64,10 +64,11 @@ def get_formatted_name(name, site, sport):
     try:
         return res[0][0]
     except IndexError:
-        colorama.init()
-        print(termcolor.colored('{}\t{}'.format(site, name), 'red'))
-        colorama.Style.RESET_ALL
-        colorama.deinit()
+        if sb.DB_MANAGEMENT:
+            colorama.init()
+            print(termcolor.colored('{}\t{}'.format(site, name), 'red'))
+            colorama.Style.RESET_ALL
+            colorama.deinit()
         return "unknown team/player ".upper() + name
 
 
