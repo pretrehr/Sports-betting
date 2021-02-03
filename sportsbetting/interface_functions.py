@@ -79,7 +79,7 @@ def infos(result):
     lines = result.split("\n")
     match = lines[0]
     i = 0
-    if match == "No match found":
+    if not match or match == "No match found":
         return None, None
     for i, line in enumerate(lines):
         if "}}" in line:
@@ -425,14 +425,24 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     sys.stdout = old_stdout  # Put the old stream back in place
     what_was_printed = buffer.getvalue()
     match, date = infos(what_was_printed)
-    window["MATCH_FREEBETS"].update(match)
-    window["DATE_FREEBETS"].update(date)
-    window["ODDS_FREEBETS"].update(visible=True)
-    window["RESULT_FREEBETS"].update(stakes(what_was_printed), visible=True)
-    window["TEXT_FREEBETS"].update(visible=True)
-    for i, elem in enumerate(indicators(what_was_printed)):
-        window["INDICATORS_FREEBETS" + str(i)].update(elem[0].capitalize(), visible=True)
-        window["RESULTS_FREEBETS" + str(i)].update(elem[1], visible=True)
+    if match is None:
+        window["MATCH_FREEBETS"].update("Aucun match trouvé")
+        window["DATE_FREEBETS"].update("")
+        window["ODDS_FREEBETS"].update(visible=False)
+        window["RESULT_FREEBETS"].update(visible=False)
+        window["TEXT_FREEBETS"].update(visible=False)
+        for i in range(5):
+            window["INDICATORS_FREEBETS" + str(i)].update(visible=False)
+            window["RESULTS_FREEBETS" + str(i)].update(visible=False)
+    else:
+        window["MATCH_FREEBETS"].update(match)
+        window["DATE_FREEBETS"].update(date)
+        window["ODDS_FREEBETS"].update(visible=True)
+        window["RESULT_FREEBETS"].update(stakes(what_was_printed), visible=True)
+        window["TEXT_FREEBETS"].update(visible=True)
+        for i, elem in enumerate(indicators(what_was_printed)):
+            window["INDICATORS_FREEBETS" + str(i)].update(elem[0].capitalize(), visible=True)
+            window["RESULTS_FREEBETS" + str(i)].update(elem[1], visible=True)
     buffer.close()
     return what_was_printed
 

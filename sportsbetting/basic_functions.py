@@ -77,6 +77,10 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
     :return: Répartition optimale des mises
     :rtype: list[float] or None
     """
+    if not cotes:
+        if output:
+            return
+        return []
     if choix == -1:
         choix = np.argmin(cotes)
     gains = mise_requise * cotes[choix]

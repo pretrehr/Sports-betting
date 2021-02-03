@@ -603,6 +603,7 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
     combis = list(combinations(all_odds.items(), nb_matches))
     nb_combis = len(combis)
     progress = 10
+    best_combine = None
     start = time.time()
     for i, combine in enumerate(combis):
         match_combine = " / ".join([match[0] for match in combine])
@@ -630,20 +631,21 @@ def best_matches_freebet(main_sites, freebets, sport="football", *matches):
                 best_combine = combine
                 best_bets = defined_bets_temp
     #     print("Temps d'exécution =", time.time()-start)
-    best_match_combine = " / ".join([match[0] for match in best_combine])
-    odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
-    all_sites = main_sites + list(second_sites)
-    for site in all_odds_combine[best_match_combine]["odds"]:
-        if site not in all_sites:
-            del odds_best_match["odds"][site]
-    print(best_match_combine)
-    pprint(odds_best_match, compact=1)
-    print("Taux =", best_rate)
-    print("Gain référence =", best_bets[0])
-    print("Somme des mises =", np.sum(best_bets[1]))
-    afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                           all_odds_combine[best_match_combine]["odds"], "football",
-                           uniquement_freebet=True)
+    if best_combine:
+        best_match_combine = " / ".join([match[0] for match in best_combine])
+        odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
+        all_sites = main_sites + list(second_sites)
+        for site in all_odds_combine[best_match_combine]["odds"]:
+            if site not in all_sites:
+                del odds_best_match["odds"][site]
+        print(best_match_combine)
+        pprint(odds_best_match, compact=1)
+        print("Taux =", best_rate)
+        print("Gain référence =", best_bets[0])
+        print("Somme des mises =", np.sum(best_bets[1]))
+        afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
+                            all_odds_combine[best_match_combine]["odds"], "football",
+                            uniquement_freebet=True)
 
 
 def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
