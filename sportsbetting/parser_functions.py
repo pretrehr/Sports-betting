@@ -98,6 +98,8 @@ def parse_betstars(url=""):
     match = ""
     odds = []
     is_12 = False
+    get_long_names = False
+    opponents = []
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)
     year = str(today.year)
@@ -120,8 +122,18 @@ def parse_betstars(url=""):
                 match = list(line.stripped_strings)[0]
                 if "@" in match:
                     teams = match.split(" @ ")
-                    match = teams[1] + " - " + teams[0]
+                    match = teams[1].replace(" - ", "-") + " - " + teams[0].replace(" - ", "-")
+                if match.count(" - ") > 1:
+                    get_long_names = True
+                    opponents = []
                 odds = []
+            if get_long_names and "class" in line.attrs and "teamLongName" in line["class"]:
+                if opponents:
+                    match = opponents[0] + " - " + line.text.strip().replace(" - ", "-")
+                    get_long_names = False
+                    opponents = []
+                else:
+                    opponents.append(line.text.strip().replace(" - ", "-"))
             if "class" in line.attrs and ("market-AB" in line["class"]
                                           #                                           or "market-BAML" in line["class"]
                                           or "market-BASKETBALL-FTOT-ML" in line["class"]):

@@ -652,7 +652,7 @@ while True:
             visible_freebets -= 1
             window["SITE_FREEBETS_" + str(visible_freebets)].update(visible=False)
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
-    elif matches_freebets != values["MATCHES_FREEBETS"]:
+    elif "MATCHES_FREEBETS" in values and matches_freebets != values["MATCHES_FREEBETS"]:
         matches_freebets = values["MATCHES_FREEBETS"]
         matches = sorted(list(sportsbetting.ODDS["football"])) if matches_freebets else []
         window["MATCH_FREEBETS_0"].update(visible=matches_freebets, values=matches)
