@@ -353,8 +353,8 @@ def parse_joa_html(inner_html):
     for line in soup.findAll():
         if "class" in line.attrs and "bet-event-name" in line["class"]:
             match = " - ".join(map(lambda x: x.replace(" - ",
-                                                       "-"), list(line.stripped_strings)))
-        if "class" in line.attrs and "bet-event-date-info" in line["class"]:
+                                                       "-"), list(line.stripped_strings)[2:4]))
+        if "class" in line.attrs and "bet-event-date-info-top" in line["class"]:
             date_time = format_joa_time(line.text)
         if "class" in line.attrs and "bet-outcome-list" in line["class"]:
             if match:
