@@ -232,14 +232,24 @@ def best_match_freebet_interface(window, values):
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)
-        window["MATCH_FREEBET"].update(match)
-        window["DATE_FREEBET"].update(date)
-        window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=True)
-        window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
-        window["TEXT_FREEBET"].update(visible=True)
-        for i, elem in enumerate(indicators(what_was_printed)):
-            window["INDICATORS_FREEBET" + str(i)].update(elem[0].capitalize(), visible=True)
-            window["RESULTS_FREEBET" + str(i)].update(elem[1], visible=True)
+        if match is None:
+            window["MATCH_FREEBET"].update("Aucun match trouvé")
+            window["DATE_FREEBET"].update("")
+            window["ODDS_FREEBET"].update(visible=False)
+            window["RESULT_FREEBET"].update(visible=False)
+            window["TEXT_FREEBET"].update(visible=False)
+            for i in range(5):
+                window["INDICATORS_FREEBET" + str(i)].update(visible=False)
+                window["RESULTS_FREEBET" + str(i)].update(visible=False)
+        else:
+            window["MATCH_FREEBET"].update(match)
+            window["DATE_FREEBET"].update(date)
+            window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=True)
+            window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_FREEBET"].update(visible=True)
+            for i, elem in enumerate(indicators(what_was_printed)):
+                window["INDICATORS_FREEBET" + str(i)].update(elem[0].capitalize(), visible=True)
+                window["RESULTS_FREEBET" + str(i)].update(elem[1], visible=True)
         buffer.close()
     except IndexError:
         pass

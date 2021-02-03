@@ -447,7 +447,7 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cashback', cashback_layout),
                          sg.Tab('Pari gagnant', gagnant_layout),
                          sg.Tab('Pari combiné', combine_layout),
-                         sg.Tab('Paris à placer', stakes_layout),
+                         # sg.Tab('Paris à placer', stakes_layout),
                          sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Freebets à placer', freebets_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout)
