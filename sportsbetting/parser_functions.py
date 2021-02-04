@@ -779,15 +779,19 @@ def parse_page_match_pmu(url):
     _id = "-1"
     odds = []
     name = soup.find("title").text.split(" - ")[0].replace("//", "-")
+    reversed_odds = False
     if "chez les" in name:
         teams = name.split(" chez les ")
         name = teams[1] + " - " + teams[0]
+        reversed_odds = True
     print("\t" + name)
     for line in soup.find_all(["option", "a"]):
         if line.text in ["Vainqueur du match", "1N2 à la 60e minute"]:
             _id = line["data-market-id"]
         if "data-ev_mkt_id" in line.attrs and line["data-ev_mkt_id"] == _id:
             odds.append(float(line.text.replace(",", ".")))
+    if reversed_odds:
+        odds.reverse()
     return name, odds
 
 
