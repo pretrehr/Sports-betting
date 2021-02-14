@@ -471,48 +471,48 @@ matches_freebets = False
 while True:
     event, values = window.read(timeout=100)
     try:
-        if sportsbetting.ABORT or not thread.is_alive():
-            pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+        if sb.ABORT or not thread.is_alive():
+            pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
             window['PROGRESS_PARSING'].update(0, 100, visible=False)
-            window["TEXT_PARSING"].update(visible=sportsbetting.ABORT)
+            window["TEXT_PARSING"].update(visible=sb.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
             window["STOP_PARSING"].update(visible=False)
             window["START_PARSING"].update(visible=True)
             for site in sb.BOOKMAKERS:
                 window["TEXT_{}_PARSING".format(site)].update(visible=False)
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
-            if not sportsbetting.ABORT:
+            if not sb.ABORT:
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
                 print(elapsed_time)
         else:
-            window['PROGRESS_PARSING'].update(ceil(sportsbetting.PROGRESS), 100)
+            window['PROGRESS_PARSING'].update(ceil(sb.PROGRESS), 100)
             for site in sb.BOOKMAKERS:
                 (window["PROGRESS_{}_PARSING".format(site)]
-                 .update(ceil(sportsbetting.SITE_PROGRESS[site]), 100))
+                 .update(ceil(sb.SITE_PROGRESS[site]), 100))
             now = time.time()
-            if sportsbetting.IS_PARSING and not start_parsing:
+            if sb.IS_PARSING and not start_parsing:
                 start_parsing = now
             elapsed_time = now - start_time
             elapsed_time_parsing = now - start_parsing
-            if sportsbetting.IS_PARSING and sportsbetting.PROGRESS > palier:
+            if sb.IS_PARSING and sb.PROGRESS > palier:
                 palier += 5
-                sportsbetting.EXPECTED_TIME = elapsed_time * (100 / sportsbetting.PROGRESS - 1)
-                time_to_display = sportsbetting.EXPECTED_TIME
+                sb.EXPECTED_TIME = elapsed_time * (100 / sb.PROGRESS - 1)
+                time_to_display = sb.EXPECTED_TIME
                 start_parsing = time.time()
             else:
                 if start_parsing:
                     window["TEXT_PARSING"].update("Récupération des cotes en cours")
-                    time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time_parsing
+                    time_to_display = sb.EXPECTED_TIME - elapsed_time_parsing
                     window["REMAINING_TIME_PARSING"].update(visible=True)
                 else:
                     window["TEXT_PARSING"].update("Initialisation de selenium en cours")
-                    time_to_display = sportsbetting.EXPECTED_TIME - elapsed_time
-            # sportsbetting.EXPECTED_TIME = int(max(0, sportsbetting.EXPECTED_TIME - 0.1))
+                    time_to_display = sb.EXPECTED_TIME - elapsed_time
+            # sb.EXPECTED_TIME = int(max(0, sb.EXPECTED_TIME - 0.1))
             m, s = divmod(max(0, int(time_to_display)), 60)
             window["REMAINING_TIME_PARSING"].update('{:02d}:{:02d}'.format(int(m), int(s)))
-            if sportsbetting.IS_PARSING and 100 - sportsbetting.PROGRESS < 1e-6:
+            if sb.IS_PARSING and 100 - sb.PROGRESS < 1e-6:
                 window["TEXT_PARSING"].update("Finalisation")
                 window["REMAINING_TIME_PARSING"].update(visible=False)
     except AttributeError:
@@ -522,7 +522,7 @@ while True:
             window["PROGRESS_STAKES"].update(0, 100, visible=False)
             thread_stakes = None
         else:
-            window["PROGRESS_STAKES"].update(ceil(sportsbetting.PROGRESS), 100)
+            window["PROGRESS_STAKES"].update(ceil(sb.PROGRESS), 100)
     except AttributeError:
         pass
     try:
@@ -530,12 +530,12 @@ while True:
             window["PROGRESS_COMBINE"].update(0, 100, visible=False)
             thread_combine = None
         else:
-            window["PROGRESS_COMBINE"].update(ceil(sportsbetting.PROGRESS), 100)
+            window["PROGRESS_COMBINE"].update(ceil(sb.PROGRESS), 100)
     except AttributeError:
         pass
     try:  # see if something has been posted to Queue
-        message = sportsbetting.QUEUE_TO_GUI.get_nowait()
-        sportsbetting.QUEUE_FROM_GUI.put(sg.popup_yes_no(message))
+        message = sb.QUEUE_TO_GUI.get_nowait()
+        sb.QUEUE_FROM_GUI.put(sg.popup_yes_no(message))
     except queue.Empty:  # get_nowait() will get exception when Queue is empty
         pass  # break from the loop if no more messages are queued up
     if event == "SPORT":
@@ -565,7 +565,7 @@ while True:
                 """
                 :return: Crée un thread pour le parsing des compétitions
                 """
-                sportsbetting.PROGRESS = 0
+                sb.PROGRESS = 0
                 parse_competitions(selected_competitions, sport, *selected_sites)
 
 
@@ -576,20 +576,20 @@ while True:
             palier = 20
             window['PROGRESS_PARSING'].update(0, 100, visible=True)
             window["TEXT_PARSING"].update(visible=True)
-            window["REMAINING_TIME_PARSING"].update(sportsbetting.EXPECTED_TIME)
-            sportsbetting.SITE_PROGRESS = collections.defaultdict(int)
+            window["REMAINING_TIME_PARSING"].update(sb.EXPECTED_TIME)
+            sb.SITE_PROGRESS = collections.defaultdict(int)
             for site in selected_sites:
                 window["TEXT_{}_PARSING".format(site)].update(visible=True)
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=True)
     elif event == "STOP_PARSING":
         window["STOP_PARSING"].update(visible=False)
         window["TEXT_PARSING"].update("Interruption en cours")
-        sportsbetting.ABORT = True
+        sb.ABORT = True
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
     elif event == "SPORT_STAKE":
         try:
-            matches = sorted(list(sportsbetting.ODDS[values["SPORT_STAKE"][0]]))
+            matches = sorted(list(sb.ODDS[values["SPORT_STAKE"][0]]))
             window['MATCHES'].update(values=matches)
         except KeyError:
             window['MATCHES'].update(values=[])
@@ -609,7 +609,7 @@ while True:
         window["PROGRESS_COMBINE"].update(0, 100, visible=True)
     elif not window_odds_active and event in ["ODDS_COMBINE", "ODDS_STAKES", "ODDS_FREEBETS", "ODDS_COMBI_OPT", "ODDS_COMBINE_GAGNANT"]:
         window_odds_active = True
-        table = odds_table_combine(sportsbetting.ODDS_INTERFACE)
+        table = odds_table_combine(sb.ODDS_INTERFACE)
         layout_odds = [[sg.Table(table[1:], headings=table[0], size=(None, 20))]]
         window_odds = sg.Window('Cotes', layout_odds)
     elif window_odds_active:
@@ -649,17 +649,17 @@ while True:
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
     elif "MATCHES_FREEBETS" in values and matches_freebets != values["MATCHES_FREEBETS"]:
         matches_freebets = values["MATCHES_FREEBETS"]
-        matches = sorted(list(sportsbetting.ODDS["football"])) if matches_freebets else []
+        matches = sorted(list(sb.ODDS["football"])) if matches_freebets else []
         window["MATCH_FREEBETS_0"].update(visible=matches_freebets, values=matches)
         window["MATCH_FREEBETS_1"].update(visible=matches_freebets, values=matches)
     elif event == "BEST_MATCH_FREEBETS":
-        sportsbetting.ODDS_INTERFACE = best_matches_freebet_interface(window, values,
+        sb.ODDS_INTERFACE = best_matches_freebet_interface(window, values,
                                                                       visible_freebets)
     elif event == "BEST_MATCH_GAGNANT":
         best_match_pari_gagnant_interface(window, values)
     elif event == "SPORT_ODDS":
         try:
-            matches = sorted(list(sportsbetting.ODDS[values["SPORT_ODDS"][0]]))
+            matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]))
             window['MATCHES_ODDS'].update(values=matches)
         except KeyError:
             window['MATCHES_ODDS'].update(values=[])
@@ -667,10 +667,10 @@ while True:
         odds_match_interface(window, values)
     elif event == "DELETE_SITE_ODDS":
         delete_site_interface(window, values)
-        pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+        pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
     elif event == "DELETE_MATCH_ODDS":
         delete_odds_interface(window, values)
-        pickle.dump(sportsbetting.ODDS, open(PATH_DATA, "wb"))
+        pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
     elif event == "ADD_COMBI_OPT":
         sport = ""
         if values["SPORT_COMBI_OPT"]:
@@ -697,8 +697,8 @@ while True:
             elif get_nb_outcomes(sport) == 3:
                 window["N_RES_COMBI_OPT_"+str(i)].update(visible=True)
         for i in range(9):
-            if sport in sportsbetting.ODDS:
-                matches = sorted(list(sportsbetting.ODDS[sport]))
+            if sport in sb.ODDS:
+                matches = sorted(list(sb.ODDS[sport]))
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=matches)
             else:
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=[])
@@ -708,6 +708,6 @@ while True:
         break
     else:
         pass
-sportsbetting.INTERFACE = False
+sb.INTERFACE = False
 window.close()
 sys.stdout = old_stdout
