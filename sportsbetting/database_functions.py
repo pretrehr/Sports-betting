@@ -629,10 +629,10 @@ def is_matching_next_match(id_competition, id_team, name_team, matches):
         sport = get_sport_by_id(id_team)
         time_margin = 0
         if sport == "tennis":
-            time_margin = datetime.timedelta(hours=1)
+            time_margin = 1
         if id_team < 0:
             return date_next_match == get_time_next_match_thesportsdb(id_competition, id_team)
-        return abs(date_next_match-get_time_next_match(id_competition, id_team)) <= time_margin
+        return abs(date_next_match-get_time_next_match(id_competition, id_team)) <= datetime.timedelta(hours=time_margin)
     except (IndexError, TypeError): #TypeError si date undefined
         return False
         
