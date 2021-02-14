@@ -7,12 +7,11 @@
 """
 import sys
 import io
-import datetime
 import numpy as np
 import PySimpleGUI as sg
 
 import sportsbetting as sb
-from sportsbetting.auxiliary_functions import get_nb_issues
+from sportsbetting.auxiliary_functions import get_nb_outcomes
 from sportsbetting.database_functions import get_all_current_competitions, get_main_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
@@ -65,9 +64,7 @@ def stakes(result):
     sportsbetting
     :return: Dictionnaire des mises
     """
-    return result.split(
-        "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):\n")[
-        1]
+    return result.split("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):\n")[1]
 
 
 def infos(result):
@@ -110,7 +107,7 @@ def odds_table_combine(result):
     combinaisons = ["Combinaison"] + combinaisons
     table.append(combinaisons)
     for key, value in odds.items():
-        table.append([key] + list(map(lambda x:str(round(x, 3)), value)))
+        table.append([key] + list(map(lambda x: str(round(x, 3)), value)))
     return np.transpose(table).tolist()
 
 
@@ -576,7 +573,7 @@ def get_current_competitions_interface(window, values):
         current_competitions = [_ for _ in current_competitions if _]
         competitions = get_all_competitions(sport)
         window['COMPETITIONS'].update(values=competitions)
-        index_list = list(map(lambda x: competitions.index(x), current_competitions))
+        index_list = list(map(competitions.index, current_competitions))
         window['COMPETITIONS'].update(set_to_index=index_list)
     except IndexError:
         pass
@@ -587,17 +584,16 @@ def get_main_competitions_interface(window, values):
         competitions = window['COMPETITIONS'].GetListValues()
         current_competitions = get_main_competitions(sport)
         current_competitions = [_ for _ in current_competitions if _]
-        index_list = list(map(lambda x: competitions.index(x), current_competitions))
+        index_list = list(map(competitions.index, current_competitions))
         window['COMPETITIONS'].update(set_to_index=index_list)
     except IndexError:
         pass
 
 def best_combine_reduit_interface(window, values, visible_combi_opt):
-    stakes_list = []
     match_list = []
     combi_boostee = []
     sport = values["SPORT_COMBI_OPT"][0]
-    issues = ["1", "N", "2"] if sport and get_nb_issues(sport) == 3 else ["1", "2"]
+    issues = ["1", "N", "2"] if sport and get_nb_outcomes(sport) == 3 else ["1", "2"]
     for i in range(visible_combi_opt):
         match_list.append(values["MATCH_COMBI_OPT_" + str(i)])
         for j, issue in enumerate(issues):
@@ -623,4 +619,3 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
         window["RESULTS_COMBI_OPT" + str(i)].update(elem[1], visible=True)
     buffer.close()
     sb.ODDS_INTERFACE = what_was_printed
-    

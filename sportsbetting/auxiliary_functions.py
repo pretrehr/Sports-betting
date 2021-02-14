@@ -10,17 +10,18 @@ import copy
 import itertools
 import math
 import time
+import sqlite3
+
 import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
                                               get_close_name, add_name_to_db,
                                               get_id_by_site, get_id_by_opponent, get_close_name2,
-                                              get_close_name3, get_close_name4, 
+                                              get_close_name3, get_close_name4,
                                               get_double_team_tennis,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
 from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
-import sqlite3
 
 
 def valid_odds(all_odds, sport):
@@ -33,7 +34,8 @@ def valid_odds(all_odds, sport):
     copy_all_odds = copy.deepcopy(all_odds)
     for match in all_odds:
         for site in all_odds[match]["odds"]:
-            if len(all_odds[match]["odds"][site]) != n or (all_odds[match]["date"] and all_odds[match]["date"] < datetime.datetime.today()):
+            if (len(all_odds[match]["odds"][site]) != n
+                    or (all_odds[match]["date"] and all_odds[match]["date"] < datetime.datetime.today())):
                 copy_all_odds[match]["odds"][site] = [1.01 for _ in range(n)]
     return copy_all_odds
 
@@ -77,7 +79,8 @@ def add_matches_to_db(odds, sport, site, id_competition):
                         check = not is_matching_next_match(id_competition, line[0], team, odds)
                         date_next_match = datetime.datetime.today()
                         try:
-                            date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                            date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")],
+                                                     key=lambda x: x["date"])[0]["date"]
                         except IndexError:
                             pass
                         date_next_match_db = get_time_next_match(id_competition, line[0])
@@ -104,7 +107,8 @@ def add_matches_to_db(odds, sport, site, id_competition):
                         id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
                     if id_to_find and id_to_find not in not_matching_teams[team]:
                         check = not is_matching_next_match(id_competition, id_to_find, team, odds)
-                        date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+                        date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")],
+                                                 key=lambda x: x["date"])[0]["date"]
                         date_next_match_db = get_time_next_match(id_competition, id_to_find)
                         success = add_name_to_db(id_to_find, team, site, check, date_next_match, date_next_match_db)
                         if success:
@@ -244,14 +248,12 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                 sites_bet_combinaison[site]["mise"] = round(sites_bet_combinaison[site]["mise"], 2)
             except KeyError:
                 sites_bet_combinaison[site]["mise freebet"] = round((sites_bet_combinaison[site]
-                ["mise freebet"]),
-                                                                    2)
+                                                                     ["mise freebet"]), 2)
         if cotes_boostees and cotes_boostees[i] > cotes[sites[0][i]][i]:
             # Valable que s'il n'y a qu'un seul match
             sites_bet_combinaison["total boosté"] = round(cotes_boostees[i]
                                                           * (sites_bet_combinaison[sites[0][i]]
-            ["mise"]),
-                                                          2)
+                                                             ["mise"]), 2)
         else:
             try:
                 sites_bet_combinaison["total"] = round(sum(x["cote"] * x["mise"]
@@ -385,7 +387,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         for site in sites:
             odd = 1
             for i, match in zip(combinaison, matches):
-                if i!=float("inf"):
+                if i != float("inf"):
                     if site in sb.ODDS[sport][match]["odds"].keys():
                         odd *= sb.ODDS[sport][match]["odds"][site][i]
                     else:
@@ -427,17 +429,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             best_i = i_boost
     matches_name = " / ".join(matches)
     print(matches_name)
-    mises = mises2(best_cotes, mise, best_i)
-    out = {}
-    def get_issue(match, i, sport):
-        if i==float("inf"):
-            return
-        elif sport in ["basketball", "tennis"]:
-            return match.split(" - ")[i]
-        elif i==1:
-            return "Nul"
-        else:
-            return match.split(" - ")[i//2]
+    stakes = mises2(best_cotes, mise, best_i)
     opponents = []
     for match in matches:
         opponents_match = match.split(" - ")
@@ -448,15 +440,15 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
              'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
     odds = {site: [get_odd(combine, matches, site)[0] for combine in best_combinaison] for site in sites}
-    
     pprint({"date" : max(date for date in [sb.ODDS[sport][match]["date"]
                                            for match in matches]),
             "odds" :odds}, compact=True)
     print("plus-value =", round(best_gain, 2))
     print()
     print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
-    for combine, mise, cote, site in zip(best_combinaison, mises, best_cotes, best_sites):
-        names = [opponents_match[i] if i!=float("inf") else "" for match, i, opponents_match in zip(matches, combine, opponents)]
+    for combine, mise, cote, site in zip(best_combinaison, stakes, best_cotes, best_sites):
+        names = [opponents_match[i] if i != float("inf") else ""
+                 for match, i, opponents_match in zip(matches, combine, opponents)]
         name_combine = " / ".join(x for x in names if x)
         diff = nb_chars - len(name_combine)
         sites_bet_combinaison = {site:{"mise":round(mise, 2), "cote":round(cote, 2)}, "total":round(round(mise, 2)*cote, 2)}
@@ -464,12 +456,12 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
 
 
 def convert_decimal_to_base(num, base):
-    assert(2 <= base <= 9)
-    newNum = ''
+    assert 2 <= base <= 9
+    new_num = ''
     while num > 0:
-        newNum = str(num % base) + newNum
+        new_num = str(num % base) + new_num
         num //= base
-    return list(map(int, newNum))
+    return list(map(int, new_num))
 
 
 def best_match_base(odds_function, profit_function, criteria, display_function,
@@ -534,7 +526,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                         pass
     if best_match:
         if combine_opt and combine:
-            ref_combinaison = list(reversed(convert_decimal_to_base(best_rank, get_nb_issues(sport))))
+            ref_combinaison = list(reversed(convert_decimal_to_base(best_rank, get_nb_outcomes(sport))))
             n_combi = len(ref_combinaison)
             for _ in range(nb_matches_combine - n_combi):
                 ref_combinaison.append(0)
@@ -545,18 +537,17 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
             pprint(all_odds[best_match], compact=True)
             if recalcul:
                 sum_almost_won = find_almost_won_matches(best_match,
-                                                        result_function(best_overall_odds,
-                                                                        best_rank),
-                                                        sport)
+                                                         result_function(best_overall_odds, best_rank),
+                                                         sport)
                 display_function = lambda x, y: mises(x, 10000 * 50 / sum_almost_won, True)
                 result_function = lambda x, y: mises(x, 10000 * 50 / sum_almost_won, False)
                 find_almost_won_matches(best_match, result_function(best_overall_odds, best_rank),
                                         sport, True)
             second_rank = display_function(best_overall_odds, best_rank)
             afficher_mises_combine(best_match.split(" / "), [sites],
-                                [result_function(best_overall_odds, best_rank)],
-                                all_odds[best_match]["odds"], sport, best_rank if freebet else None,
-                                one_site and freebet, best_overall_odds, second_rank)
+                                   [result_function(best_overall_odds, best_rank)],
+                                   all_odds[best_match]["odds"], sport, best_rank if freebet else None,
+                                   one_site and freebet, best_overall_odds, second_rank)
     else:
         print("No match found")
 
@@ -611,13 +602,14 @@ def filter_dict_dates(odds, date_max=None, time_max=None, date_min=None, time_mi
 
 def filter_dict_minimum_odd(odds, minimum_odd, site):
     all_odds = copy.deepcopy(odds)
-    all_odds = {k: v for k, v in all_odds.items() if site in v["odds"] and all([odd >= minimum_odd for odd in v["odds"][site]])}
+    all_odds = {k: v for k, v in all_odds.items()
+                if site in v["odds"] and all([odd >= minimum_odd for odd in v["odds"][site]])}
     return all_odds
 
 def combine_reduit(nb_matches, combi_to_keep, sport):
     def get_issues(combi_to_keep_aux):
         issues = [combi_to_keep_aux]
-        base_issues = [i for i in range(get_nb_issues(sport))]
+        base_issues = [i for i in range(get_nb_outcomes(sport))]
         for i, e in enumerate(combi_to_keep_aux):
             issue = combi_to_keep_aux[:i]
             for j in base_issues:
@@ -627,17 +619,15 @@ def combine_reduit(nb_matches, combi_to_keep, sport):
     def change_order(original, order):
         return [original[i] for i in order]
     all_issues = []
-    for (i, (order, combi)) in enumerate(zip(itertools.permutations(list(range(nb_matches))),
-                                             itertools.permutations(combi_to_keep)
-                                             )
-                                        ):
-        all_issues.append(sorted(list(map(lambda x:change_order(x, order), get_issues(list(combi))))))
+    for order, combi in zip(itertools.permutations(list(range(nb_matches))),
+                            itertools.permutations(combi_to_keep)):
+        all_issues.append(sorted(list(map(lambda x, order=order: change_order(x, order), get_issues(list(combi))))))
     return all_issues
 
 def combine_reduit_rec(combi_to_keep, sport):
     n = len(combi_to_keep)
     if n <= 1:
-        return [[[i] for i in range(get_nb_issues(sport))]]
+        return [[[i] for i in range(get_nb_outcomes(sport))]]
     else:
         out = []
         for i in range(n):
@@ -651,15 +641,15 @@ def combine_reduit_rec(combi_to_keep, sport):
                         copy_combi.insert(i, float("inf"))
                         new_combi.append(copy_combi)
                     else:
-                        for j in range(get_nb_issues(sport)):
+                        for j in range(get_nb_outcomes(sport)):
                             copy_combi = copy.deepcopy(combi)
                             copy_combi.insert(i, j)
                             new_combi.append(copy_combi)
                 out.append(new_combi)
         return out
-            
 
-def get_nb_issues(sport):
+
+def get_nb_outcomes(sport):
     return 2+(sport not in ["basketball", "tennis"])
 
 def binomial(x, y):

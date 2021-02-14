@@ -3,8 +3,6 @@ Fonctions de gestion de la base de données des noms d'équipe/joueur/compétiti
 """
 import colorama
 import json
-import os
-import inspect
 import sqlite3
 import termcolor
 import urllib
@@ -67,7 +65,7 @@ def get_formatted_name(name, site, sport):
         if sb.DB_MANAGEMENT:
             colorama.init()
             print(termcolor.colored('{}\t{}'.format(site, name), 'red'))
-            colorama.Style.RESET_ALL
+            print(colorama.Style.RESET_ALL)
             colorama.deinit()
         return "unknown team/player ".upper() + name
 
@@ -425,7 +423,7 @@ def get_close_name2(name, sport, site, only_null=True):
     "Paris SG" devient "Paris"
     """
     name = name.split("(")[0].strip()
-    split_name = re.split('[ .\-,]', name)
+    split_name = re.split(r'[ .\-,]', name)
     split_name2 = " ".join([string for string in split_name if (len(string) > 2
                                                                 or string != string.upper())])
     if not split_name2:
@@ -444,7 +442,7 @@ def get_close_name2(name, sport, site, only_null=True):
     results = []
     for line in c.fetchall():
         string_line = line[1].split("(")[0].strip()
-        split_line = re.split('[ .\-,]', string_line)
+        split_line = re.split(r'[ .\-,]', string_line)
         split_line2 = " ".join([string for string in split_line if (len(string) > 2
                                                                     or string != string.upper())])
         if not split_line2:
@@ -651,6 +649,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
     """
     Trouve l'équipe de double la plus proche d'une équipe donnée
     """
+    assert sport == "tennis"
     if site in ["netbet", "france_pari"]:
         separator_team = "-"
     elif site in ["betclic", "winamax", "pmu", "zebet"]:
@@ -769,48 +768,7 @@ def get_all_current_competitions(sport):
                         leagues.append(league_name)
             else:
                 leagues.append(league)
-    result = list(set(leagues+get_all_current_competitions_betclic(sport)))
-    return result
-    
-
-def get_all_current_competitions_betclic(sport):
-    """
-    Retourne les compétitions disponibles sur betclic pour un sport donné
-    """
-    url = "https://www.betclic.fr"
-    id_sports = {
-        "football": (1, "football"),
-        "tennis": (2, "tennis"),
-        "basketball": (4, "basket-ball"),
-        "rugby": (5, "rugby-a-xv"),
-        "handball": (9, "hanball"),
-        "hockey-sur-glace": (13, "hockey-sur-glace")
-    }
-    soup = BeautifulSoup(urllib.request.urlopen(url + "/" + id_sports[sport][1] + "-s" + str(id_sports[sport][0])),
-                         features="lxml")
-    odds = []
-    links = []
-    ids = []
-    for line in soup.find_all(["a"]):
-        if "href" in line.attrs and "/" + id_sports[sport][1] + "/" in line["href"]:
-            if "https://" in line["href"]:
-                link = line["href"]
-            else:
-                link = url + line["href"]
-            if link not in links:
-                links.append(link)
-                if not ("onclick" in line.attrs and "Paris sur la compétition" in line["onclick"]):
-                    ids.append(link.split("-e")[-1])
-    def get_competition_name_by_betclic_id(_id):
-        conn = sqlite3.connect(sb.PATH_DB)
-        c = conn.cursor()
-        c.execute("""
-        SELECT competition FROM competitions WHERE url_betclic LIKE "%-e{}"
-        """.format(_id))
-        result = c.fetchone()
-        if result:
-            return result[0]
-    return [x for x in list(map(get_competition_name_by_betclic_id, ids)) if x]
+    return leagues
     
 
 def is_played_soon(url):
@@ -828,7 +786,7 @@ def get_main_competitions(sport):
         if any(x in str(line) for x in ["Événements internationaux", "Coupes européennes", "Principaux championnats", "Coupes nationales"]):
             for link in line.findParent().find_all(["a"]):
                 if sport in link["href"] and is_played_soon("http://www.comparateur-de-cotes.fr/"+link["href"]):
-                    names.append(link.text.strip().replace("Coupe de France", "Coupe de France FFF"))
+                    names.append(link.text.strip())
             if "Coupes nationales" in str(line) and names:
                 break
     return names

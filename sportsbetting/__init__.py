@@ -1,13 +1,12 @@
 """
 initialisation du module
 """
-import chromedriver_autoinstaller
 import collections
 import os
 import queue
 import re
 
-
+import chromedriver_autoinstaller
 from fake_useragent import UserAgent
 
 ALL_ODDS_COMBINE = {}
@@ -54,18 +53,17 @@ class AbortException(Exception):
     """
     Exception renvoyée lorsqu'on interropt le parsing
     """
-    
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
 
 
 def grp(pat, txt):
-    r = re.search(pat, txt)
-    return r.group(0) if r else '&'
+    res = re.search(pat, txt)
+    return res.group(0) if res else '&'
 
 def find_files(filename, search_path):
-    for root, dir, files in os.walk(search_path):
+    for root, _, files in os.walk(search_path):
         if filename in files:
             return os.path.abspath(os.path.join(root, filename))
 

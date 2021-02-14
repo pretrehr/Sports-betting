@@ -17,7 +17,7 @@ from math import ceil
 
 import PySimpleGUI as sg
 import sportsbetting
-from sportsbetting.auxiliary_functions import get_nb_issues
+from sportsbetting.auxiliary_functions import get_nb_outcomes
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.interface_functions import (odds_table_combine,
@@ -664,7 +664,7 @@ while True:
             sport = values["SPORT_COMBI_OPT"][0]
         if visible_combi_opt < 9:
             window["MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
-            issues = ["1", "N", "2"] if sport and get_nb_issues(sport) == 3 else ["1", "2"]
+            issues = ["1", "N", "2"] if sport and get_nb_outcomes(sport) == 3 else ["1", "2"]
             for issue in issues:
                 window[issue+"_RES_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
             visible_combi_opt += 1
@@ -679,9 +679,9 @@ while True:
     elif event == "SPORT_COMBI_OPT":
         sport = values["SPORT_COMBI_OPT"][0]
         for i in range(visible_combi_opt):
-            if get_nb_issues(sport) == 2:
+            if get_nb_outcomes(sport) == 2:
                 window["N_RES_COMBI_OPT_"+str(i)].update(visible=False)
-            elif get_nb_issues(sport) == 3:
+            elif get_nb_outcomes(sport) == 3:
                 window["N_RES_COMBI_OPT_"+str(i)].update(visible=True)
         for i in range(9):
             if sport in sportsbetting.ODDS:
