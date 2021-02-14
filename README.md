@@ -1,6 +1,6 @@
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
-[![Build Status](https://travis-ci.org/pretrehr/Sports-betting.svg?branch=master)](https://travis-ci.org/pretrehr/Sports-betting)
+![Build windows](https://github.com/pretrehr/Sports-betting/workflows/Python%20package/badge.svg)
 [![GitHub license](https://img.shields.io/github/license/pretrehr/Sports-betting.svg)](https://github.com/pretrehr/Sports-betting/blob/master/LICENSE)
 [![Requirements Status](https://requires.io/github/pretrehr/Sports-betting/requirements.svg?branch=master)](https://requires.io/github/pretrehr/Sports-betting/requirements/?branch=master)
 
