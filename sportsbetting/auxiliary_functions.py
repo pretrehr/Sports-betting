@@ -9,7 +9,6 @@ import datetime
 import copy
 import itertools
 import math
-import re
 import time
 import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -687,65 +686,3 @@ def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="bo
 
 def truncate_datetime(date_time):
     return datetime.datetime.strptime(date_time.strftime("%d %b %Y %H:%M"), "%d %b %Y %H:%M")
-
-def format_bwin_names(string):
-    if string.count(" - ") == 3:
-        string = string.replace(" - ", " (", 1)
-        string = string.replace(" - ", ") - ", 1)
-        string = " (".join(string.rsplit(" - ", 1))
-        string += ")"
-    string = string.replace("@ - ", "")
-    return string
-
-def format_bwin_time(string):
-    today = datetime.datetime.today().strftime("%d/%m/%Y ")
-    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
-    string = " ".join(string.replace("Aujourd'hui/", today).replace("Demain/", tomorrow).split())
-    if "Commence dans" in string:
-        date_time = truncate_datetime(datetime.datetime.today())
-        date_time += datetime.timedelta(minutes=int(string.split("dans ")[1]
-                                                    .split("min")[0]) + 1)
-        return date_time
-    if "Commence maintenant" in string:
-        return truncate_datetime(datetime.datetime.today())
-    return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
-
-def reverse_match_odds(match, odds):
-    match = " - ".join(reversed(match.split(" - ")))
-    odds.reverse()
-    return match, odds
-
-
-def format_joa_time(string):
-    if "Aujourd'hui" in string or "Demain" in string:
-        today = datetime.datetime.today().strftime("%d/%m/%Y ")
-        tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
-        string = " ".join(string.replace("Aujourd'hui", today).replace("Demain", tomorrow).split())
-        return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
-    date_time = None
-    year = str(datetime.datetime.today().year)
-    string += year
-    date_time = datetime.datetime.strptime(string, "%d/%m%H:%M%Y")
-    if date_time < datetime.datetime.today():
-        date_time = date_time.replace(year=date_time.year + 1)
-    return date_time
-
-def format_zebet_names(match):
-    strings = match.split(" / ")
-    if len(strings) == 2:
-        return " - ".join(strings)
-    elif len(strings) == 4:
-        return " - ".join(map(lambda x: " / ".join(x), [strings[0:2], strings[2:4]]))
-    elif len(strings) == 3:
-        reg_exp = r'[A-z]+\.[A-z\-]+\-[A-z]+\.[A-z\-]+'
-        if re.findall(reg_exp, strings[0]):
-            return " - ".join([strings[0], " / ".join(strings[1:3])])
-        elif re.findall(reg_exp, strings[2]):
-            return " - ".join([" / ".join(strings[0:2]), strings[2]])
-        elif len(strings[0]) > max(len(strings[1]), len(strings[2])):
-            return " - ".join([strings[0], " / ".join(strings[1:3])])
-        elif len(strings[2]) > max(len(strings[1]), len(strings[0])):
-            return " - ".join([" / ".join(strings[0:2]), strings[2]])
-    return ""
-        
-    
