@@ -5,6 +5,8 @@
 .. module::interface_functions
 :synopsis: Fonctions d'intéraction entre l'interface et les fonctions du package sportsbetting
 """
+
+import datetime # à garder jusqu'à JSON
 import sys
 import io
 import numpy as np
