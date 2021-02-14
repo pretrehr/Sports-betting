@@ -1,6 +1,8 @@
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
+[![Build Status](https://travis-ci.org/pretrehr/Sports-betting.svg?branch=master)](https://travis-ci.org/pretrehr/Sports-betting)
 [![GitHub license](https://img.shields.io/github/license/pretrehr/Sports-betting.svg)](https://github.com/pretrehr/Sports-betting/blob/master/LICENSE)
+[![Requirements Status](https://requires.io/github/pretrehr/Sports-betting/requirements.svg?branch=master)](https://requires.io/github/pretrehr/Sports-betting/requirements/?branch=master)
 
 # Sports-betting
 Sports betting assistant which optimizes earnings regarding odds and offers
