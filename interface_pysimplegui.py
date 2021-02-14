@@ -101,7 +101,7 @@ options_under_condition = [[sg.Text("Options")],
                                          key="DATE_MAX_UNDER_CONDITION"),
                             sg.InputText(tooltip="HH:MM", size=(7, 1),
                                          key="TIME_MAX_UNDER_CONDITION")],
-                           [sg.Checkbox("Mise à répartir sur toutes les issues d'un même match",
+                           [sg.Checkbox("Mise à répartir sur toutes plusieurs issues d'un même match",
                                         key="ONE_SITE_UNDER_CONDITION")]]
 column_indicators_under_condition = [[sg.Text("", size=(15, 1),
                                               key="INDICATORS_UNDER_CONDITION" + str(_),
@@ -239,7 +239,7 @@ options_combine = [[sg.Text("Options")],
                    [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_COMBINE_BOOL"),
                     sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_COMBINE"),
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_COMBINE")],
-                   [sg.Checkbox("Mise à répartir sur toutes les issues d'un même combiné",
+                   [sg.Checkbox("Mise à répartir sur plusieurs issues d'un même combiné",
                                 key="ONE_SITE_COMBINE")]]
 column_indicators_combine = [[sg.Text("", size=(15, 1), key="INDICATORS_COMBINE" + str(_),
                                       visible=False)] for _ in range(5)]

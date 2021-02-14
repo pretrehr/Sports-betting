@@ -544,7 +544,7 @@ def get_id_by_opponent(id_opponent, name_site_match, matches):
                 if " à " in string:
                     date_time = datetime.datetime.strptime(string.lower(), "%A %d %B %Y à %Hh%M")
                     try:
-                        if abs(date_time - date_match) < datetime.timedelta(days=0.5):
+                        if abs(date_time - date_match) <= datetime.timedelta(hours=1):
                             get_next_id = True
                     except TypeError:  # live
                         pass
@@ -626,9 +626,13 @@ def get_next_competition(id_team):
 def is_matching_next_match(id_competition, id_team, name_team, matches):
     try:
         date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+        sport = get_sport_by_id(id_team)
+        time_margin = 0
+        if sport == "tennis":
+            time_margin = datetime.timedelta(hours=1)
         if id_team < 0:
             return date_next_match == get_time_next_match_thesportsdb(id_competition, id_team)
-        return date_next_match == get_time_next_match(id_competition, id_team)
+        return abs(date_next_match-get_time_next_match(id_competition, id_team)) <= time_margin
     except (IndexError, TypeError): #TypeError si date undefined
         return False
         
