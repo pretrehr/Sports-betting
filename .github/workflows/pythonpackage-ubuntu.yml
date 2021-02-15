@@ -1,4 +1,4 @@
-name: Python package Ubuntu
+name: Ubuntu
 
 on: [push]
 
