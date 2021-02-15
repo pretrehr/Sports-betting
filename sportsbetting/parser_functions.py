@@ -9,10 +9,12 @@ from sportsbetting.bookmakers import (betclic, betstars, bwin, france_pari, joa,
                                       parionssport, pasinobet, pmu, unibet, winamax, zebet)
 
 
-if sys.platform == "win32":
+if sys.platform.startswith("win"):
     locale.setlocale(locale.LC_TIME, "fr")
-else:  # sys.platform == "linux"
+elif sys.platform.startswith("linux"):
     locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
+else:  # sys.platform.startswith("darwin") # (Mac OS)
+    locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 def parse(site, url=""):
     """
