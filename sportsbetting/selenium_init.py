@@ -14,7 +14,7 @@ import sportsbetting as sb
 DRIVER = {}
 
 
-def start_selenium_aux(site, headless=True):
+def start_selenium_aux(site, headless, force_creation):
     """
     Lancement d'un driver selenium
     """
@@ -28,8 +28,8 @@ def start_selenium_aux(site, headless=True):
         options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     try:
-        if site in DRIVER:
-            DRIVER[site].quit()
+        if site in DRIVER and not force_creation:
+            return True
         DRIVER[site] = selenium.webdriver.Chrome(
             sb.PATH_DRIVER, options=options)
         colorama.init()
@@ -48,26 +48,10 @@ def start_selenium_aux(site, headless=True):
         return False
 
 
-def start_drivers():
-    sb.PROGRESS = 0
-    start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
-    for site in sb.SELENIUM_SITES:
-        while True:
-            if start_selenium(site, True, timeout=15):
-                break
-            colorama.init()
-            print(termcolor.colored('Restarting driver{}'
-                                    .format(colorama.Style.RESET_ALL),
-                                    'yellow'))
-            colorama.deinit()
-        sb.PROGRESS += 100/len(sb.SELENIUM_SITES)
-    sb.PROGRESS = 0
-
-
-def start_bwin_drive(headless):
+def start_driver(site, headless, force_creation):
     start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
     while True:
-        if start_selenium("bwin", headless, timeout=15):
+        if start_selenium(site, headless, force_creation, timeout=15):
             break
         colorama.init()
         print(termcolor.colored('Restarting driver{}'

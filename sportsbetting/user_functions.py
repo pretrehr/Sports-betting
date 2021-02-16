@@ -108,9 +108,13 @@ def parse_competitions(competitions, sport, *sites):
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
     sites = [site for site in sites_order if site in sites]
-    additional_bwin_driver = sport == "handball" and "bwin" in sites
-    if additional_bwin_driver:
-        selenium_init.start_bwin_drive(False)
+    sb.PROGRESS = 0
+    selenium_sites = sb.SELENIUM_SITES.intersection(sites)
+    for site in selenium_sites:
+        headless = sport != "handball" or site != "bwin"
+        selenium_init.start_driver(site, headless, not headless)	
+        sb.PROGRESS += 100/len(selenium_sites)
+    sb.PROGRESS = 0
     sb.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
         if competition == sport or "Tout le" in competition:
@@ -129,9 +133,9 @@ def parse_competitions(competitions, sport, *sites):
         sb.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
+    if sport == "handball" and "bwin" in sites:
+        selenium_init.start_driver("bwin", True, True)
     sb.IS_PARSING = False
-    if additional_bwin_driver:
-        selenium_init.start_bwin_drive(True)
     sb.ABORT = False
 
 

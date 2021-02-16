@@ -39,7 +39,6 @@ def test_parsing_chromedriver():
     :return:Test simple
     """
     sb.TEST = True
-    sb.selenium_init.start_drivers()
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sb.ODDS = {}
@@ -52,7 +51,7 @@ def test_parsing_chromedriver():
     name_competition = random.choice(names)
     print(name_competition)
     parse_competitions([name_competition], "football", "betclic", "unibet")
-    for site in sb.SELENIUM_SITES:
+    for site in ["betclic", "unibet"]:
         sb.selenium_init.DRIVER[site].quit()
     sb.TEST = False
     assert len(sb.ODDS) > 0

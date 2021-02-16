@@ -56,7 +56,6 @@ except FileNotFoundError:
     pass
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
-sb.selenium_init.start_drivers()
 
 # All the stuff inside your window.
 sg.set_options(enable_treeview_869_patch=False)
@@ -482,11 +481,11 @@ while True:
             window["TEXT_PARSING"].update(visible=sb.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
             window["STOP_PARSING"].update(visible=False)
-            window["START_PARSING"].update(visible=True)
             for site in sb.BOOKMAKERS:
                 window["TEXT_{}_PARSING".format(site)].update(visible=False)
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sb.ABORT:
+                window["START_PARSING"].update(visible=True)
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
@@ -717,7 +716,8 @@ sb.INTERFACE = False
 window.close()
 sys.stdout = old_stdout
 for site in sb.SELENIUM_SITES:
-    sb.selenium_init.DRIVER[site].quit()
+    if site in sb.selenium_init.DRIVER:
+        sb.selenium_init.DRIVER[site].quit()
 colorama.init()
 print(termcolor.colored('Drivers closed{}'
                         .format(colorama.Style.RESET_ALL),
