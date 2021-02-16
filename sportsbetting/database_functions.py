@@ -1,17 +1,19 @@
 """
 Fonctions de gestion de la base de données des noms d'équipe/joueur/compétition
 """
-import colorama
 import json
 import sqlite3
-import termcolor
 import urllib
 import urllib.request
 import urllib.error
 import datetime
 import re
 import unidecode
+
 from bs4 import BeautifulSoup
+import colorama
+import termcolor
+
 import sportsbetting as sb
 
 
@@ -64,8 +66,9 @@ def get_formatted_name(name, site, sport):
     except IndexError:
         if sb.DB_MANAGEMENT:
             colorama.init()
-            print(termcolor.colored('{}\t{}'.format(site, name), 'red'))
-            print(colorama.Style.RESET_ALL)
+            print(termcolor.colored('{}\t{}{}'.format(site, name,
+                                                      colorama.Style.RESET_ALL),
+                                    'red'))
             colorama.deinit()
         return "unknown team/player ".upper() + name
 
@@ -281,7 +284,7 @@ def get_sport_by_id(_id):
     try:
         return c.fetchone()[0]
     except TypeError:
-        if int(_id)>0:
+        if int(_id) > 0:
             add_id_to_db(_id)
         else:
             add_id_to_db_thesportsdb(_id)
@@ -309,11 +312,12 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
         if check:
             if sb.INTERFACE:
                 sb.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} ({}) sur {}\n"
-                                               "Nouvelle donnée : {}\n"
-                                               "Date du prochain match de l'équipe à ajouter : {}\n"
-                                               "Date du prochain match de l'équipe existant dans la db : {}\n"
-                                               "Prochaine compétition jouée dans la db : {}\n"
-                                               .format(formatted_name, _id, site, name, date_next_match, date_next_match_db, get_next_competition(_id)))
+                                    "Nouvelle donnée : {}\n"
+                                    "Date du prochain match de l'équipe à ajouter : {}\n"
+                                    "Date du prochain match de l'équipe existant dans la db : {}\n"
+                                    "Prochaine compétition jouée dans la db : {}\n"
+                                    .format(formatted_name, _id, site, name, date_next_match,
+                                            date_next_match_db, get_next_competition(_id)))
                 ans = sb.QUEUE_FROM_GUI.get(True)
             elif not sb.TEST:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -343,12 +347,13 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
             if check:
                 if sb.INTERFACE:
                     sb.QUEUE_TO_GUI.put("Créer une nouvelle donnée pour {} sur {}\n"
-                                                   "Nouvelle donnée : {}\n"
-                                                   "Donnée déjà existante : {}\n"
-                                                   "Date du prochain match de l'équipe à ajouter : {}\n"
-                                                   "Date du prochain match de l'équipe existant dans la db : {}\n"
-                                                   "Prochaine compétition jouée dans la db : {}\n"
-                                                   .format(formatted_name, site, name, name_site, date_next_match, date_next_match_db, get_next_competition(_id)))
+                                        "Nouvelle donnée : {}\n"
+                                        "Donnée déjà existante : {}\n"
+                                        "Date du prochain match de l'équipe à ajouter : {}\n"
+                                        "Date du prochain match de l'équipe existant dans la db : {}\n"
+                                        "Prochaine compétition jouée dans la db : {}\n"
+                                        .format(formatted_name, site, name, name_site, date_next_match,
+                                                date_next_match_db, get_next_competition(_id)))
                     ans = sb.QUEUE_FROM_GUI.get(True)
                 elif not sb.TEST:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -502,8 +507,7 @@ def get_close_name4(name, sport, site, only_null=True):
         for line in c.fetchall():
             results.add(line)
     return list(results)
-    
-    
+
 
 def get_id_by_site(name, sport, site):
     """
@@ -572,7 +576,7 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
                 elif id_away == id_opponent:
                     return id_home
     return
-    
+
 
 def get_time_next_match_thesportsdb(id_competition, id_team):
     url = "https://www.thesportsdb.com/api/v1/json/1/eventsnext.php?id=" + str(-id_team)
@@ -623,7 +627,8 @@ def get_next_competition(id_team):
 
 def is_matching_next_match(id_competition, id_team, name_team, matches):
     try:
-        date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")], key=lambda x: x["date"])[0]["date"]
+        date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")],
+                                 key=lambda x: x["date"])[0]["date"]
         sport = get_sport_by_id(id_team)
         time_margin = 0
         if sport == "tennis":
@@ -633,7 +638,7 @@ def is_matching_next_match(id_competition, id_team, name_team, matches):
         return abs(date_next_match-get_time_next_match(id_competition, id_team)) <= datetime.timedelta(hours=time_margin)
     except (IndexError, TypeError): #TypeError si date undefined
         return False
-        
+
 
 def are_same_double(team1, team2):
     """
@@ -683,7 +688,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
                 players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
             else:
                 players = list(map(lambda x: x.split(" ")[0].strip(), complete_names))
-        players = list(map(lambda x:x.strip(), players))
+        players = list(map(lambda x: x.strip(), players))
         conn = sqlite3.connect(sb.PATH_DB)
         c = conn.cursor()
         if only_null:
@@ -754,7 +759,7 @@ def get_all_current_competitions(sport):
             if not league:
                 if sb.INTERFACE:
                     sb.QUEUE_TO_GUI.put("Créer une nouvelle compétition : {}"
-                                                    .format(league_name))
+                                        .format(league_name))
                     ans = sb.QUEUE_FROM_GUI.get(True)
                     if ans == "Yes":
                         conn = sqlite3.connect(sb.PATH_DB)
@@ -769,13 +774,13 @@ def get_all_current_competitions(sport):
             else:
                 leagues.append(league)
     return leagues
-    
+
 
 def is_played_soon(url):
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     for line in soup.find_all("table", attrs={"class":"bettable"}):
         date_time = datetime.datetime.strptime(list(line.stripped_strings)[3].lower(), "%A %d %B %Y à %Hh%M")
-        return date_time<datetime.datetime.today()+datetime.timedelta(days=7)
+        return date_time < datetime.datetime.today()+datetime.timedelta(days=7)
 
 def get_main_competitions(sport):
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport

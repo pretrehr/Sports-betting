@@ -5,6 +5,8 @@ import collections
 import os
 import queue
 import re
+import sys
+import urllib.error
 
 import chromedriver_autoinstaller
 from fake_useragent import UserAgent
@@ -74,6 +76,9 @@ try:
     PATH_DRIVER = chromedriver_autoinstaller.install(True)
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
+except urllib.error.URLError:
+    print("Aucune connection internet")
+    sys.exit()
 print(PATH_DRIVER)
 
 PATH_DB = find_files("teams.db", "sportsbetting")

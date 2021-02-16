@@ -3,7 +3,6 @@
 Fichier de test
 """
 
-import os
 import random
 import sqlite3
 import urllib.request
@@ -29,20 +28,18 @@ def test_parsing():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
-    main_competitions = ['France - Ligue 1', 'Angleterre - Premier League', 'Espagne - LaLiga',
-                         'Allemagne - Bundesliga', 'Italie - Serie A']
-    competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sb.ODDS) > 0
     sb.TEST = False
-    
+
 
 def test_parsing_chromedriver():
     """
     :return:Test simple
     """
     sb.TEST = True
+    sb.selenium_init.start_drivers()
     url = "http://www.comparateur-de-cotes.fr/comparateur/football"
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
     sb.ODDS = {}
@@ -52,14 +49,13 @@ def test_parsing_chromedriver():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
-    main_competitions = ['France - Ligue 1', 'Angleterre - Premier League', 'Espagne - LaLiga',
-                         'Allemagne - Bundesliga', 'Italie - Serie A']
-    competitions = [name for name in main_competitions if name in names] 
     name_competition = random.choice(names)
     print(name_competition)
     parse_competitions([name_competition], "football", "betclic", "unibet")
+    for site in sb.SELENIUM_SITES:
+        sb.selenium_init.DRIVER[site].quit()
+    sb.TEST = False
     assert len(sb.ODDS) > 0
-    sb.TEST = False  
 
 
 def test_consistency():
@@ -71,6 +67,5 @@ def test_consistency():
     """)
     results = c.fetchall()
     for result in results:
-        id = result[0]
-        assert is_id_consistent(id)
+        assert is_id_consistent(result[0])
     sb.TEST = False

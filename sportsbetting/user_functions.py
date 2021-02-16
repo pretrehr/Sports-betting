@@ -4,9 +4,7 @@ Fonctions principales d'assistant de paris
 """
 
 import copy
-import inspect
 import socket
-import sqlite3
 import sys
 import time
 import traceback
@@ -22,10 +20,6 @@ import numpy as np
 import selenium
 import selenium.common
 import unidecode
-import urllib3
-
-import colorama
-import termcolor
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
@@ -67,16 +61,9 @@ def parse_competition(competition, sport, *sites):
         url = get_competition_by_id(_id, site)
         try:
             if url:
-                try:
-                    res_parsing[site] = parse(site, url)
-                except urllib3.exceptions.MaxRetryError:
-                    selenium_init.DRIVER[site].quit()
-                    print("Redémarrage de selenium")
-                    selenium_init.start_selenium(site, timeout=20)
-                    res_parsing[site] = parse(site, url)
-                except sqlite3.OperationalError:
-                    print("Erreur dans la base de données, redémarrage en cours")
-                    res_parsing[site] = parse(site, url)
+                res_parsing[site] = parse(site, url)
+            else:
+                print("Pas d'url en base pour {} sur {}".format(competition, site))
         except urllib.error.URLError:
             print("{} non accessible sur {} (délai écoulé)".format(competition, site))
         except KeyboardInterrupt:
@@ -93,8 +80,7 @@ def parse_competition(competition, sport, *sites):
             print("Connection closed ({} sur {})".format(competition, site))
     res = format_team_names(res_parsing, sport, competition)
     out = valid_odds(merge_dict_odds(res), sport)
-    if inspect.currentframe().f_back.f_code.co_name != "<module>":
-        return out
+    return out
 
 
 def parse_competitions_site(competitions, sport, site):
@@ -112,8 +98,6 @@ def parse_competitions_site(competitions, sport, site):
         sb.SITE_PROGRESS[site] = 100
     except sb.AbortException:
         print("Interruption", site)
-    if site in sb.SELENIUM_SITES:
-        selenium_init.DRIVER[site].quit()
     return merge_dict_odds(list_odds)
 
 
@@ -123,26 +107,10 @@ def parse_competitions(competitions, sport, *sites):
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
-    selenium_sites = sb.SELENIUM_SITES.intersection(sites)
-    selenium_required = ((inspect.currentframe().f_back.f_code.co_name
-                          in ["<module>", "parse_thread"]
-                          or 'test' in inspect.currentframe().f_back.f_code.co_name)
-                         and (selenium_sites or not sites))
-    sb.SELENIUM_REQUIRED = selenium_required
     sites = [site for site in sites_order if site in sites]
-    sb.PROGRESS = 0
-    if selenium_required:
-        for site in selenium_sites:
-            while True:
-                headless = sport != "handball" or site != "bwin"
-                if sb.ABORT or selenium_init.start_selenium(site, headless, timeout=15):
-                    break
-                colorama.init()
-                print(termcolor.colored('Restarting', 'yellow'))
-                print(colorama.Style.RESET_ALL)
-                colorama.deinit()
-            sb.PROGRESS += 100/len(selenium_sites)
-    sb.PROGRESS = 0
+    additional_bwin_driver = sport == "handball" and "bwin" in sites
+    if additional_bwin_driver:
+        selenium_init.start_bwin_drive(False)
     sb.SUB_PROGRESS_LIMIT = len(sites)
     for competition in competitions:
         if competition == sport or "Tout le" in competition:
@@ -162,11 +130,8 @@ def parse_competitions(competitions, sport, *sites):
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
     sb.IS_PARSING = False
-    if selenium_required:
-        colorama.init()
-        print(termcolor.colored('Drivers closed', 'green'))
-        print(colorama.Style.RESET_ALL)
-        colorama.deinit()
+    if additional_bwin_driver:
+        selenium_init.start_bwin_drive(True)
     sb.ABORT = False
 
 
@@ -561,7 +526,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         print("No match found")
 
 
-def best_matches_freebet(main_sites, freebets, sport="football", *matches):
+def best_matches_freebet(main_sites, freebets, sport, *matches):
     """
     Compute of the best way to bet freebets following the model
     [[bet, bookmaker], ...]

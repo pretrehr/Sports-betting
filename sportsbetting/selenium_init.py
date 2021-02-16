@@ -14,8 +14,7 @@ import sportsbetting as sb
 DRIVER = {}
 
 
-@stopit.threading_timeoutable(timeout_param='timeout')
-def start_selenium(site, headless=True):
+def start_selenium_aux(site, headless=True):
     """
     Lancement d'un driver selenium
     """
@@ -29,6 +28,8 @@ def start_selenium(site, headless=True):
         options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     try:
+        if site in DRIVER:
+            DRIVER[site].quit()
         DRIVER[site] = selenium.webdriver.Chrome(
             sb.PATH_DRIVER, options=options)
         colorama.init()
@@ -45,3 +46,31 @@ def start_selenium(site, headless=True):
                                 'red'))
         colorama.deinit()
         return False
+
+
+def start_drivers():
+    sb.PROGRESS = 0
+    start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
+    for site in sb.SELENIUM_SITES:
+        while True:
+            if start_selenium(site, True, timeout=5):
+                break
+            colorama.init()
+            print(termcolor.colored('Restarting driver{}'
+                                    .format(colorama.Style.RESET_ALL),
+                                    'yellow'))
+            colorama.deinit()
+        sb.PROGRESS += 100/len(sb.SELENIUM_SITES)
+    sb.PROGRESS = 0
+
+
+def start_bwin_drive(headless):
+    start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
+    while True:
+        if start_selenium("bwin", headless, timeout=5):
+            break
+        colorama.init()
+        print(termcolor.colored('Restarting driver{}'
+                                .format(colorama.Style.RESET_ALL),
+                                'yellow'))
+        colorama.deinit()

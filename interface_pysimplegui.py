@@ -16,6 +16,9 @@ import time
 from math import ceil
 
 import PySimpleGUI as sg
+
+import colorama
+import termcolor
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes
 from sportsbetting.database_functions import get_all_sports, get_all_competitions
@@ -34,6 +37,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                get_current_competitions_interface,
                                                get_main_competitions_interface,
                                                best_combine_reduit_interface)
+import sportsbetting.selenium_init
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.pickle"
 
@@ -52,6 +56,7 @@ except FileNotFoundError:
     pass
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
+sb.selenium_init.start_drivers()
 
 # All the stuff inside your window.
 sg.set_options(enable_treeview_869_patch=False)
@@ -485,7 +490,7 @@ while True:
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
-                print(elapsed_time)
+                print("Elapsed time : {} s\n".format(round(elapsed_time)))
         else:
             window['PROGRESS_PARSING'].update(ceil(sb.PROGRESS), 100)
             for site in sb.BOOKMAKERS:
@@ -711,3 +716,10 @@ while True:
 sb.INTERFACE = False
 window.close()
 sys.stdout = old_stdout
+for site in sb.SELENIUM_SITES:
+    sb.selenium_init.DRIVER[site].quit()
+colorama.init()
+print(termcolor.colored('Drivers closed{}'
+                        .format(colorama.Style.RESET_ALL),
+                        'green'))
+colorama.deinit()
