@@ -53,7 +53,7 @@ def start_drivers():
     start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
     for site in sb.SELENIUM_SITES:
         while True:
-            if start_selenium(site, True, timeout=5):
+            if start_selenium(site, True, timeout=15):
                 break
             colorama.init()
             print(termcolor.colored('Restarting driver{}'
@@ -67,7 +67,7 @@ def start_drivers():
 def start_bwin_drive(headless):
     start_selenium = stopit.threading_timeoutable(timeout_param='timeout')(start_selenium_aux)
     while True:
-        if start_selenium("bwin", headless, timeout=5):
+        if start_selenium("bwin", headless, timeout=15):
             break
         colorama.init()
         print(termcolor.colored('Restarting driver{}'
