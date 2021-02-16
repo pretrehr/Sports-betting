@@ -676,3 +676,11 @@ def scroll(driver, site, element_to_reach_class, timeout, scrollable_element="bo
 
 def truncate_datetime(date_time):
     return datetime.datetime.strptime(date_time.strftime("%d %b %Y %H:%M"), "%d %b %Y %H:%M")
+
+def reverse_match_odds(match, odds):
+    """
+    Reverse match opponents and odds (away - home -> home - away)
+    """
+    match = " - ".join(reversed(match.split(" - ")))
+    odds.reverse()
+    return match, odds

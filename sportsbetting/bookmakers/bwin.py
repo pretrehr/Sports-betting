@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import truncate_datetime, scroll
+from sportsbetting.auxiliary_functions import reverse_match_odds, scroll, truncate_datetime
 
 def parse_bwin(url):
     """
@@ -116,11 +116,3 @@ def format_bwin_time(string):
     if "Commence maintenant" in string:
         return truncate_datetime(datetime.datetime.today())
     return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
-
-def reverse_match_odds(match, odds):
-    """
-    Reverse match opponents and odds (away - home -> home - away)
-    """
-    match = " - ".join(reversed(match.split(" - ")))
-    odds.reverse()
-    return match, odds

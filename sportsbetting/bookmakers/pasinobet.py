@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
+from sportsbetting.auxiliary_functions import reverse_match_odds
 
 def parse_pasinobet(url):
     """
@@ -19,6 +20,7 @@ def parse_pasinobet(url):
     """
     selenium_init.DRIVER["pasinobet"].get("about:blank")
     selenium_init.DRIVER["pasinobet"].get(url)
+    reversed_odds = "North%20America" in url
     match_odds_hash = {}
     match = None
     date_time = None
@@ -50,15 +52,11 @@ def parse_pasinobet(url):
                 date_time = datetime.datetime.strptime(date+time, "%A, %d %B %Y%H:%M")
             except ValueError:
                 date_time = "undefined"
-        if "class" in line.attrs and "time" in line["class"]:
-            try:
-                date_time = datetime.datetime.strptime(
-                    date+line.text.strip(), "%A, %d %B %Y%H:%M")
-            except ValueError:
-                date_time = "undefined"
         if "class" in line.attrs and "event-list" in line["class"]:
             if "---" not in list(line.stripped_strings):
                 odds = list(map(float, line.stripped_strings))
+                if reversed_odds:
+                    match, odds = reverse_match_odds(match, odds)
                 match_odds_hash[match] = {}
                 match_odds_hash[match]["date"] = date_time
                 match_odds_hash[match]["odds"] = {"pasinobet": odds}
