@@ -552,7 +552,8 @@ while True:
         thread_competitions = threading.Thread(target=lambda : get_current_competitions_interface(window, values))
         thread_competitions.start()
     elif event == "MAIN_COMPETITIONS":
-        get_main_competitions_interface(window, values)
+        thread_competitions = threading.Thread(target=lambda : get_main_competitions_interface(window, values))
+        thread_competitions.start()
     elif event == "SELECT_ALL":
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS)])
     elif event == "SELECT_NONE_SITE":

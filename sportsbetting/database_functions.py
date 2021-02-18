@@ -17,7 +17,7 @@ import termcolor
 import sportsbetting as sb
 
 
-def get_id_formatted_competition_name(competition, sport):
+def get_id_from_competition_name(competition, sport):
     """
     Retourne l'id et le nom tel qu'affiché sur comparateur-de-cotes.fr. Par
     exemple, "Ligue 1" devient "France - Ligue 1"
@@ -25,17 +25,9 @@ def get_id_formatted_competition_name(competition, sport):
     conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
-    SELECT id, competition FROM competitions WHERE sport='{}'
-    """.format(sport))
-    for line in c.fetchall():
-        strings_name = competition.lower().split()
-        possible = True
-        for string in strings_name:
-            if string not in line[1].lower():
-                possible = False
-                break
-        if possible:
-            return line[0], line[1]
+    SELECT id FROM competitions WHERE competition = "{}" AND sport='{}'
+    """.format(competition, sport))
+    return c.fetchone()[0]
 
 
 def get_competition_by_id(_id, site):
@@ -748,13 +740,11 @@ def get_competition_name_by_id(_id):
 def get_all_current_competitions(sport):
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    id_leagues = []
     leagues = []
     for line in soup.find_all("a"):
         if "href" in line.attrs and sport in line["href"] and "ed" in line["href"]:
             id_league = int(line["href"].split("-ed")[-1])
             league_name = line.text.strip()
-            id_leagues.append(id_league)
             league = get_competition_name_by_id(id_league)
             if not league:
                 if sb.INTERFACE:
@@ -785,16 +775,37 @@ def is_played_soon(url):
 def get_main_competitions(sport):
     url = "http://www.comparateur-de-cotes.fr/comparateur/"+sport
     soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
-    sb.ODDS = {}
-    names = []
+    leagues = []
     for line in soup.find_all(attrs={"class": "subhead"}):
         if any(x in str(line) for x in ["Événements internationaux", "Coupes européennes", "Principaux championnats", "Coupes nationales"]):
             for link in line.findParent().find_all(["a"]):
-                if sport in link["href"] and is_played_soon("http://www.comparateur-de-cotes.fr/"+link["href"]):
-                    names.append(link.text.strip())
-            if "Coupes nationales" in str(line) and names:
+                if sport in link["href"]:
+                    id_league = int(link["href"].split("-ed")[-1])
+                    url = "http://www.comparateur-de-cotes.fr/comparateur/{}/a-ed{}".format(sport, str(id_league))
+                    if not is_played_soon(url):
+                        continue
+                    league_name = link.text.strip()
+                    league = get_competition_name_by_id(id_league)
+                    if not league:
+                        if sb.INTERFACE:
+                            sb.QUEUE_TO_GUI.put("Créer une nouvelle compétition : {}"
+                                                .format(league_name))
+                            ans = sb.QUEUE_FROM_GUI.get(True)
+                            if ans == "Yes":
+                                conn = sqlite3.connect(sb.PATH_DB)
+                                c = conn.cursor()
+                                c.execute("""
+                                INSERT INTO competitions (id, sport, competition)
+                                VALUES ({}, "{}", "{}")
+                                """.format(id_league, sport, league_name))
+                                conn.commit()
+                                c.close()
+                                leagues.append(league_name)
+                    else:
+                        leagues.append(league)
+            if "Coupes nationales" in str(line) and leagues:
                 break
-    return names
+    return leagues
 
 
 def get_all_names_from_id(_id):

@@ -23,7 +23,7 @@ import unidecode
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
-from sportsbetting.database_functions import (get_id_formatted_competition_name, get_competition_by_id, import_teams_by_url,
+from sportsbetting.database_functions import (get_id_from_competition_name, get_competition_by_id, import_teams_by_url,
                                               import_teams_by_sport, import_teams_by_competition_id_thesportsdb)
 from sportsbetting.parser_functions import parse
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds, afficher_mises_combine,
@@ -46,11 +46,11 @@ def parse_competition(competition, sport, *sites):
     if sb.ABORT:
         raise sb.AbortException
     try:
-        _id, formatted_name = get_id_formatted_competition_name(competition, sport)
+        _id = get_id_from_competition_name(competition, sport)
     except TypeError:
         print("Competition inconnue")
         return
-    print(formatted_name, *sites)
+    print(competition, *sites)
     if not sites:
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
@@ -120,7 +120,7 @@ def parse_competitions(competitions, sport, *sites):
         if competition == sport or "Tout le" in competition:
             import_teams_by_sport(sport)
         else:
-            id_competition = get_id_formatted_competition_name(competition, sport)[0]
+            id_competition = get_id_from_competition_name(competition, sport)
             if id_competition < 0:
                 import_teams_by_competition_id_thesportsdb(id_competition)
             else:

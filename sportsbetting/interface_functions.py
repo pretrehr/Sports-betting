@@ -420,7 +420,7 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     if match0 and match1:
         best_matches_freebet(sites, freebets_list, "football", match0, match1)
     else:
-        best_matches_freebet(sites, freebets_list)
+        best_matches_freebet(sites, freebets_list, "football")
     sys.stdout = old_stdout  # Put the old stream back in place
     what_was_printed = buffer.getvalue()
     match, date = infos(what_was_printed)
