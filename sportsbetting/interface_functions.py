@@ -20,7 +20,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_matches_freebet, best_matches_combine,
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match,
-                                          best_combine_booste)
+                                          best_combine_booste, trj_match)
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -621,3 +621,53 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
         window["RESULTS_COMBI_OPT" + str(i)].update(elem[1], visible=True)
     buffer.close()
     sb.ODDS_INTERFACE = what_was_printed
+
+
+def find_surebets_interface(window, values):
+    matches = []
+    sport = values["SPORT_SUREBETS"][0]
+    trj_min = float(values["TRJ_SUREBETS"])/100
+    for match in sb.ODDS[sport]:
+        if trj_match(sb.ODDS[sport][match]) >= trj_min:
+            matches.append(match)
+    matches.sort(key=lambda x :trj_match(sb.ODDS[sport][x]), reverse=True)
+    window["MATCHES_SUREBETS"].update(matches)
+    if not matches:
+        window["MESSAGE_SUREBETS"].update("Aucun surebet trouvé")
+    else:
+        window["MESSAGE_SUREBETS"].update("")
+
+
+def odds_match_surebets_interface(window, values):
+    """
+    :param window: Fenêtre principale PySimpleGUI
+    :param values: Valeurs de la fenêtre principale
+    :return: Affiche le résultat de la fonction odds_match dans l'interface
+    """
+    try:
+        match = values["MATCHES_SUREBETS"][0]
+        sport = values["SPORT_SUREBETS"][0]
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = io.StringIO()
+        odds_dict = odds_match(match, sport)[1]
+        sys.stdout = old_stdout  # Put the old stream back in place
+        odds = odds_dict["odds"]
+        date = odds_dict["date"]
+        if len(list(odds.values())[0]) == 2:
+            for key in odds.keys():
+                odds[key].insert(1, "-   ")
+        table = []
+        for key, value in odds.items():
+            table.append([key] + list(map(str, value)))
+        table.sort()
+        window["ODDS_SUREBETS"].update(table, visible=True)
+        if date:
+            window["DATE_SUREBETS"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
+        else:
+            window["DATE_SUREBETS"].update(visible=False)
+        window["MATCH_SUREBETS"].update(match, visible=True)
+        trj = trj_match(sb.ODDS[sport][match])
+        window["MESSAGE_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
+    except (IndexError, ValueError) as _:
+        pass
+    

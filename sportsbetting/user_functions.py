@@ -662,3 +662,20 @@ def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, t
 
 def best_combine_booste(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee):
     best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee)
+
+
+def trj_match(match_odds):
+    odds = []
+    for bookmaker in match_odds["odds"]:
+        tmp_odds = match_odds["odds"][bookmaker]
+        if not odds:
+            odds = copy.deepcopy(tmp_odds)
+            continue
+        for i, tmp_odd in enumerate(tmp_odds):
+            if tmp_odd > odds[i]:
+                odds[i] = tmp_odd
+    return gain(odds)
+    
+            
+            
+            
