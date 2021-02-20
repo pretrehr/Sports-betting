@@ -403,7 +403,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     best_combinaison = []
     best_cotes = []
     best_sites = []
-    best_gain = -mise
+    best_gain = -float("inf")
     best_i = -1
     for combinaisons in combine_reduit_rec(combinaison_boostee, sport):
         cotes = []
