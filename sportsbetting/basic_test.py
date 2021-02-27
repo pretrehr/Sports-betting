@@ -54,6 +54,26 @@ def test_parsing_chromedriver():
     sb.selenium_init.DRIVER["joa"].quit()
     sb.TEST = False
     assert len(sb.ODDS) > 0
+    
+def test_parsing_token():
+    """
+    :return:Test simple
+    """
+    sb.TEST = True
+    url = "http://www.comparateur-de-cotes.fr/comparateur/football"
+    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    sb.ODDS = {}
+    names = []
+    for line in soup.find_all(attrs={"class": "subhead"}):
+        if "Principaux championnats" in str(line):
+            for link in line.findParent().find_all(["a"]):
+                names.append(link.text.strip())
+            break
+    name_competition = random.choice(names)
+    print(name_competition)
+    parse_competitions([name_competition], "football", "bwin", "parionssport")
+    sb.TEST = False
+    assert len(sb.ODDS) > 0
 
 
 def test_consistency():
