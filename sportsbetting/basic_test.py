@@ -50,9 +50,8 @@ def test_parsing_chromedriver():
             break
     name_competition = random.choice(names)
     print(name_competition)
-    parse_competitions([name_competition], "football", "betclic", "unibet")
-    for site in ["betclic", "unibet"]:
-        sb.selenium_init.DRIVER[site].quit()
+    parse_competitions([name_competition], "football", "joa")
+    sb.selenium_init.DRIVER["joa"].quit()
     sb.TEST = False
     assert len(sb.ODDS) > 0
 

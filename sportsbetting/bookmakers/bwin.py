@@ -3,116 +3,93 @@ Bwin odds scraper
 """
 
 import datetime
+import urllib
+import json
+import re
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-
-from bs4 import BeautifulSoup
+import dateutil
+import seleniumwire.webdriver
 
 import sportsbetting as sb
-from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import reverse_match_odds, scroll, truncate_datetime
+from sportsbetting.auxiliary_functions import reverse_match_odds, truncate_datetime
+
+
+
+def get_bwin_token():
+    """
+    Get Bwin token to access the API
+    """
+    token = ""
+    with open(sb.PATH_TOKENS, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            bookmaker, token = line.split()
+            if bookmaker == "bwin":
+                return token
+    options = seleniumwire.webdriver.ChromeOptions()
+    prefs = {'profile.managed_default_content_settings.images': 2,
+             'disk-cache-size': 4096}
+    options.add_argument('log-level=3')
+    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument("--headless")
+    options.add_argument("--disable-extensions")
+    driver = seleniumwire.webdriver.Chrome(sb.PATH_DRIVER, options=options)
+    driver.get("https://sports.bwin.fr/fr/sports")
+    for request in driver.requests:
+        if request.response and "x-bwin-accessid=" in request.url:
+            token = request.url.split("x-bwin-accessid=")[1].split("&")[0]
+            with open(sb.PATH_TOKENS, "a") as file:
+                file.write("bwin {}\n".format(token))
+            break
+    driver.quit()
+    return token
+
+def parse_bwin_api(parameter):
+    """
+    Get Bwin odds from API
+    """
+    token = get_bwin_token()
+    if not token:
+        return {}
+    url = ("https://cds-api.bwin.fr/bettingoffer/fixtures?x-bwin-accessid={}&lang=fr&country=FR&userCountry=FR"
+           "&fixtureTypes=Standard&state=Latest&offerMapping=Filtered&offerCategories=Gridable&fixtureCategories=Gridable"
+           "&{}&skip=0&take=1000&sortBy=Tags".format(token, parameter))
+    content = urllib.request.urlopen(url).read()
+    parsed = json.loads(content)
+    fixtures = parsed["fixtures"]
+    odds_match = {}
+    for fixture in fixtures:
+        if fixture["stage"] == "Live":
+            continue
+        reversed_odds = " chez " in fixture["name"]["value"]
+        odds = []
+        participants = fixture["participants"]
+        name = " - ".join(map(lambda x: x["name"]["value"], participants))
+        games = fixture["games"]
+        for game in games:
+            odds_type = game["name"]["value"]
+            if odds_type not in ["1 X 2", "Pari sur le vainqueur (US)", "1X2 (temps réglementaire)", "Vainqueur 1 2"]:
+                continue
+            for result in game["results"]:
+                odds.append(result["odds"])
+            break
+        date = truncate_datetime(dateutil.parser.isoparse(fixture["startDate"]))+datetime.timedelta(hours=1)
+        if reversed_odds:
+            name, odds = reverse_match_odds(name, odds)
+        odds_match[name] = {"date": date, "odds":{"bwin":odds}}
+    return odds_match
+
 
 def parse_bwin(url):
     """
-    Retourne les cotes disponibles sur bwin
+    Get Bwin odds from url
     """
-    selenium_init.DRIVER["bwin"].maximize_window()
-    selenium_init.DRIVER["bwin"].get(url)
-    match_odds_hash = {}
-    match = None
-    date_time = None
-    index_column_result_odds = 1 if "handball" in url else 0
-    is_sport_page = "/0" in url
-    reversed_odds = False
-    live = False
-    WebDriverWait(selenium_init.DRIVER["bwin"], 15).until(
-        EC.presence_of_all_elements_located(
-            (By.CLASS_NAME, "participants-pair-game")) or sb.ABORT
-    )
-    if sb.ABORT:
-        raise sb.AbortException
-    if is_sport_page:
-        scroll(selenium_init.DRIVER["bwin"], "bwin",
-               "grid-event-detail", 3, 'getElementById("main-view")')
-    for _ in range(10):
-        inner_html = selenium_init.DRIVER["bwin"].execute_script(
-            "return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        for line in soup.findAll():
-            if "class" in line.attrs and "grid-group" in line["class"]:
-                strings = list(line.stripped_strings)
-                if "Pari sur le vainqueur" in strings:
-                    index_column_result_odds = strings.index(
-                        "Pari sur le vainqueur")
-            if "class" in line.attrs and "participants-pair-game" in line["class"]:
-                teams = []
-                if line.findChildren(attrs={"class": "participant-container"}):
-                    names_and_countries = list(line.findChildren(attrs={"class": "participant-container"}))
-                    for name_and_country in names_and_countries:
-                        strings = list(name_and_country.stripped_strings)
-                        if len(strings) == 2 and strings[1] != '@':
-                            teams.append(strings[0] + " ("+strings[1]+")")
-                        else:
-                            teams.append(strings[0])
-                match = " - ".join(teams)
-                reversed_odds = True if line.findChildren(attrs={"class": "away-indicator"}) else False
-            if "class" in line.attrs and "starting-time" in line["class"]:
-                date_time = format_bwin_time(line.text)
-            if "class" in line.attrs and "live-icon" in line["class"]:
-                live = True
-            if "class" in line.attrs and "grid-group-container" in line["class"]:
-                if (line.findChildren(attrs={"class": "grid-option-group"})
-                        and "Pariez maintenant !" not in list(line.stripped_strings)):
-                    odds_line = line.findChildren(
-                        attrs={"class": "grid-option-group"})[index_column_result_odds]
-                    odds = []
-                    for odd in list(odds_line.stripped_strings):
-                        try:
-                            odds.append(float(odd))
-                        except ValueError:
-                            break
-                    if match:
-                        if reversed_odds:
-                            match, odds = reverse_match_odds(match, odds)
-                        if not live:
-                            match_odds_hash[match] = {}
-                            match_odds_hash[match]['odds'] = {"bwin": odds}
-                            match_odds_hash[match]['date'] = date_time
-                        else:
-                            live = False
-                        match = None
-                        date_time = "undefined"
-        if match_odds_hash:
-            return match_odds_hash
-    return match_odds_hash
-
-
-def format_bwin_names(string):
-    """
-    Returns match from a string available on bwin html
-    """
-    if string.count(" - ") == 3:
-        string = string.replace(" - ", " (", 1)
-        string = string.replace(" - ", ") - ", 1)
-        string = " (".join(string.rsplit(" - ", 1))
-        string += ")"
-    string = string.replace("@ - ", "")
-    return string
-
-def format_bwin_time(string):
-    """
-    Returns time from a string available on bwin html
-    """
-    today = datetime.datetime.today().strftime("%d/%m/%Y ")
-    tomorrow = (datetime.datetime.today()+datetime.timedelta(days=1)).strftime("%d/%m/%Y ")
-    string = " ".join(string.replace("Aujourd'hui/", today).replace("Demain/", tomorrow).split())
-    if "Commence dans" in string:
-        date_time = truncate_datetime(datetime.datetime.today())
-        date_time += datetime.timedelta(minutes=int(string.split("dans ")[1]
-                                                    .split("min")[0]) + 1)
-        return date_time
-    if "Commence maintenant" in string:
-        return truncate_datetime(datetime.datetime.today())
-    return datetime.datetime.strptime(string, "%d/%m/%Y %H:%M")
+    parameter = ""
+    if "/0" in url:
+        id_sport = re.findall(r'\d+', url)[0]
+        parameter = "sportIds=" + id_sport
+    else:
+        id_league = re.findall(r'\d+', url)[-1]
+        parameter = "competitionIds=" + id_league
+    return parse_bwin_api(parameter)

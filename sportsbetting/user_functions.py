@@ -111,8 +111,7 @@ def parse_competitions(competitions, sport, *sites):
     sb.PROGRESS = 0
     selenium_sites = sb.SELENIUM_SITES.intersection(sites)
     for site in selenium_sites:
-        headless = sport != "handball" or site != "bwin"
-        selenium_init.start_driver(site, headless, not headless)	
+        selenium_init.start_driver(site)	
         sb.PROGRESS += 100/len(selenium_sites)
     sb.PROGRESS = 0
     sb.SUB_PROGRESS_LIMIT = len(sites)
@@ -133,8 +132,6 @@ def parse_competitions(competitions, sport, *sites):
         sb.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
-    if sport == "handball" and "bwin" in sites:
-        selenium_init.start_driver("bwin", True, True)
     sb.IS_PARSING = False
     sb.ABORT = False
 
