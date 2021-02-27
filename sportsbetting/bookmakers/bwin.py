@@ -3,11 +3,11 @@ Bwin odds scraper
 """
 
 import datetime
-import urllib
 import json
 import re
+import urllib
 
-import dateutil
+import dateutil.parser
 import seleniumwire.webdriver
 
 import sportsbetting as sb

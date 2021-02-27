@@ -5,8 +5,7 @@ Pokerstars odds scraper
 import datetime
 import json
 import re
-
-import requests
+import urllib
 
 from sportsbetting.auxiliary_functions import merge_dicts
 
@@ -18,9 +17,7 @@ def parse_betstars_api(id_league):
     url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getCompetitionEvents?competitionId={}"
            "&marketTypes=SOCCER%3AFT%3AAXB%2CMRES,BASKETBALL%3AFTOT%3AML,AB,RUGBYUNION%3AFT%3AMRES,HANDBALL%3AFT%3AMRES,"
            "ICEHOCKEY%3AFT%3AAXB&includeOutrights=false&channelId=11&locale=fr-fr&siteId=32".format(id_league))
-    session = requests.Session()
-    res = session.get(url)
-    content = res.content
+    content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
     matches = parsed["event"]
     odds_match = {}
@@ -71,9 +68,7 @@ def parse_sport_betstars(sport):
     """
     url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getSportTree?sport={}&includeOutrights=false"
            "&includeEvents=false&includeCoupons=true&channelId=11&locale=fr-fr&siteId=32".format(sport.upper()))
-    session = requests.Session()
-    res = session.get(url)
-    content = res.content
+    content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
     list_odds = []
     competitions = parsed["categories"]

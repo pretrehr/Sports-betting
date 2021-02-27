@@ -3,11 +3,11 @@ Betclic odds scraper
 """
 
 import datetime
-import re
 import json
+import re
+import urllib
 
 import dateutil.parser
-import requests
 
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
 
@@ -18,9 +18,7 @@ def parse_betclic_api(id_league):
     """
     url = ("https://offer.cdn.betclic.fr/api/pub/v2/competitions/{}?application=2&countrycode=fr"
            "&fetchMultipleDefaultMarkets=true&language=fr&sitecode=frfr".format(id_league))
-    session = requests.Session()
-    res = session.get(url)
-    content = res.content
+    content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
     odds_match = {}
     if (not parsed) or "unifiedEvents" not in parsed:
@@ -62,9 +60,7 @@ def parse_sport_betclic(id_sport):
     """
     url = ("https://offer.cdn.betclic.fr/api/pub/v2/sports/{}?application=2&countrycode=fr&language=fr&sitecode=frfr"
            .format(id_sport))
-    session = requests.Session()
-    res = session.get(url)
-    content = res.content
+    content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
     list_odds = []
     competitions = parsed["competitions"]
