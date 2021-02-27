@@ -12,4 +12,4 @@ stopit>=1.1.2
 colorama>=0.4.1
 python-dateutil>=2.8.1
 selenium-wire>=2.1.1
-
+websockets>=8.1
