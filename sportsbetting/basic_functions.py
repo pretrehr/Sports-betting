@@ -104,12 +104,15 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
 
 
 def mises3(odds, best_odds, stake, minimum_odd, output=False):
+    """
+    Répartition optimale d'une certaine somme sur les différentes cotes en prenant en compte les cotes des autres
+    bookmakers
+    """
     assert len(odds) == len(best_odds)
     n = len(odds)
     indices_valid_odds = [i for i in range(n) if odds[i] >= minimum_odd]
     n_valid_odds = len(indices_valid_odds)
     profit = -stake
-    stakes = []
     odds_best_profit = []
     best_combination = []
     reference_stake = []
@@ -124,7 +127,6 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False):
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
             if profit_combination > profit:
                 reference_stake = first_stake_site
-                stakes = mises2(odds_to_check, first_stake_site, combination[0])
                 odds_best_profit = copy.deepcopy(odds_to_check)
                 best_combination = copy.deepcopy(combination)
                 profit = profit_combination
@@ -135,17 +137,18 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False):
     if best_combination:
         return mises2(odds_best_profit, reference_stake, best_combination[0]), best_combination
     return
-        
+
+
 def gain3(odds, best_odds, stake, minimum_odd):
+    """
+    Profit avec répartition optimale d'une certaine somme sur les différentes cotes en prenant en compte les cotes des autres
+    bookmakers
+    """
     assert len(odds) == len(best_odds)
     n = len(odds)
     indices_valid_odds = [i for i in range(n) if odds[i] >= minimum_odd]
     n_valid_odds = len(indices_valid_odds)
     profit = -float("inf")
-    stakes = []
-    odds_best_profit = []
-    best_combnation = []
-    reference_stake = []
     for i in range(n_valid_odds):
         for combination in combinations(indices_valid_odds, i+1):
             odds_to_check = []
@@ -156,10 +159,6 @@ def gain3(odds, best_odds, stake, minimum_odd):
             first_stake_site = mises(odds_site, stake)[0]
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
             if profit_combination > profit:
-                reference_stake = first_stake_site
-                stakes = mises2(odds_to_check, first_stake_site, combination[0])
-                odds_best_profit = copy.deepcopy(odds_to_check)
-                best_combination = copy.deepcopy(combination)
                 profit = profit_combination
     return profit
 

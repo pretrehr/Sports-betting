@@ -21,7 +21,7 @@ import colorama
 import termcolor
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes
-from sportsbetting.database_functions import get_all_sports, get_all_competitions
+from sportsbetting.database_functions import get_all_competitions
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_under_conditions_interface,

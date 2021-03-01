@@ -33,7 +33,7 @@ def parse_unibet_api(id_league, sport):
            .format(id_league, parameter))
     content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
-    markets_by_type = parsed["marketsByType"]
+    markets_by_type = parsed.get("marketsByType", [])
     odds_match = {}
     for market_by_type in markets_by_type:
         days = market_by_type["days"]

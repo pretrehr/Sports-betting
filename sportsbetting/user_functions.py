@@ -102,8 +102,8 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['bwin', 'parionssport', 'betstars', 'pasinobet', 'joa', 'unibet', 'betclic',
-                   'pmu', 'france_pari', 'netbet', 'winamax', 'zebet']
+    sites_order = ['joa', 'pmu', 'betclic', 'pasinobet', 'betstars', 'unibet',
+                   'zebet','france_pari','winamax', 'bwin', 'parionssport', 'netbet']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -128,7 +128,7 @@ def parse_competitions(competitions, sport, *sites):
     list_odds = []
     try:
         sb.IS_PARSING = True
-        list_odds = ThreadPool(7).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+        list_odds = ThreadPool(3).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
         sb.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)

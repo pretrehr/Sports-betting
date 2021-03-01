@@ -36,6 +36,7 @@ def valid_odds(all_odds, sport):
         for site in all_odds[match]["odds"]:
             if (len(all_odds[match]["odds"][site]) != n
                     or (all_odds[match]["date"] and all_odds[match]["date"] < datetime.datetime.today())):
+                print(match, site, all_odds[match]["date"], all_odds[match]["odds"][site])
                 copy_all_odds[match]["odds"][site] = [1.01 for _ in range(n)]
     return copy_all_odds
 
