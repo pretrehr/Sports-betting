@@ -49,13 +49,14 @@ def parse_pmu_html(soup):
                     date + " " + hour, "%Y-%m-%d %Hh%M")
             except ValueError:
                 date_time = "undefined"
+        elif "class" in line.attrs and "trow--live--logo-active" in line["class"]:
+            live = True
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
             if "//" in string:
                 try:
                     is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
                 except TypeError:
-                    live = False
                     is_rugby_13 = False
                 if not is_rugby_13:
                     handicap = False
@@ -68,6 +69,9 @@ def parse_pmu_html(soup):
                         match = match.replace(" // ", " - ")
                         match = match.replace("//", " - ")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
+            if live:
+                live = False
+                continue
             if not handicap:
                 odds = list(
                     map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
