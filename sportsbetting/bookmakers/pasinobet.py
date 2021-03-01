@@ -4,79 +4,118 @@ Pasinobet odds scraper
 
 import datetime
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
+import asyncio
+import ssl
+import re
+import json
 
-from bs4 import BeautifulSoup
+import websockets
 
-import sportsbetting as sb
-from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import reverse_match_odds
+from sportsbetting.auxiliary_functions import merge_dicts, reverse_match_odds
+
+async def get_json_pasinobet_api(id_league):
+    """
+    Get odds JSON from league id
+    """
+    async with websockets.connect('wss://swarm-2.vbet.fr/', ssl=ssl.SSLContext(protocol=ssl.PROTOCOL_TLS)) as websocket:
+        data = {"command":"request_session",
+                "params":{"language":"fra", "site_id":"599"}}
+        await websocket.send(json.dumps(data))
+        response = await websocket.recv()
+        data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
+                '"game":["start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                '"where":{"competition":{"id":'+str(id_league)+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
+                '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}}}}')
+        await websocket.send(data)
+        response = await websocket.recv()
+        parsed = json.loads(response)
+        return parsed
+
+
+async def get_json_sport_pasinobet_api(sport):
+    """
+    Get odds JSON from sport
+    """
+    async with websockets.connect('wss://swarm-2.vbet.fr/', ssl=ssl.SSLContext(protocol=ssl.PROTOCOL_TLS)) as websocket:
+        data = {"command":"request_session",
+                "params":{"language":"fra", "site_id":"599"}}
+        await websocket.send(json.dumps(data))
+        response = await websocket.recv()
+        data = {"command":"get",
+                "params":{"source":"betting",
+                          "what":{"competition":["id", "name"]},
+                          "where":{"sport":{"name":sport},
+                                   "game":{"@or":[{"type":{"@in":[0, 2]}},
+                                                  {"visible_in_prematch":1, "type":1}]}}}}
+        await websocket.send(json.dumps(data))
+        response = await websocket.recv()
+        parsed = json.loads(response)
+        list_odds = []
+        for league in parsed["data"]["data"]["competition"].values():
+            if "Compétition" in league["name"]:
+                continue
+            data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
+                    '"game":["start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                    '"where":{"competition":{"id":'+str(league["id"])+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
+                    '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}'
+                    '}}}}')
+            await websocket.send(data)
+            response = await websocket.recv()
+            parsed_league = json.loads(response)
+            odds_league = get_odds_from_league_json(parsed_league)
+            list_odds.append(odds_league)
+        return merge_dicts(list_odds)
+
+
+def get_odds_from_league_json(parsed_league):
+    """
+    Get odds from league json
+    """
+    competitions = parsed_league["data"]["data"]["competition"]
+    odds_league = {}
+    for competition in competitions.values():
+        reversed_odds = competition["teams_reversed"]
+        games = competition["game"]
+        for game in games.values():
+            if game["is_started"]:
+                continue
+            name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
+            date = datetime.datetime.fromtimestamp(game["start_ts"])
+            markets = game["market"]
+            for market in markets.values():
+                odds = []
+                for event in sorted(market["event"].values(), key=lambda x: x["order"]):
+                    odds.append(event["price"])
+            if reversed_odds:
+                name, odds = reverse_match_odds(name, odds)
+            odds_league[name] = {"date":date, "odds":{"pasinobet":odds}}
+    return odds_league
+
+
+def parse_pasinobet_api(id_league):
+    """
+    Get Pasinobet odds from league id
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    parsed = asyncio.get_event_loop().run_until_complete(get_json_pasinobet_api(id_league))
+    return get_odds_from_league_json(parsed)
+
+
+def parse_pasinobet_sport(sport):
+    """
+    Get Pasinobet odds from sport ("Tennis ", "Football " ...)
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return asyncio.get_event_loop().run_until_complete(get_json_sport_pasinobet_api(sport))
+
 
 def parse_pasinobet(url):
     """
-    Retourne les cotes disponibles sur pasinobet
+    Get Pasinobet odds from url
     """
-    selenium_init.DRIVER["pasinobet"].get("about:blank")
-    selenium_init.DRIVER["pasinobet"].get(url)
-    reversed_odds = "North%20America" in url
-    match_odds_hash = {}
-    match = None
-    date_time = None
-    WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
-        EC.invisibility_of_element_located(
-            (By.CLASS_NAME, "skeleton-line")) or sb.ABORT
-    )
-    if sb.ABORT:
-        raise sb.AbortException
-    inner_html = selenium_init.DRIVER["pasinobet"].execute_script(
-        "return document.body.innerHTML")
-    soup = BeautifulSoup(inner_html, features="lxml")
-    date = ""
-    for line in soup.findAll():
-        if sb.ABORT:
-            raise sb.AbortException
-        if "class" in line.attrs and "category-date" in line["class"]:
-            date = line.text.lower()
-            date = date.replace("nov", "novembre")
-            date = date.replace("déc", "décembre")
-            date = date.replace("jan", "janvier")
-            date = date.replace("fév", "février")
-            date = date.replace("mar ", "mars ")
-        if "class" in line.attrs and "event-header" in line["class"]:
-            match = " - ".join(map(lambda x: list(x.stripped_strings)[0],
-                                   line.findChildren("div", {"class": "teams-container-layout2"})))
-            time = line.findChild("div", {"class": "sbEventsList__time"}).text.strip()
-            try:
-                date_time = datetime.datetime.strptime(date+time, "%A, %d %B %Y%H:%M")
-            except ValueError:
-                date_time = "undefined"
-        if "class" in line.attrs and "event-list" in line["class"]:
-            if "---" not in list(line.stripped_strings):
-                odds = list(map(float, line.stripped_strings))
-                if reversed_odds:
-                    match, odds = reverse_match_odds(match, odds)
-                match_odds_hash[match] = {}
-                match_odds_hash[match]["date"] = date_time
-                match_odds_hash[match]["odds"] = {"pasinobet": odds}
-    return match_odds_hash
-
-
-# def parse_pasinobet_sport(sport):
-#     selenium_init.start_selenium("pasinobet", False)
-#     selenium_init.DRIVER["pasinobet"].maximize_window()
-#     selenium_init.DRIVER["pasinobet"].get(
-#         "https://www.pasinobet.fr/#/sport/?type=0&sport=1&region=-1")
-#     sport_items = WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
-#         EC.presence_of_all_elements_located((By.CLASS_NAME, "sport-header"))
-#     )
-#     for sport_item in sport_items:
-#         if sport_item.text.split() and sport_item.text.split()[0] == sport:
-#             sport_item.find_element_by_xpath("..").click()
-#             break
-#     regions = WebDriverWait(selenium_init.DRIVER["pasinobet"], 15).until(
-#         EC.presence_of_all_elements_located((By.CLASS_NAME, "region"))
-#     )
-#     input()
-#     selenium_init.DRIVER["pasinobet"].quit()
+    if not "https://" in url:
+        return parse_pasinobet_sport(url)
+    id_league = re.findall(r'\/\d+', url)[0].strip("/")
+    return parse_pasinobet_api(id_league)

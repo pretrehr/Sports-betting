@@ -26,11 +26,12 @@ IS_PARSING = False
 ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 PATH_DRIVER = ""
-SELENIUM_SITES = {"betclic", "betstars", "bwin", "joa", "parionssport", "pasinobet", "unibet"}
+SELENIUM_SITES = {"joa"}
 BOOKMAKERS = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport",
               "pasinobet", "pmu", "unibet", "winamax", "zebet"]
 TEST = False
 DB_MANAGEMENT = False
+TOKENS = {}
 
 
 class UnavailableCompetitionException(Exception):
@@ -83,3 +84,5 @@ print(PATH_DRIVER)
 
 PATH_DB = find_files("teams.db", "sportsbetting")
 print(PATH_DB)
+
+PATH_TOKENS = find_files("tokens.txt", "sportsbetting")

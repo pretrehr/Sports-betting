@@ -102,8 +102,8 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['bwin', 'parionssport', 'betstars', 'pasinobet', 'joa', 'unibet', 'betclic',
-                   'pmu', 'france_pari', 'netbet', 'winamax', 'zebet']
+    sites_order = ['joa', 'pmu', 'betclic', 'pasinobet', 'betstars', 'unibet',
+                   'zebet','france_pari','winamax', 'bwin', 'parionssport', 'netbet']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -111,8 +111,7 @@ def parse_competitions(competitions, sport, *sites):
     sb.PROGRESS = 0
     selenium_sites = sb.SELENIUM_SITES.intersection(sites)
     for site in selenium_sites:
-        headless = sport != "handball" or site != "bwin"
-        selenium_init.start_driver(site, headless, not headless)	
+        selenium_init.start_driver(site)	
         sb.PROGRESS += 100/len(selenium_sites)
     sb.PROGRESS = 0
     sb.SUB_PROGRESS_LIMIT = len(sites)
@@ -129,12 +128,10 @@ def parse_competitions(competitions, sport, *sites):
     list_odds = []
     try:
         sb.IS_PARSING = True
-        list_odds = ThreadPool(7).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
+        list_odds = ThreadPool(3).map(lambda x: parse_competitions_site(competitions, sport, x), sites)
         sb.ODDS[sport] = merge_dict_odds(list_odds)
     except Exception:
         print(traceback.format_exc(), file=sys.stderr)
-    if sport == "handball" and "bwin" in sites:
-        selenium_init.start_driver("bwin", True, True)
     sb.IS_PARSING = False
     sb.ABORT = False
 

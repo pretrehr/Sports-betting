@@ -3,65 +3,68 @@ Betclic odds scraper
 """
 
 import datetime
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
+import json
+import re
+import urllib
 
-from bs4 import BeautifulSoup
+import dateutil.parser
 
-import sportsbetting as sb
-from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import scroll
+from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
+
+
+def parse_betclic_api(id_league):
+    """
+    Get odds from Betclic API
+    """
+    url = ("https://offer.cdn.betclic.fr/api/pub/v2/competitions/{}?application=2&countrycode=fr"
+           "&fetchMultipleDefaultMarkets=true&language=fr&sitecode=frfr".format(id_league))
+    content = urllib.request.urlopen(url).read()
+    parsed = json.loads(content)
+    odds_match = {}
+    if (not parsed) or "unifiedEvents" not in parsed:
+        return odds_match
+    matches = parsed["unifiedEvents"]
+    for match in matches:
+        if match["isLive"]:
+            continue
+        if "contestants" not in match:
+            continue
+        contestants = match["contestants"]
+        if not contestants:
+            continue
+        name = " - ".join(contestant["name"] for contestant in contestants)
+        date = dateutil.parser.isoparse(match["date"])+datetime.timedelta(hours=1)
+        markets = match["markets"]
+        if not markets:
+            continue
+        odds = [selection["odds"] for selection in markets[0]["selections"]]
+        odds_match[name] = {}
+        odds_match[name]["date"] = truncate_datetime(date)
+        odds_match[name]["odds"] = {"betclic":odds}
+    return odds_match
 
 
 def parse_betclic(url):
     """
-    Gets the odds available on a Betclic url
+    Get odds from Betclic url
     """
-    selenium_init.DRIVER["betclic"].get(url)
-    is_sport_page = len([x for x in url.split("/") if x]) == 3
-    match_odds_hash = {}
-    match = None
-    date_time = None
-    today = datetime.datetime.today().strftime("%d/%m/%Y")
-    tomorrow = (datetime.datetime.today() +
-                datetime.timedelta(days=1)).strftime("%d/%m/%Y")
-    if (selenium_init.DRIVER["betclic"].current_url
-            == "https://www.betclic.fr/"):
-        raise sb.UnavailableCompetitionException
-    WebDriverWait(selenium_init.DRIVER["betclic"], 15).until(
-        EC.invisibility_of_element_located(
-            (By.TAG_NAME, "app-preloader")) or sb.ABORT
-    )
-    if sb.ABORT:
-        raise sb.AbortException
-    if is_sport_page:
-        scroll(selenium_init.DRIVER["betclic"], "betclic", "betBox_match", 10)
-    for _ in range(10):
-        inner_html = selenium_init.DRIVER["betclic"].execute_script(
-            "return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        if "Désolé, cette compétition n'est plus disponible." in str(soup):
-            raise sb.UnavailableCompetitionException
-        for line in soup.findAll():
-            if "class" in line.attrs and "betBox_matchName" in line["class"]:
-                match = " - ".join(list(line.stripped_strings))
-            if line.name == "app-date":
-                string = " ".join(line.text.replace(
-                    "Aujourd'hui", today).replace("Demain", tomorrow).split())
-                date_time = datetime.datetime.strptime(
-                    string, "%d/%m/%Y %H:%M")
-            if "class" in line.attrs and "betBox_odds" in line["class"]:
-                try:
-                    odds = list(map(lambda x: float(x.text.replace(",", ".")),
-                                    list(line.findChildren("span", {"class": "oddValue"}))))
-                    if match:
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"betclic": odds}
-                        match_odds_hash[match]['date'] = date_time
-                        match = None
-                except ValueError:
-                    pass
-        if match_odds_hash:
-            return match_odds_hash
-    return match_odds_hash
+    if "-s" in url and url.split("-s")[-1].isdigit():
+        return parse_sport_betclic(url.split("-s")[-1])
+    id_league = re.findall(r'\d+', url)[-1]
+    return parse_betclic_api(id_league)
+
+
+def parse_sport_betclic(id_sport):
+    """
+    Get odds from Betclic sport id
+    """
+    url = ("https://offer.cdn.betclic.fr/api/pub/v2/sports/{}?application=2&countrycode=fr&language=fr&sitecode=frfr"
+           .format(id_sport))
+    content = urllib.request.urlopen(url).read()
+    parsed = json.loads(content)
+    list_odds = []
+    competitions = parsed["competitions"]
+    for competition in competitions:
+        id_competition = competition["id"]
+        list_odds.append(parse_betclic_api(id_competition))
+    return merge_dicts(list_odds)

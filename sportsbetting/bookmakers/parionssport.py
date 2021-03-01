@@ -3,124 +3,156 @@ ParionsSport odds scraper
 """
 
 import datetime
+import json
+import re
+import urllib
 
-from bs4 import BeautifulSoup
+import seleniumwire
 
 import sportsbetting as sb
-from sportsbetting import selenium_init
-from sportsbetting.auxiliary_functions import merge_dicts, scroll
+from sportsbetting.auxiliary_functions import merge_dicts
+
+
+def get_parionssport_token():
+    """
+    Get ParionsSport token to access the API
+    """
+    token = ""
+    with open(sb.PATH_TOKENS, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            bookmaker, token = line.split()
+            if bookmaker == "parionssport":
+                return token
+    options = seleniumwire.webdriver.ChromeOptions()
+    prefs = {'profile.managed_default_content_settings.images': 2,
+             'disk-cache-size': 4096}
+    options.add_argument('log-level=3')
+    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument("--headless")
+    options.add_argument("--disable-extensions")
+    driver = seleniumwire.webdriver.Chrome(sb.PATH_DRIVER, options=options)
+    driver.get("https://enligne.parionssport.fdj.fr")
+    for request in driver.requests:
+        if request.response:
+            token = request.headers.get("X-LVS-HSToken")
+            if token:
+                with open(sb.PATH_TOKENS, "a") as file:
+                    file.write("parionssport {}\n".format(token))
+                break
+    driver.quit()
+    return token
+
+
+
+def parse_parionssport_match_basketball(id_match):
+    """
+    Get ParionsSport odds from baskteball match id
+    """
+    url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
+           "&showPromotions=true".format(id_match))
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    content = urllib.request.urlopen(req).read()
+    parsed = json.loads(content)
+    items = parsed["items"]
+    odds = []
+    odds_match = {}
+    for item in items:
+        if not item.startswith("o"):
+            continue
+        odd = items[item]
+        market = items[odd["parent"]]
+        if not "desc" in market:
+            continue
+        if not market["desc"] == "Face à Face":
+            continue
+        if not "period" in market:
+            continue
+        if not market["period"] == "Match":
+            continue
+        event = items[market["parent"]]
+        if "date" not in odds_match:
+            odds_match["date"] = datetime.datetime.strptime(event["start"], "%y%m%d%H%M") + datetime.timedelta(hours=1)
+        odds.append(float(odd["price"].replace(",", ".")))
+    if not odds:
+        return odds_match
+    odds_match["odds"] = {"parionssport" : odds}
+    return odds_match
+
+
+
+def parse_parionssport_api(id_league):
+    """
+    Get ParionsSport odds from league id
+    """
+    url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/next/50/{}?originId=3&lineId=1&breakdownEventsIntoDays=true"
+           "&eType=G&showPromotions=true".format(id_league))
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    content = urllib.request.urlopen(req).read()
+    parsed = json.loads(content)
+    odds_match = {}
+    if "items" not in parsed:
+        return odds_match
+    items = parsed["items"]
+    for item in items:
+        if not item.startswith("o"):
+            continue
+        odd = items[item]
+        market = items[odd["parent"]]
+        if not market["style"] in ["WIN_DRAW_WIN", "TWO_OUTCOME_LONG"]:
+            continue
+        event = items[market["parent"]]
+        name = event["a"] + " - " + event["b"]
+        if event["code"] == "BASK":
+            if name not in odds_match:
+                odds = parse_parionssport_match_basketball(market["parent"])
+                if odds:
+                    odds_match[name] = odds
+        else:
+            if not name in odds_match:
+                odds_match[name] = {}
+                odds_match[name]["date"] = (datetime.datetime.strptime(event["start"], "%y%m%d%H%M")
+                                            + datetime.timedelta(hours=1))
+                odds_match[name]["odds"] = {"parionssport":[]}
+            odds_match[name]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))
+    return odds_match
+
+def parse_sport_parionssport(sport):
+    """
+    Get ParionsSport odds from sport
+    """
+    sports_alias = {
+        "football"          : "FOOT",
+        "basketball"        : "BASK",
+        "tennis"            : "TENN",
+        "handball"          : "HAND",
+        "rugby"             : "RUGU",
+        "hockey-sur-glace"  : "ICEH"
+    }
+    url = "https://www.enligne.parionssport.fdj.fr/lvs-api/leagues?sport={}".format(sports_alias[sport])
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    content = urllib.request.urlopen(req).read()
+    competitions = json.loads(content)
+    list_odds = []
+    for competition in competitions:
+        for id_competition in competition["items"]:
+            list_odds.append(parse_parionssport_api(id_competition))
+    return merge_dicts(list_odds)
+
 
 def parse_parionssport(url):
     """
-    Retourne les cotes disponibles sur ParionsSport
+    Get ParionsSport odds from url
     """
-    is_sport_page = "paris-" in url.split("/")[-1] and "?" not in url
-    is_basket = False  # "basket" in url
-    selenium_init.DRIVER["parionssport"].get(url)
-    if "maintenance technique" in selenium_init.DRIVER["parionssport"].execute_script(
-            "return document.body.innerHTML"):
-        raise sb.UnavailableSiteException
-    if (selenium_init.DRIVER["parionssport"].current_url
-            == "https://www.enligne.parionssport.fdj.fr/"):
-        raise sb.UnavailableSiteException
-    if (not is_sport_page) and selenium_init.DRIVER["parionssport"].current_url == "/".join(url.split("?")[0].split("/")[:4]):
-        raise sb.UnavailableCompetitionException
-    if is_sport_page:
-        scroll(selenium_init.DRIVER["parionssport"],
-               "parionssport", "wpsel-desc", 5)
-    match_odds_hash = {}
-    urls_basket = []
-    today = datetime.datetime.today()
-    today = datetime.datetime(today.year, today.month, today.day)
-    year = " " + str(today.year)
-    date = ""
-    match = ""
-    date_time = None
-    live = False
-    for _ in range(10):
-        inner_html = selenium_init.DRIVER["parionssport"].execute_script(
-            "return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        for line in soup.findAll():
-            if is_basket:
-                if ("href" in line.attrs and list(line.stripped_strings)
-                        and "+" in list(line.stripped_strings)[0]):
-                    urls_basket.append(
-                        "https://www.enligne.parionssport.fdj.fr" + line["href"])
-            else:
-                if "Nous vous prions de bien vouloir nous en excuser" in line:
-                    raise sb.UnavailableCompetitionException
-                if "class" in line.attrs and "wpsel-titleRubric" in line["class"]:
-                    if line.text.strip() == "aujourd'hui":
-                        date = datetime.date.today().strftime("%A %d %B %Y")
-                    else:
-                        date = line.text.strip().lower() + year
-                if "class" in line.attrs and "wpsel-timerLabel" in line["class"]:
-                    try:
-                        date_time = datetime.datetime.strptime(date + " " + line.text,
-                                                               "%A %d %B %Y À %Hh%M")
-                        if date_time < today:
-                            date_time = date_time.replace(
-                                year=date_time.year + 1)
-                    except ValueError:
-                        date_time = "undefined"
-                if "class" in line.attrs and "wpsel-desc" in line["class"]:
-                    match = line.text.split(" À")[0].strip().replace("  ", " ")
-                if "class" in line.attrs and "tag__stateLive" in line["class"]:
-                    live = True
-                if "class" in line.attrs and "buttonLine" in line["class"]:
-                    if live:
-                        live = False
-                        continue
-                    try:
-                        odds = list(map(lambda x: float(x.replace(",", ".")),
-                                        list(line.stripped_strings)))
-                        match_odds_hash[match] = {}
-                        match_odds_hash[match]['odds'] = {"parionssport": odds}
-                        match_odds_hash[match]['date'] = date_time
-                    except ValueError:
-                        pass
-        if match_odds_hash:
-            return match_odds_hash
-        elif urls_basket:
-            list_odds = []
-            for match_url in urls_basket:
-                if sb.ABORT:
-                    break
-                list_odds.append(parse_match_nba_parionssport(match_url))
-            return merge_dicts(list_odds)
-    return match_odds_hash
-
-
-def parse_match_nba_parionssport(url):
-    """
-    Recupere les cotes d'un match de NBA
-    """
-    selenium_init.DRIVER["parionssport"].get(url)
-    match_odds = {}
-    date_time = "undefined"
-    match = ""
-    today = datetime.datetime.today()
-    today = datetime.datetime(today.year, today.month, today.day)
-    year = " " + str(today.year)
-    for _ in range(10):
-        inner_html = selenium_init.DRIVER["parionssport"].execute_script(
-            "return document.body.innerHTML")
-        soup = BeautifulSoup(inner_html, features="lxml")
-        for line in soup.findAll():
-            if "class" in line.attrs and "header-banner-event-date-section" in line["class"]:
-                date_time = datetime.datetime.strptime(list(line.stripped_strings)[0] + year,
-                                                       "Le %d %B à %H:%M %Y")
-                if date_time < today:
-                    date_time = date_time.replace(year=date_time.year + 1)
-            elif "class" in line.attrs and "headband-eventLabel" in line["class"]:
-                match = list(line.stripped_strings)[0]
-                print("\t" + match)
-            elif "class" in line.attrs and "wpsel-market-detail" in line["class"] and match:
-                strings = list(line.stripped_strings)
-                odds = list(map(lambda x: float(x.replace(",", ".")),
-                                strings[2::2]))
-                match_odds[match] = {"date": date_time,
-                                     "odds": {"parionssport": odds}}
-                return match_odds
-    return match_odds
+    if "parionssport" not in sb.TOKENS:
+        token = get_parionssport_token()
+        sb.TOKENS["parionssport"] = token
+    if "paris-" in url.split("/")[-1] and "?" not in url:
+        sport = url.split("/")[-1].split("paris-")[-1]
+        return parse_sport_parionssport(sport)
+    regex = re.findall(r'\d+', url)
+    if regex:
+        id_league = regex[-1]
+        return parse_parionssport_api("p" + str(id_league))
+    return {}

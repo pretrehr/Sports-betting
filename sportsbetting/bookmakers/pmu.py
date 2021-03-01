@@ -53,12 +53,11 @@ def parse_pmu_html(soup):
             string = "".join(list(line.stripped_strings))
             if "//" in string:
                 try:
-                    live = line.find_parent("a")["data-name"] == "sportif.clic.paris_live.details"
                     is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
                 except TypeError:
                     live = False
                     is_rugby_13 = False
-                if not (live or is_rugby_13):
+                if not is_rugby_13:
                     handicap = False
                     if "+" in string or "Egalité" in string:
                         handicap = True
@@ -69,13 +68,12 @@ def parse_pmu_html(soup):
                         match = match.replace(" // ", " - ")
                         match = match.replace("//", " - ")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
-            if not live:
-                if not handicap:
-                    odds = list(
-                        map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
-                match_odds_hash[match] = {}
-                match_odds_hash[match]['odds'] = {"pmu": odds}
-                match_odds_hash[match]['date'] = date_time
+            if not handicap:
+                odds = list(
+                    map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+            match_odds_hash[match] = {}
+            match_odds_hash[match]['odds'] = {"pmu": odds}
+            match_odds_hash[match]['date'] = date_time
     if not match_odds_hash:
         raise sb.UnavailableCompetitionException
     return match_odds_hash
