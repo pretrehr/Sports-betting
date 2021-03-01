@@ -115,16 +115,17 @@ def parse_competitions(competitions, sport, *sites):
         sb.PROGRESS += 100/len(selenium_sites)
     sb.PROGRESS = 0
     sb.SUB_PROGRESS_LIMIT = len(sites)
-    for competition in competitions:
-        if competition == sport or "Tout le" in competition:
-            import_teams_by_sport(sport)
-        else:
-            id_competition = get_id_from_competition_name(competition, sport)
-            if id_competition < 0:
-                import_teams_by_competition_id_thesportsdb(id_competition)
+    if sb.DB_MANAGEMENT:
+        for competition in competitions:
+            if competition == sport or "Tout le" in competition:
+                import_teams_by_sport(sport)
             else:
-                import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
-                                    + "/a-ed" + str(id_competition))
+                id_competition = get_id_from_competition_name(competition, sport)
+                if id_competition < 0:
+                    import_teams_by_competition_id_thesportsdb(id_competition)
+                else:
+                    import_teams_by_url("http://www.comparateur-de-cotes.fr/comparateur/" + sport
+                                        + "/a-ed" + str(id_competition))
     list_odds = []
     try:
         sb.IS_PARSING = True
@@ -140,21 +141,11 @@ def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
-    match = unidecode.unidecode(match)
-    all_odds = sb.ODDS[sport]
     opponents = match.split('-')
-    for match_name in all_odds:
-        if (opponents[0].lower().strip() in unidecode.unidecode(match_name.split("-")[0].lower())
-                and opponents[1].lower().strip() in unidecode.unidecode(match_name.split("-")[1].lower())):
-            break
-    else:
-        for match_name in all_odds:
-            if (opponents[0].lower().strip() in unidecode.unidecode(match_name.lower())
-                    and opponents[1].lower().strip() in unidecode.unidecode(match_name.lower())):
-                break
-        else:
-            return None, None
-    return match_name, copy.deepcopy(all_odds[match_name])
+    odds_match = sb.ODDS[sport].get(match)
+    if odds_match:
+        return match, copy.deepcopy(odds_match)
+    return None, None
 
 
 def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
