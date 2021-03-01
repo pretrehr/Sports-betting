@@ -7,6 +7,7 @@ import json
 import re
 import urllib
 
+import OpenSSL
 import seleniumwire
 
 import sportsbetting as sb
@@ -146,8 +147,11 @@ def parse_parionssport(url):
     Get ParionsSport odds from url
     """
     if "parionssport" not in sb.TOKENS:
-        token = get_parionssport_token()
-        sb.TOKENS["parionssport"] = token
+        try:
+            token = get_parionssport_token()
+            sb.TOKENS["parionssport"] = token
+        except OpenSSL.crypto.Error:
+            return {}
     if "paris-" in url.split("/")[-1] and "?" not in url:
         sport = url.split("/")[-1].split("paris-")[-1]
         return parse_sport_parionssport(sport)
