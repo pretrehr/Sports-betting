@@ -565,7 +565,7 @@ def get_id_by_opponent_thesportsdb(id_opponent, name_site_match, matches):
                 id_away = -int(event["idAwayTeam"])
                 if id_home == id_opponent:
                     return id_away
-                elif id_away == id_opponent:
+                if id_away == id_opponent:
                     return id_home
     return
 
@@ -588,7 +588,7 @@ def get_time_next_match_thesportsdb(id_competition, id_team):
 def get_time_next_match(id_competition, id_team):
     if id_team < 0:
         return get_time_next_match_thesportsdb(id_competition, id_team)
-    elif id_competition >= 9999:
+    if id_competition >= 9999:
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-td" + str(id_team)
     else:
         url = "http://www.comparateur-de-cotes.fr/comparateur/football/a-ed" + str(id_competition)

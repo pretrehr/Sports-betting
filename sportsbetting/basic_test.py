@@ -54,7 +54,8 @@ def test_parsing_chromedriver():
     sb.selenium_init.DRIVER["joa"].quit()
     sb.TEST = False
     assert len(sb.ODDS) > 0
-    
+
+
 def test_parsing_token():
     """
     :return:Test simple

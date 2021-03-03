@@ -449,12 +449,12 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     print("plus-value =", round(best_gain, 2))
     print()
     print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
-    for combine, mise, cote, site in zip(best_combinaison, stakes, best_cotes, best_sites):
+    for combine, stake, cote, site in zip(best_combinaison, stakes, best_cotes, best_sites):
         names = [opponents_match[i] if i != float("inf") else ""
                  for match, i, opponents_match in zip(matches, combine, opponents)]
         name_combine = " / ".join(x for x in names if x)
         diff = nb_chars - len(name_combine)
-        sites_bet_combinaison = {site:{"mise":round(mise, 2), "cote":round(cote, 2)}, "total":round(round(mise, 2)*cote, 2)}
+        sites_bet_combinaison = {site:{"mise":round(stake, 2), "cote":round(cote, 2)}, "total":round(round(stake, 2)*cote, 2)}
         print(name_combine + " " * diff + "\t", sites_bet_combinaison)
 
 
@@ -631,25 +631,24 @@ def combine_reduit_rec(combi_to_keep, sport):
     n = len(combi_to_keep)
     if n <= 1:
         return [[[i] for i in range(get_nb_outcomes(sport))]]
-    else:
-        out = []
-        for i in range(n):
-            ref_combi = combi_to_keep[:i]+combi_to_keep[i+1:]
-            combines_partiels = combine_reduit_rec(ref_combi, sport)
-            for list_combi in combines_partiels:
-                new_combi = []
-                for combi in list_combi:
-                    if combi != ref_combi:
+    out = []
+    for i in range(n):
+        ref_combi = combi_to_keep[:i]+combi_to_keep[i+1:]
+        combines_partiels = combine_reduit_rec(ref_combi, sport)
+        for list_combi in combines_partiels:
+            new_combi = []
+            for combi in list_combi:
+                if combi != ref_combi:
+                    copy_combi = copy.deepcopy(combi)
+                    copy_combi.insert(i, float("inf"))
+                    new_combi.append(copy_combi)
+                else:
+                    for j in range(get_nb_outcomes(sport)):
                         copy_combi = copy.deepcopy(combi)
-                        copy_combi.insert(i, float("inf"))
+                        copy_combi.insert(i, j)
                         new_combi.append(copy_combi)
-                    else:
-                        for j in range(get_nb_outcomes(sport)):
-                            copy_combi = copy.deepcopy(combi)
-                            copy_combi.insert(i, j)
-                            new_combi.append(copy_combi)
-                out.append(new_combi)
-        return out
+            out.append(new_combi)
+    return out
 
 
 def get_nb_outcomes(sport):

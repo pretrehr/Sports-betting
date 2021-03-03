@@ -670,4 +670,3 @@ def odds_match_surebets_interface(window, values):
         window["MESSAGE_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
     except (IndexError, ValueError) as _:
         pass
-    

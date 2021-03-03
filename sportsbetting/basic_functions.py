@@ -445,16 +445,15 @@ def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
     def aux(mise):
         if mise > 25:
             return 10
-        elif mise > 20:
+        if mise > 20:
             return 8
-        elif mise > 15:
+        if mise > 15:
             return 6
-        elif mise > 10:
+        if mise > 10:
             return 4
-        elif mise > 5:
+        if mise > 5:
             return 2
-        else:
-            return 0
+        return 0
 
     sorted_cotes = sorted(cotes)
     mise_max = 25.01

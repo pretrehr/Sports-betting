@@ -19,7 +19,6 @@ from pprint import pprint
 import numpy as np
 import selenium
 import selenium.common
-import unidecode
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
@@ -111,7 +110,7 @@ def parse_competitions(competitions, sport, *sites):
     sb.PROGRESS = 0
     selenium_sites = sb.SELENIUM_SITES.intersection(sites)
     for site in selenium_sites:
-        selenium_init.start_driver(site)	
+        selenium_init.start_driver(site)
         sb.PROGRESS += 100/len(selenium_sites)
     sb.PROGRESS = 0
     sb.SUB_PROGRESS_LIMIT = len(sites)
@@ -141,7 +140,6 @@ def odds_match(match, sport="football"):
     """
     Retourne les cotes d'un match donné sur tous les sites de l'ARJEL
     """
-    opponents = match.split('-')
     odds_match = sb.ODDS[sport].get(match)
     if odds_match:
         return match, copy.deepcopy(odds_match)
@@ -548,11 +546,8 @@ def best_matches_freebet(main_sites, freebets, sport, *matches):
     nb_freebets = len(freebets)
     all_odds_combine = {}
     combis = list(combinations(all_odds.items(), nb_matches))
-    nb_combis = len(combis)
-    progress = 10
     best_combine = None
-    start = time.time()
-    for i, combine in enumerate(combis):
+    for combine in combis:
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine],
                                                                   freebet=True)
@@ -577,7 +572,6 @@ def best_matches_freebet(main_sites, freebets, sport, *matches):
                 best_rate = defined_bets_temp[0] / np.sum(defined_bets_temp[1])
                 best_combine = combine
                 best_bets = defined_bets_temp
-    #     print("Temps d'exécution =", time.time()-start)
     if best_combine:
         best_match_combine = " / ".join([match[0] for match in best_combine])
         odds_best_match = copy.deepcopy(all_odds_combine[best_match_combine])
@@ -663,7 +657,3 @@ def trj_match(match_odds):
             if tmp_odd > odds[i]:
                 odds[i] = tmp_odd
     return gain(odds)
-    
-            
-            
-            

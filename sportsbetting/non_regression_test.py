@@ -49,6 +49,3 @@ def test_under_condition():
         best_match_under_conditions("parionssport", 1.7, 10, date_min="23/11/2020", date_max="29/11/2020")
     sys.stdout = original_stdout
     assert(are_identical_files(expected, reached))
-    
-    
-

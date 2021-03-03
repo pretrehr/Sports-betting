@@ -38,7 +38,6 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                get_main_competitions_interface,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface)
-import sportsbetting.selenium_init
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.pickle"
 
