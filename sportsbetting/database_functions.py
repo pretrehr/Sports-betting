@@ -705,9 +705,9 @@ def get_all_competitions(sport):
     conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     c.execute("""
-    SELECT competition FROM competitions WHERE sport='{}'
+    SELECT competition FROM competitions WHERE sport='{0}' AND competition<>'Tout le {0}'
     """.format(sport))
-    return sorted(list(map(lambda x: x[0], c.fetchall())))
+    return ["Tout le "+sport]+sorted(list(map(lambda x: x[0], c.fetchall())))
 
 
 def get_all_sports():

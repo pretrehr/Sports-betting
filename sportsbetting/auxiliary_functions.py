@@ -33,6 +33,9 @@ def valid_odds(all_odds, sport):
     n = 2 + (sport not in ["tennis", "volleyball", "basketball"])
     copy_all_odds = copy.deepcopy(all_odds)
     for match in all_odds:
+        if not all_odds[match]["odds"]:
+            del copy_all_odds[match]
+            continue
         for site in all_odds[match]["odds"]:
             if (len(all_odds[match]["odds"][site]) != n
                     or (all_odds[match]["date"] and all_odds[match]["date"] < datetime.datetime.today())):
