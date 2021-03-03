@@ -82,7 +82,7 @@ except urllib.error.URLError:
     sys.exit()
 print(PATH_DRIVER)
 
-PATH_DB = find_files("teams.db", "sportsbetting")
+PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
 print(PATH_DB)
 
-PATH_TOKENS = find_files("tokens.txt", "sportsbetting")
+PATH_TOKENS = os.path.dirname(__file__) + "/bookmakers/tokens.txt"

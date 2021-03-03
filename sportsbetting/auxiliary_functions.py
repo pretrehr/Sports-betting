@@ -134,11 +134,6 @@ def adapt_names(odds, site, sport, competition):
         while ans not in ["n", "No"]:
             try:
                 add_matches_to_db(odds, sport, site, id_competition)
-                for match in odds:
-                    new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
-                                                    match.split(" - "))))
-                    if "UNKNOWN TEAM/PLAYER" not in new_match:
-                        new_dict[new_match] = odds[match]
                 break
             except sqlite3.OperationalError:
                 if sb.INTERFACE:
@@ -148,6 +143,11 @@ def adapt_names(odds, site, sport, competition):
                     ans = input("Database is locked, try again ? (y/n)")
                 else:
                     ans = "No"
+    for match in odds:
+        new_match = " - ".join(list(map(lambda x: get_formatted_name(x.strip(), site, sport),
+                                        match.split(" - "))))
+        if "UNKNOWN TEAM/PLAYER" not in new_match:
+            new_dict[new_match] = odds[match]
     return new_dict
 
 

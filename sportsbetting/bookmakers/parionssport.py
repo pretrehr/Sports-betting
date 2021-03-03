@@ -4,6 +4,7 @@ ParionsSport odds scraper
 
 import datetime
 import json
+import os
 import re
 import urllib
 
@@ -19,12 +20,14 @@ def get_parionssport_token():
     Get ParionsSport token to access the API
     """
     token = ""
-    with open(sb.PATH_TOKENS, "r") as file:
-        lines = file.readlines()
-        for line in lines:
-            bookmaker, token = line.split()
-            if bookmaker == "parionssport":
-                return token
+    if os.path.exists(sb.PATH_TOKENS):
+        with open(sb.PATH_TOKENS, "r") as file:
+            lines = file.readlines()
+            for line in lines:
+                bookmaker, token = line.split()
+                if bookmaker == "parionssport":
+                    return token
+    print("Récupération du token de connexion de Parions Sport")
     options = seleniumwire.webdriver.ChromeOptions()
     prefs = {'profile.managed_default_content_settings.images': 2,
              'disk-cache-size': 4096}
@@ -39,7 +42,7 @@ def get_parionssport_token():
         if request.response:
             token = request.headers.get("X-LVS-HSToken")
             if token:
-                with open(sb.PATH_TOKENS, "a") as file:
+                with open(sb.PATH_TOKENS, "a+") as file:
                     file.write("parionssport {}\n".format(token))
                 break
     driver.quit()

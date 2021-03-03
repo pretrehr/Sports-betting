@@ -4,6 +4,7 @@ Bwin odds scraper
 
 import datetime
 import json
+import os
 import re
 import urllib
 
@@ -20,12 +21,14 @@ def get_bwin_token():
     Get Bwin token to access the API
     """
     token = ""
-    with open(sb.PATH_TOKENS, "r") as file:
-        lines = file.readlines()
-        for line in lines:
-            bookmaker, token = line.split()
-            if bookmaker == "bwin":
-                return token
+    if os.path.exists(sb.PATH_TOKENS):
+        with open(sb.PATH_TOKENS, "r") as file:
+            lines = file.readlines()
+            for line in lines:
+                bookmaker, token = line.split()
+                if bookmaker == "bwin":
+                    return token
+    print("Récupération du token de connexion de Bwin")
     options = seleniumwire.webdriver.ChromeOptions()
     prefs = {'profile.managed_default_content_settings.images': 2,
              'disk-cache-size': 4096}
@@ -39,7 +42,7 @@ def get_bwin_token():
     for request in driver.requests:
         if request.response and "x-bwin-accessid=" in request.url:
             token = request.url.split("x-bwin-accessid=")[1].split("&")[0]
-            with open(sb.PATH_TOKENS, "a") as file:
+            with open(sb.PATH_TOKENS, "a+") as file:
                 file.write("bwin {}\n".format(token))
             break
     driver.quit()
