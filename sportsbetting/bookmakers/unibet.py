@@ -10,12 +10,16 @@ def get_id_league(url):
     """
     Get league id from url
     """
+    if "https://www.unibet.fr" not in url:
+        return None, None
     public_url = url.split("https://www.unibet.fr")[1]
     request_url = "https://www.unibet.fr/zones/navigation.json?publicUrl="+public_url
     content = urllib.request.urlopen(request_url).read()
     parsed = json.loads(content)
     sport = public_url.split("/")[2]
-    return parsed["requestData"]["nodeId"], sport
+    if parsed["requestData"]:
+        return parsed["requestData"].get("nodeId"), sport
+    return None, None
 
 
 def parse_unibet_api(id_league, sport):
@@ -59,4 +63,7 @@ def parse_unibet(url):
     Get Unibet odds from url
     """
     id_league, sport = get_id_league(url)
-    return parse_unibet_api(id_league, sport)
+    if id_league:
+        return parse_unibet_api(id_league, sport)
+    print("Wrong unibet url")
+    return {}
