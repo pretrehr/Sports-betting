@@ -16,6 +16,26 @@ from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import merge_dicts
 
 
+COOKIES_ACCEPTED = False
+
+
+def accept_cookies_joa():
+    """
+    Accept cookies on JOA
+    """
+    try:
+        cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
+            EC.element_to_be_clickable(
+                (By.CLASS_NAME, "cc-cookie-accept")) or sb.ABORT
+        )
+        if sb.ABORT:
+            raise sb.AbortException
+        cookies.click()
+    except selenium.common.exceptions.TimeoutException:
+        pass
+    COOKIES_ACCEPTED = True
+    
+
 def parse_joa(url):
     """
     Retourne les cotes disponibles sur joa
@@ -23,6 +43,8 @@ def parse_joa(url):
     if "sport/sport" in url:
         return parse_joa_sport(url)
     selenium_init.DRIVER["joa"].get(url)
+    if not COOKIES_ACCEPTED:
+        accept_cookies_joa()
     match_odds_hash = {}
     try:
         WebDriverWait(selenium_init.DRIVER["joa"], 30).until(
@@ -75,14 +97,9 @@ def parse_joa_sport(url):
     """
     selenium_init.DRIVER["joa"].maximize_window()
     selenium_init.DRIVER["joa"].get(url)
+    if not COOKIES_ACCEPTED:
+        accept_cookies_joa()
     list_odds = []
-    cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
-        EC.element_to_be_clickable(
-            (By.CLASS_NAME, "cc-cookie-accept")) or sb.ABORT
-    )
-    if sb.ABORT:
-        raise sb.AbortException
-    cookies.click()
     try:
         filtres = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
             EC.presence_of_all_elements_located(
@@ -116,6 +133,8 @@ def parse_joa_sport(url):
                     raise sb.AbortException
                 show_more.find_element_by_tag_name("button").click()
             except selenium.common.exceptions.TimeoutException:
+                break
+            except selenium.common.exceptions.WebDriverException:
                 break
         inner_html = selenium_init.DRIVER["joa"].execute_script(
             "return document.body.innerHTML")

@@ -172,7 +172,8 @@ def merge_dict_odds(dict_odds):
     new_dict = {}
     all_keys = set()
     for odds in dict_odds:
-        all_keys = all_keys.union(odds.keys())
+        if odds:
+            all_keys = all_keys.union(odds.keys())
     for match in all_keys:
         new_dict[match] = {}
         new_dict[match]["odds"] = {}
