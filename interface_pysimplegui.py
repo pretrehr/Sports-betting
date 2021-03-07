@@ -9,7 +9,6 @@ Interface
 import collections
 import queue
 import threading
-import pickle
 import os
 import sys
 import time
@@ -20,7 +19,7 @@ import PySimpleGUI as sg
 import colorama
 import termcolor
 import sportsbetting as sb
-from sportsbetting.auxiliary_functions import get_nb_outcomes
+from sportsbetting.auxiliary_functions import get_nb_outcomes, load_odds, save_odds
 from sportsbetting.database_functions import get_all_competitions
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.interface_functions import (odds_table_combine,
@@ -39,7 +38,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface)
 
-PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.pickle"
+PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
 print(r"""
    _____                  __             __         __  __  _            
@@ -51,7 +50,7 @@ print(r"""
 """)
 
 try:
-    sb.ODDS = pickle.load(open(PATH_DATA, "rb"))
+    sb.ODDS = load_odds(PATH_DATA)
 except FileNotFoundError:
     pass
 
@@ -493,7 +492,7 @@ while True:
     event, values = window.read(timeout=100)
     try:
         if sb.ABORT or not thread.is_alive():
-            pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
+            save_odds(sb.ODDS, PATH_DATA)
             window['PROGRESS_PARSING'].update(0, 100, visible=False)
             window["TEXT_PARSING"].update(visible=sb.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
@@ -669,7 +668,7 @@ while True:
             visible_freebets -= 1
             window["SITE_FREEBETS_" + str(visible_freebets)].update(visible=False)
             window["STAKE_FREEBETS_" + str(visible_freebets)].update(visible=False)
-    elif values.get("MATCHES_FREEBETS") != matches_freebets:
+    elif values and values.get("MATCHES_FREEBETS") != matches_freebets:
         matches_freebets = values["MATCHES_FREEBETS"]
         matches = sorted(list(sb.ODDS["football"])) if matches_freebets else []
         window["MATCH_FREEBETS_0"].update(visible=matches_freebets, values=matches)
@@ -689,10 +688,10 @@ while True:
         odds_match_interface(window, values)
     elif event == "DELETE_SITE_ODDS":
         delete_site_interface(window, values)
-        pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
+        save_odds(sb.ODDS, PATH_DATA)
     elif event == "DELETE_MATCH_ODDS":
         delete_odds_interface(window, values)
-        pickle.dump(sb.ODDS, open(PATH_DATA, "wb"))
+        save_odds(sb.ODDS, PATH_DATA)
     elif event == "ADD_COMBI_OPT":
         sport = ""
         if values["SPORT_COMBI_OPT"]:

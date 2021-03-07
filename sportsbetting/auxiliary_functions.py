@@ -8,9 +8,12 @@ from pprint import pprint
 import datetime
 import copy
 import itertools
+import json
 import math
 import time
 import sqlite3
+
+import dateutil.parser
 
 import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -687,3 +690,23 @@ def reverse_match_odds(match, odds):
     match = " - ".join(reversed(match.split(" - ")))
     odds.reverse()
     return match, odds
+
+def load_odds(path):
+    with open(path) as file:
+        try:
+            odds = json.load(file)
+        except json.decoder.JSONDecodeError:
+            return {}
+    for sport in odds:
+        for match in odds[sport]:
+            odds[sport][match]["date"] = dateutil.parser.isoparse(odds[sport][match]["date"])
+    return odds
+
+def save_odds(odds, path):
+    saved_odds = copy.deepcopy(odds)
+    for sport in saved_odds:
+        for match in saved_odds[sport]:
+            saved_odds[sport][match]["date"] = saved_odds[sport][match]["date"].isoformat()
+    with open(path, "w") as file:
+        odds = json.dump(saved_odds, file, indent=2)
+

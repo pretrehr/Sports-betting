@@ -1,8 +1,8 @@
 import difflib
 import os
-import pickle
 import sportsbetting as sb
 import sys
+from sportsbetting.auxiliary_functions import load_odds
 from sportsbetting.user_functions import best_match_under_conditions
 
 def are_identical_files(filename1, filename2):
@@ -23,8 +23,8 @@ def are_identical_files(filename1, filename2):
     
 
 def test_under_condition():
-    PATH_DATA_TEST = os.path.dirname(sb.__file__) + "/resources/data_test.pickle"
-    sb.ODDS = pickle.load(open(PATH_DATA_TEST, "rb"))
+    PATH_DATA_TEST = os.path.dirname(sb.__file__) + "/resources/data_test.json"
+    sb.ODDS = load_odds(PATH_DATA_TEST)
     original_stdout = sys.stdout
     reached = os.path.dirname(sb.__file__) + "/tests/result_under_condition_1_reached.txt"
     expected = os.path.dirname(sb.__file__) + "/tests/result_under_condition_1_expected.txt"
