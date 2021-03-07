@@ -77,7 +77,7 @@ def get_odds_from_league_json(parsed_league):
         reversed_odds = competition["teams_reversed"]
         games = competition["game"]
         for game in games.values():
-            if game["is_started"]:
+            if "is_started" in game and game["is_started"]:
                 continue
             name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
             date = datetime.datetime.fromtimestamp(game["start_ts"])

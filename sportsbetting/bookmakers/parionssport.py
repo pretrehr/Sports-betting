@@ -161,5 +161,8 @@ def parse_parionssport(url):
     regex = re.findall(r'\d+', url)
     if regex:
         id_league = regex[-1]
-        return parse_parionssport_api("p" + str(id_league))
+        try:
+            return parse_parionssport_api("p" + str(id_league))
+        except TypeError:
+            return {}
     return {}
