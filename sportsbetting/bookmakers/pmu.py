@@ -112,18 +112,18 @@ def parse_sport_pmu(sport):
     Retourne les cotes disponibles sur pmu pour un sport donné
     """
     list_odds = []
-    id_sport = {"football": 8, "tennis": 11, "rugby": 7,
-                "hockey-sur-glace": 44, "basketball": 5}
+    id_sport = {"football": [8], "tennis": [11], "rugby": [7],
+                "hockey-sur-glace": [40, 44], "basketball": [5, 37]}
     i = 0
-    _id = id_sport[sport]
-    while True:
-        url = "https://paris-sportifs.pmu.fr/pservices/more_events/{0}/{1}/pmu-event-list-load-more-{0}".format(_id, i)
-        response = urllib.request.urlopen(url)
-        data = json.loads(response.read())
-        soup = BeautifulSoup(data[1]["html"], features="lxml")
-        try:
-            list_odds.append(parse_pmu_html(soup))
-            i += 1
-        except sb.UnavailableCompetitionException:
-            break
+    for _id in id_sport[sport]:
+        while True:
+            url = "https://paris-sportifs.pmu.fr/pservices/more_events/{0}/{1}/pmu-event-list-load-more-{0}".format(_id, i)
+            response = urllib.request.urlopen(url)
+            data = json.loads(response.read())
+            soup = BeautifulSoup(data[1]["html"], features="lxml")
+            try:
+                list_odds.append(parse_pmu_html(soup))
+                i += 1
+            except sb.UnavailableCompetitionException:
+                break
     return merge_dicts(list_odds)
