@@ -23,6 +23,7 @@ def accept_cookies_joa():
     """
     Accept cookies on JOA
     """
+    global COOKIES_ACCEPTED
     try:
         cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
             EC.element_to_be_clickable(
@@ -40,6 +41,7 @@ def parse_joa(url):
     """
     Retourne les cotes disponibles sur joa
     """
+    global COOKIES_ACCEPTED
     if "sport/sport" in url:
         return parse_joa_sport(url)
     selenium_init.DRIVER["joa"].get(url)
@@ -95,6 +97,7 @@ def parse_joa_sport(url):
     """
     Retourne les cotes disponibles sur joa pour un sport donné
     """
+    global COOKIES_ACCEPTED
     selenium_init.DRIVER["joa"].maximize_window()
     selenium_init.DRIVER["joa"].get(url)
     if not COOKIES_ACCEPTED:

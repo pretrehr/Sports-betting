@@ -31,9 +31,9 @@ def parse_betstars_api(id_league):
         name_away = ""
         for participant in participants["participant"]:
             if participant["type"] == "AWAY":
-                name_away = participant["names"]["longName"]
+                name_away = participant["names"]["longName"].replace("&apos;", "'")
             elif participant["type"] == "HOME":
-                name_home = participant["names"]["longName"]
+                name_home = participant["names"]["longName"].replace("&apos;", "'")
         name = name_home + " - " + name_away
         date = datetime.datetime.fromtimestamp(match["eventTime"]/1000)
         markets = match["markets"]

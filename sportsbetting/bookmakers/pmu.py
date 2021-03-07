@@ -58,19 +58,21 @@ def parse_pmu_html(soup):
                     is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
                 except TypeError:
                     is_rugby_13 = False
-                if not is_rugby_13:
-                    handicap = False
-                    if "+" in string or "Egalité" in string:
-                        handicap = True
-                        match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                           + line.parent["href"])
-                    else:
-                        match = string.replace(" - ", "-")
-                        match = match.replace(" // ", " - ")
-                        match = match.replace("//", " - ")
+                if is_rugby_13 or live:
+                    continue
+                handicap = False
+                if "+" in string or "Egalité" in string:
+                    handicap = True
+                    match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
+                                                        + line.parent["href"])
+                else:
+                    match = string.replace(" - ", "-")
+                    match = match.replace(" // ", " - ")
+                    match = match.replace("//", " - ")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
-            if live:
+            if live or is_rugby_13:
                 live = False
+                is_rugby_13 = False
                 continue
             if not handicap:
                 odds = list(

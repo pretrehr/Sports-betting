@@ -62,6 +62,8 @@ def add_matches_to_db(odds, sport, site, id_competition):
     i = 0
     teams_sets.append(set())
     for team in teams:
+        if not team:
+            continue
         not_matching_teams[team] = []
         line = is_in_db_site(team, sport, site)
         if not line:
@@ -708,5 +710,5 @@ def save_odds(odds, path):
         for match in saved_odds[sport]:
             saved_odds[sport][match]["date"] = saved_odds[sport][match]["date"].isoformat()
     with open(path, "w") as file:
-        odds = json.dump(saved_odds, file, indent=2)
+        json.dump(saved_odds, file, indent=2)
 
