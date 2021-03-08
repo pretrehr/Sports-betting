@@ -648,12 +648,16 @@ def best_combine_booste(matches, combinaison_boostee, site_combinaison, mise, sp
 
 def trj_match(match_odds):
     odds = []
+    bookmakers = []
     for bookmaker in match_odds["odds"]:
         tmp_odds = match_odds["odds"][bookmaker]
+        tmp_bookmakers = [bookmaker for _ in tmp_odds]
         if not odds:
             odds = copy.deepcopy(tmp_odds)
+            bookmakers = copy.deepcopy(tmp_bookmakers)
             continue
         for i, tmp_odd in enumerate(tmp_odds):
             if tmp_odd > odds[i]:
                 odds[i] = tmp_odd
-    return gain(odds)
+                bookmakers[i] = bookmaker
+    return gain(odds), bookmakers, odds

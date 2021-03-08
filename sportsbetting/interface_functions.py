@@ -628,9 +628,9 @@ def find_surebets_interface(window, values):
     sport = values["SPORT_SUREBETS"][0]
     trj_min = float(values["TRJ_SUREBETS"])/100
     for match in sb.ODDS[sport]:
-        if trj_match(sb.ODDS[sport][match]) >= trj_min:
+        if trj_match(sb.ODDS[sport][match])[0] >= trj_min:
             matches.append(match)
-    matches.sort(key=lambda x :trj_match(sb.ODDS[sport][x]), reverse=True)
+    matches.sort(key=lambda x :trj_match(sb.ODDS[sport][x])[0], reverse=True)
     window["MATCHES_SUREBETS"].update(matches)
     if not matches:
         window["MESSAGE_SUREBETS"].update("Aucun surebet trouvé")
@@ -666,7 +666,8 @@ def odds_match_surebets_interface(window, values):
         else:
             window["DATE_SUREBETS"].update(visible=False)
         window["MATCH_SUREBETS"].update(match, visible=True)
-        trj = trj_match(sb.ODDS[sport][match])
-        window["MESSAGE_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
+        trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
+        window["INFOS_TRJ_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
+        window["INFOS_ODDS_SUREBETS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
     except (IndexError, ValueError) as _:
         pass

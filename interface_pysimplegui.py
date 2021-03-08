@@ -99,14 +99,14 @@ options_under_condition = [[sg.Text("Options")],
                                          key="DATE_MAX_UNDER_CONDITION"),
                             sg.InputText(tooltip="HH:MM", size=(7, 1),
                                          key="TIME_MAX_UNDER_CONDITION")],
-                           [sg.Checkbox("Mise à répartir sur toutes plusieurs issues d'un même match",
+                           [sg.Checkbox("Mise à répartir sur plusieurs issues d'un même match",
                                         key="ONE_SITE_UNDER_CONDITION")]]
-column_indicators_under_condition = [[sg.Text("", size=(15, 1),
+column_indicators_under_condition = [[sg.Text("", size=(18, 1),
                                               key="INDICATORS_UNDER_CONDITION" + str(_),
-                                              visible=False)] for _ in range(5)]
+                                              visible=False)] for _ in range(6)]
 column_results_under_condition = [[sg.Text("", size=(30, 1),
                                            key="RESULTS_UNDER_CONDITION" + str(_),
-                                           visible=False)] for _ in range(5)]
+                                           visible=False)] for _ in range(6)]
 match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_UNDER_CONDITION"),
                                  sg.Column(column_under_condition),
                                  sg.Column(options_under_condition)],
@@ -154,7 +154,7 @@ stake_layout = [
      sg.Column(column_results_stake)]
 ]
 
-column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1))],
+column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1)), sg.Checkbox("Fractionnable", key='SPLIT_FREEBET')],
                   [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_FREEBET")]]
 column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET" + str(_),
                                       visible=False)] for _ in range(5)]
@@ -447,6 +447,8 @@ surebets_layout = [
                    ]),
         sg.Listbox([], size=(40, 12), key="MATCHES_SUREBETS", enable_events=True),
         sg.Col([[sg.Text("", size=(30, 1), key="MATCH_SUREBETS", visible=False)],
+                [sg.Text("", size=(30, 1), key="INFOS_TRJ_SUREBETS")],
+                [sg.Text("", size=(50, 1), key="INFOS_ODDS_SUREBETS")],
                 [sg.Text("", size=(30, 1), key="DATE_SUREBETS", visible=False)],
                 [sg.Table([["parionssport", "0000", "0000", "0000"]],
                             headings=["Cotes", "1", "N", "2"], key="ODDS_SUREBETS", visible=False,
