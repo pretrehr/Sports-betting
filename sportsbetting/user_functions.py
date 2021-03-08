@@ -101,8 +101,8 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['joa', 'pmu', 'betclic', 'pasinobet', 'betstars', 'unibet',
-                   'zebet','france_pari','winamax', 'bwin', 'parionssport', 'netbet']
+    sites_order = ['joa', 'pmu', 'pasinobet', 'france_pari', 'netbet', 'zebet', 
+                   'winamax', 'betclic', 'betstars', 'unibet', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -604,7 +604,7 @@ def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
     odds_function = lambda best_odds, odds_site, i: cotes_freebet(odds_site)
     profit_function = lambda odds_to_check, i: gain(odds_to_check, freebet) - freebet
     criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
-    display_function = lambda best_overall_odds, best_rank: mises(best_overall_odds, freebet, True)
+    display_function = lambda best_overall_odds, best_rank: mises(best_overall_odds, freebet, True, True)
     result_function = lambda best_overall_odds, best_rank: mises(best_overall_odds, freebet, False)
     best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport, date_max, time_max, date_min,

@@ -34,7 +34,7 @@ def gain2(cotes, i, mise=1):
     return cotes[i] * mise - sum(mises2(cotes, mise, i))
 
 
-def mises(cotes, mise=1, output=False):
+def mises(cotes, mise=1, output=False, freebet_display=False):
     """
     :param cotes: Cotes au format décimal
     :type cotes: list[float]
@@ -48,6 +48,13 @@ def mises(cotes, mise=1, output=False):
     mises_reelles = list(map(lambda x: gains / x, cotes))
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
+        if freebet_display:
+            print("gain sur freebet =", round(gains + mise - sum(mis), 2))
+            print("gain sur freebet / mise freebet =", round(gains + mise - sum(mis), 2) / mise)
+            print("gain =", round(gains, 2))
+            print("mise totale =", round(sum(mis), 2))
+            print("mises arrondies =", mis)
+            return
         print("taux de retour au joueur =", round(gain(cotes)*100, 2), "%")
         print("somme des mises =", round(sum(mis), 2))
         print("gain min =", min([round(mis[i] * cotes[i], 2)

@@ -20,7 +20,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_matches_freebet, best_matches_combine,
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match,
-                                          best_combine_booste, trj_match)
+                                          best_combine_booste, trj_match, best_matches_freebet_one_site)
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -225,9 +225,13 @@ def best_match_freebet_interface(window, values):
         site = values["SITE_FREEBET"][0]
         freebet = float(values["BET_FREEBET"])
         sport = values["SPORT_FREEBET"][0]
+        split_freebet = values["SPLIT_FREEBET"]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
-        best_match_freebet(site, freebet, sport)
+        if split_freebet:
+            best_matches_freebet_one_site(site, freebet, sport)
+        else:
+            best_match_freebet(site, freebet, sport)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)
@@ -243,7 +247,7 @@ def best_match_freebet_interface(window, values):
         else:
             window["MATCH_FREEBET"].update(match)
             window["DATE_FREEBET"].update(date)
-            window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=True)
+            window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=not split_freebet)
             window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
             window["TEXT_FREEBET"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
@@ -410,20 +414,26 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     """
     freebets_list = []
     for i in range(visible_freebets):
-        freebets_list.append([float(values["STAKE_FREEBETS_" + str(i)]),
-                              values["SITE_FREEBETS_" + str(i)]])
+        try:
+            freebets_list.append([float(values["STAKE_FREEBETS_" + str(i)]),
+                                values["SITE_FREEBETS_" + str(i)]])
+        except ValueError:
+            pass
     sites = values["SITES_FREEBETS"]
     match0 = values["MATCH_FREEBETS_0"]
     match1 = values["MATCH_FREEBETS_1"]
+    match, date = None, None
     old_stdout = sys.stdout  # Memorize the default stdout stream
     sys.stdout = buffer = io.StringIO()
-    if match0 and match1:
-        best_matches_freebet(sites, freebets_list, "football", match0, match1)
-    else:
-        best_matches_freebet(sites, freebets_list, "football")
-    sys.stdout = old_stdout  # Put the old stream back in place
-    what_was_printed = buffer.getvalue()
-    match, date = infos(what_was_printed)
+    what_was_printed = ""
+    if sites and freebets_list:
+        if match0 and match1:
+            best_matches_freebet(sites, freebets_list, "football", match0, match1)
+        else:
+            best_matches_freebet(sites, freebets_list, "football")
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()
+        match, date = infos(what_was_printed)
     if match is None:
         window["MATCH_FREEBETS"].update("Aucun match trouvé")
         window["DATE_FREEBETS"].update("")
