@@ -16,14 +16,10 @@ from sportsbetting import selenium_init
 from sportsbetting.auxiliary_functions import merge_dicts
 
 
-COOKIES_ACCEPTED = False
-
-
 def accept_cookies_joa():
     """
     Accept cookies on JOA
     """
-    global COOKIES_ACCEPTED
     try:
         cookies = WebDriverWait(selenium_init.DRIVER["joa"], 15).until(
             EC.element_to_be_clickable(
@@ -34,18 +30,17 @@ def accept_cookies_joa():
         cookies.click()
     except selenium.common.exceptions.TimeoutException:
         pass
-    COOKIES_ACCEPTED = True
-    
+    sb.COOKIES_JOA_ACCEPTED = True
+
 
 def parse_joa(url):
     """
     Retourne les cotes disponibles sur joa
     """
-    global COOKIES_ACCEPTED
     if "sport/sport" in url:
         return parse_joa_sport(url)
     selenium_init.DRIVER["joa"].get(url)
-    if not COOKIES_ACCEPTED:
+    if not sb.COOKIES_JOA_ACCEPTED:
         accept_cookies_joa()
     match_odds_hash = {}
     try:
@@ -97,10 +92,9 @@ def parse_joa_sport(url):
     """
     Retourne les cotes disponibles sur joa pour un sport donné
     """
-    global COOKIES_ACCEPTED
     selenium_init.DRIVER["joa"].maximize_window()
     selenium_init.DRIVER["joa"].get(url)
-    if not COOKIES_ACCEPTED:
+    if not sb.COOKIES_JOA_ACCEPTED:
         accept_cookies_joa()
     list_odds = []
     try:

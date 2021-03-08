@@ -32,6 +32,7 @@ BOOKMAKERS = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "pa
 TEST = False
 DB_MANAGEMENT = False
 TOKENS = {}
+COOKIES_JOA_ACCEPTED = False
 
 
 class UnavailableCompetitionException(Exception):
