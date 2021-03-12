@@ -6,7 +6,6 @@ Fonctions principales d'assistant de paris
 import copy
 import socket
 import sys
-import time
 import traceback
 import urllib
 import urllib.error
@@ -101,7 +100,7 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['joa', 'pmu', 'pasinobet', 'france_pari', 'netbet', 'zebet', 
+    sites_order = ['joa', 'pmu', 'pasinobet', 'france_pari', 'netbet', 'zebet',
                    'winamax', 'betclic', 'betstars', 'unibet', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
@@ -432,7 +431,7 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
                                                                    rate_cashback, False)
     best_match_base(odds_function, profit_function, criteria, display_function,
                     return_function, site, sport, date_max, time_max, date_min,
-                    time_min, True, nb_matches)
+                    time_min, True, nb_matches, combine_opt=True, taux_cashback=rate_cashback, cashback_freebet=freebet)
 
 
 def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=None, time_max=None, identical_stakes=False):

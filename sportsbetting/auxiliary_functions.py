@@ -24,7 +24,8 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
-from sportsbetting.basic_functions import cotes_combine, cotes_freebet, mises2, mises, gain2
+from sportsbetting.basic_functions import (cotes_combine, cotes_freebet, mises2, mises, gain2,
+                                           gain_pari_rembourse_si_perdant, mises_pari_rembourse_si_perdant)
 
 
 def valid_odds(all_odds, sport):
@@ -385,7 +386,8 @@ def get_future_opponents(name, matches):
                 pass
     return future_opponents, future_matches
 
-def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee=0):
+def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee=0, taux_cashback=0,
+                        cashback_freebet=True):
     def get_odd(combinaison, matches, site_combinaison=None):
         sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
                  'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
@@ -404,7 +406,6 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             if odd > best_odd:
                 best_odd = odd
                 best_site = site
-#         print(best_odd, best_site)
         return best_odd, best_site
     odds = {}
     for match in matches:
@@ -429,7 +430,11 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
                 res = get_odd(combinaison, matches)
                 cotes.append(res[0])
                 sites.append(res[1])
-        new_gain = gain2(cotes, i_boost, mise)
+        if not taux_cashback:
+            new_gain = gain2(cotes, i_boost, mise)
+        else:
+            new_gain = gain_pari_rembourse_si_perdant(cotes, mise, i_boost, cashback_freebet,
+                                                      taux_cashback)
         if new_gain > best_gain:
             best_cotes = cotes
             best_sites = sites
@@ -438,7 +443,11 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             best_i = i_boost
     matches_name = " / ".join(matches)
     print(matches_name)
-    stakes = mises2(best_cotes, mise, best_i)
+    if not taux_cashback:
+        stakes = mises2(best_cotes, mise, best_i)
+    else:
+        stakes = mises_pari_rembourse_si_perdant(best_cotes, mise, best_i, cashback_freebet,
+                                                 taux_cashback)
     opponents = []
     for match in matches:
         opponents_match = match.split(" - ")
@@ -477,7 +486,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                     result_function, site, sport="football", date_max=None,
                     time_max=None, date_min=None, time_min=None, combine=False,
                     nb_matches_combine=2, freebet=False, one_site=False, recalcul=False,
-                    combine_opt=False):
+                    combine_opt=False, taux_cashback=0, cashback_freebet=True):
     """
     Fonction de base de détermination du meilleur match sur lequel parier en
     fonction de critères donnés
@@ -540,7 +549,8 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
             for _ in range(nb_matches_combine - n_combi):
                 ref_combinaison.append(0)
             stakes = result_function(best_overall_odds, best_rank)
-            best_combine_reduit(best_match.split(" / "), list(reversed(ref_combinaison)), site, stakes[best_rank], sport)
+            best_combine_reduit(best_match.split(" / "), list(reversed(ref_combinaison)), site, stakes[best_rank], sport,
+                                0, taux_cashback, cashback_freebet)
         else:
             print(best_match)
             pprint(all_odds[best_match], compact=True)

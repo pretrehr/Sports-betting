@@ -134,9 +134,9 @@ column_fields_stake = [[sg.InputText(key='BET_STAKE', size=(6, 1))],
 column_stake = [[sg.Column(column_text_stake), sg.Column(column_fields_stake)],
                 [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_STAKE", enable_events=True)]]
 column_indicators_stake = [[sg.Text("", size=(15, 1), key="INDICATORS_STAKE" + str(_),
-                                    visible=False)] for _ in range(5)]
+                                    visible=False)] for _ in range(6)]
 column_results_stake = [[sg.Text("", size=(30, 1), key="RESULTS_STAKE" + str(_),
-                                 visible=False)] for _ in range(5)]
+                                 visible=False)] for _ in range(6)]
 stake_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_STAKE"),
      sg.Column(column_stake),
@@ -196,7 +196,9 @@ options_cashback = [
      sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MIN_CASHBACK")],
     [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_CASHBACK_BOOL"),
      sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_CASHBACK"),
-     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_CASHBACK")]
+     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_CASHBACK")],
+    [sg.Text("Nombre de matches combinés"),
+     sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_CASHBACK")],
 ]
 column_indicators_cashback = [[sg.Text("", size=(15, 1), key="INDICATORS_CASHBACK" + str(_),
                                        visible=False)] for _ in range(5)]

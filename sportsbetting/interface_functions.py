@@ -19,7 +19,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_match_freebet, best_stakes_match,
                                           best_matches_freebet, best_matches_combine,
                                           best_match_cashback, best_match_stakes_to_bet,
-                                          best_match_pari_gagnant, odds_match,
+                                          best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
                                           best_combine_booste, trj_match, best_matches_freebet_one_site)
 
 WHAT_WAS_PRINTED_COMBINE = ""
@@ -277,6 +277,7 @@ def best_match_cashback_interface(window, values):
         combi_max = float(values["COMBI_MAX_CASHBACK"]) / 100
         combi_odd = float(values["COMBI_ODD_CASHBACK"])
         rate_cashback = float(values["RATE_CASHBACK"]) / 100
+        nb_matches_combine = values["NB_MATCHES_CASHBACK"]
         date_min, time_min, date_max, time_max = None, None, None, None
         if values["DATE_MIN_CASHBACK_BOOL"]:
             date_min = values["DATE_MIN_CASHBACK"]
@@ -286,8 +287,13 @@ def best_match_cashback_interface(window, values):
             time_max = values["TIME_MAX_CASHBACK"].replace(":", "h")
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
-        best_match_cashback(site, minimum_odd, bet, sport, freebet, combi_max, combi_odd,
-                            rate_cashback, date_max, time_max, date_min, time_min)
+        if nb_matches_combine == 1:
+            best_match_cashback(site, minimum_odd, bet, sport, freebet, combi_max, combi_odd,
+                                rate_cashback, date_max, time_max, date_min, time_min)
+        else:
+            best_matches_combine_cashback(site, minimum_odd, bet, sport, freebet, combi_max,
+                                          rate_cashback, nb_matches_combine, date_max, time_max,
+                                          date_min, time_min)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)

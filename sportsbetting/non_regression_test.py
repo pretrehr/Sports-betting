@@ -17,7 +17,6 @@ def are_identical_files(filename1, filename2):
     diffs = list(difflib.unified_diff(lines1, lines2))
     if not diffs:
         return True
-    
     print(diffs)
     return False
     
