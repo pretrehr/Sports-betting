@@ -655,12 +655,12 @@ def get_double_team_tennis(team, sport, site, only_null=False):
             separator_team = "-"
     elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
-    else:  # if site in ["betstars"]:
+    else:  # if site in ["pokerstars"]:
         separator_team = " & "
     results = []
     if separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
-        if site in ["betstars", "pasinobet", "pmu"]:
+        if site in ["pokerstars", "pasinobet", "pmu"]:
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
         elif site in ["netbet", "france_pari", "winamax"]:
             players = list(map(lambda x: x.split(".")[-1], complete_names))
@@ -853,7 +853,7 @@ def is_id_consistent(_id):
     """.format(_id))
     results = c.fetchall()
     n = len(results)
-    list_sites = ["betclic", "betstars", "bwin", "france_pari", "joa", "netbet", "parionssport", "pasinobet", "pmu", "unibet", "winamax", "zebet"]
+    list_sites = sb.BOOKMAKERS
     out = True
     for i in range(n):
         if not(any(results[i][3:])):

@@ -5,8 +5,8 @@ Fonctions de parsing
 import locale
 import sys
 
-from sportsbetting.bookmakers import (betclic, betstars, bwin, france_pari, joa, netbet,
-                                      parionssport, pasinobet, pmu, unibet, winamax, zebet)
+from sportsbetting.bookmakers import (betclic, bwin, france_pari, joa, netbet, parionssport,
+                                      pasinobet, pmu, pokerstars, unibet, winamax, zebet)
 
 
 if sys.platform.startswith("win"):
@@ -22,7 +22,7 @@ def parse(site, url=""):
     """
     parse_functions = {
         "betclic" : betclic.parse_betclic,
-        "betstars" : betstars.parse_betstars,
+        "pokerstars" : pokerstars.parse_pokerstars,
         "bwin" : bwin.parse_bwin,
         "france_pari" : france_pari.parse_france_pari,
         "joa" : joa.parse_joa,

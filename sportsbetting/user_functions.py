@@ -50,8 +50,7 @@ def parse_competition(competition, sport, *sites):
         return
     print(competition, *sites)
     if not sites:
-        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
-                 'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+        sites = sb.BOOKMAKERS
     res_parsing = {}
     for site in sites:
         if len(sites) > 1:
@@ -101,7 +100,7 @@ def parse_competitions_site(competitions, sport, site):
 
 def parse_competitions(competitions, sport, *sites):
     sites_order = ['joa', 'pmu', 'pasinobet', 'france_pari', 'netbet', 'zebet',
-                   'winamax', 'betclic', 'betstars', 'unibet', 'bwin', 'parionssport']
+                   'winamax', 'betclic', 'pokerstars', 'unibet', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -436,8 +435,7 @@ def best_matches_combine_cashback(site, minimum_odd, bet, sport="football",
 
 def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=None, time_max=None, identical_stakes=False):
     second_sites = {stake[1] for stake in stakes}
-    main_sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet',
-                  'parionssport', 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+    main_sites = sb.BOOKMAKERS
     all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max)
     best_profit = -sum(stake[0] for stake in stakes)
     n = get_nb_outcomes(sport) ** nb_matches

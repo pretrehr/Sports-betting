@@ -10,9 +10,9 @@ import urllib
 from sportsbetting.auxiliary_functions import merge_dicts
 
 
-def parse_betstars_api(id_league):
+def parse_pokerstars_api(id_league):
     """
-    Get Betstars odds from league id
+    Get pokerstars odds from league id
     """
     url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getCompetitionEvents?competitionId={}"
            "&marketTypes=SOCCER%3AFT%3AAXB%2CMRES,BASKETBALL%3AFTOT%3AML,AB,RUGBYUNION%3AFT%3AMRES,HANDBALL%3AFT%3AMRES,"
@@ -59,12 +59,12 @@ def parse_betstars_api(id_league):
             odds = [odd_home, odd_away]
         odds_match[name] = {}
         odds_match[name]["date"] = date
-        odds_match[name]["odds"] = {"betstars":odds}
+        odds_match[name]["odds"] = {"pokerstars":odds}
     return odds_match
 
-def parse_sport_betstars(sport):
+def parse_sport_pokerstars(sport):
     """
-    Get Betstars odds from sport
+    Get pokerstars odds from sport
     """
     url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getSportTree?sport={}&includeOutrights=false"
            "&includeEvents=false&includeCoupons=true&channelId=11&locale=fr-fr&siteId=32".format(sport.upper()))
@@ -74,14 +74,14 @@ def parse_sport_betstars(sport):
     competitions = parsed["categories"]
     for competition in competitions:
         id_competition = competition["id"]
-        list_odds.append(parse_betstars_api(id_competition))
+        list_odds.append(parse_pokerstars_api(id_competition))
     return merge_dicts(list_odds)
 
-def parse_betstars(url):
+def parse_pokerstars(url):
     """
-    Get Betstars odds from url
+    Get pokerstars odds from url
     """
     if not "https://" in url:
-        return parse_sport_betstars(url)
+        return parse_sport_pokerstars(url)
     id_league = re.findall(r'\d+', url)[-1]
-    return parse_betstars_api(id_league)
+    return parse_pokerstars_api(id_league)

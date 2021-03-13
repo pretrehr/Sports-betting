@@ -1,7 +1,6 @@
 Liverpool - Leicester City
 {'date': datetime.datetime(2020, 11, 22, 20, 15),
  'odds': {'betclic': [1.85, 3.9, 3.8],
-          'betstars': [1.9, 3.6, 3.6],
           'bwin': [1.8, 3.8, 3.6],
           'france_pari': [1.81, 3.85, 3.75],
           'joa': [1.85, 3.9, 3.8],
@@ -9,6 +8,7 @@ Liverpool - Leicester City
           'parionssport': [1.88, 4.1, 3.5],
           'pasinobet': [1.82, 3.8, 3.74],
           'pmu': [1.85, 3.9, 3.8],
+          'pokerstars': [1.9, 3.6, 3.6],
           'unibet': [1.88, 4.0, 3.9],
           'winamax': [1.88, 4, 3.9],
           'zebet': [1.85, 3.95, 3.8]}}

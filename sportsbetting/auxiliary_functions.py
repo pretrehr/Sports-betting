@@ -389,8 +389,7 @@ def get_future_opponents(name, matches):
 def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee=0, taux_cashback=0,
                         cashback_freebet=True):
     def get_odd(combinaison, matches, site_combinaison=None):
-        sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-                 'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+        sites = sb.BOOKMAKERS
         if site_combinaison:
             sites = [site_combinaison]
         best_odd = 1
@@ -455,8 +454,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             opponents_match.insert(1, "Nul")
         opponents.append(opponents_match)
     nb_chars = max(map(lambda x: len(" / ".join(x)), product(*opponents)))
-    sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-             'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+    sites = sb.BOOKMAKERS
     odds = {site: [get_odd(combine, matches, site)[0] for combine in best_combinaison] for site in sites}
     pprint({"date" : max(date for date in [sb.ODDS[sport][match]["date"]
                                            for match in matches]),
