@@ -34,7 +34,6 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                odds_match_interface, delete_odds_interface,
                                                delete_site_interface,
                                                get_current_competitions_interface,
-                                               get_main_competitions_interface,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface)
 
@@ -64,7 +63,7 @@ parsing_layout = [
         sg.Column([[sg.Listbox((), size=(27, 12), key='COMPETITIONS', select_mode='multiple')],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS")],
-                   [sg.Button("Principales compétitions", key="MAIN_COMPETITIONS")]]),
+                   [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
         sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL")],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
@@ -566,14 +565,16 @@ while True:
         sport = values["SPORT"][0]
         competitions = get_all_competitions(sport)
         window['COMPETITIONS'].update(values=competitions)
+        window['MAIN_COMPETITIONS'].update(visible=sport=="football")
     elif event == "SELECT_NONE_COMPETITION":
         window['COMPETITIONS'].update(set_to_index=[])
     elif event == "CURRENT_COMPETITIONS":
         thread_competitions = threading.Thread(target=lambda : get_current_competitions_interface(window, values))
         thread_competitions.start()
     elif event == "MAIN_COMPETITIONS":
-        thread_competitions = threading.Thread(target=lambda : get_main_competitions_interface(window, values))
-        thread_competitions.start()
+        competitions = get_all_competitions(sport)
+        big_five = ["France - Ligue 1", "Angleterre - Premier League", "Allemagne - Bundesliga", "Italie - Serie A", "Espagne - LaLiga"]
+        window['COMPETITIONS'].update(set_to_index=[i for i, competition in enumerate(competitions) if competition in big_five])
     elif event == "SELECT_ALL":
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS)])
     elif event == "SELECT_NONE_SITE":

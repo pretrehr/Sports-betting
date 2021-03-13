@@ -14,7 +14,7 @@ import PySimpleGUI as sg
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes
-from sportsbetting.database_functions import get_all_current_competitions, get_main_competitions, get_all_competitions
+from sportsbetting.database_functions import get_all_current_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
                                           best_matches_freebet, best_matches_combine,
@@ -591,17 +591,6 @@ def get_current_competitions_interface(window, values):
         current_competitions = [_ for _ in current_competitions if _]
         competitions = get_all_competitions(sport)
         window['COMPETITIONS'].update(values=competitions)
-        index_list = list(map(competitions.index, current_competitions))
-        window['COMPETITIONS'].update(set_to_index=index_list)
-    except IndexError:
-        pass
-
-def get_main_competitions_interface(window, values):
-    try:
-        sport = values['SPORT'][0]
-        competitions = window['COMPETITIONS'].GetListValues()
-        current_competitions = get_main_competitions(sport)
-        current_competitions = [_ for _ in current_competitions if _]
         index_list = list(map(competitions.index, current_competitions))
         window['COMPETITIONS'].update(set_to_index=index_list)
     except IndexError:
