@@ -79,6 +79,8 @@ def get_odds_from_league_json(parsed_league):
         for game in games.values():
             if "is_started" in game and game["is_started"]:
                 continue
+            if not game.get("team1_name") or not game.get("team2_name"):
+                continue
             name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
             date = datetime.datetime.fromtimestamp(game["start_ts"])
             markets = game["market"]

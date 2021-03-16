@@ -37,8 +37,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
 PATH_DATA = os.path.dirname(sportsbetting.__file__) + "/resources/data.pickle"
 
 sports = get_all_sports()
-sites = ['betclic', 'betstars', 'bwin', 'france_pari', 'joa', 'netbet', 'parionssport',
-         'pasinobet', 'pmu', 'unibet', 'winamax', 'zebet']
+sites = sportsbetting.BOOKMAKERS
 
 
 print("""

@@ -9,7 +9,6 @@ import urllib
 
 from sportsbetting.auxiliary_functions import merge_dicts
 
-
 def parse_pokerstars_api(id_league):
     """
     Get pokerstars odds from league id

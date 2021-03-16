@@ -88,7 +88,6 @@ Vous trouverez ci-dessous un tableau récapitulatif des différents bookmakers a
 | Bookmaker  | Chaîne de caractères |
 | ------------- | ------------- |
 | [Betclic](https://www.betclic.fr/sport/)  | `"betclic"`  |
-| [BetStars](https://www.betstars.fr/)  | `"betstars"`  |
 | [Bwin](https://sports.bwin.fr/fr/sports)  | `"bwin"`  |
 | [France Pari](https://www.france-pari.fr/)  | `"france_pari"`  |
 | [JOA](https://www.joa-online.fr/fr/sport)  | `"joa"` |
@@ -96,6 +95,7 @@ Vous trouverez ci-dessous un tableau récapitulatif des différents bookmakers a
 | [Parions Sport](https://www.enligne.parionssport.fdj.fr/) |`"parionssport"` |
 | [PasinoBet](https://www.pasinobet.fr/) |`"pasinobet"` |
 | [PMU](https://paris-sportifs.pmu.fr/) |`"pmu"` |
+| [PokerStars](https://www.pokestarssport.fr/)  | `"pokerstars"`  |
 | [Unibet](https://www.unibet.fr/sport) |`"unibet"` |
 | [Winamax](https://www.winamax.fr/paris-sportifs/sports/) |`"winamax"` |
 | [Zebet](https://www.zebet.fr/fr/) |`"zebet"` |

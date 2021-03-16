@@ -62,7 +62,7 @@ parsing_layout = [
         sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT", enable_events=True),
         sg.Column([[sg.Listbox((), size=(27, 12), key='COMPETITIONS', select_mode='multiple')],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
-                   [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS")],
+                   [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS", visible=sb.DB_MANAGEMENT)],
                    [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
         sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL")],
@@ -110,6 +110,8 @@ match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="S
                                  sg.Column(column_under_condition),
                                  sg.Column(options_under_condition)],
                                 [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")],
+                                [sg.Button("Ignorer ce match", key="DELETE_MATCH_UNDER_CONDITION", visible=False)],
+                                [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_UNDER_CONDITION", visible=False)],
                                 [sg.Text("", size=(30, 1), key="MATCH_UNDER_CONDITION"),
                                  sg.Text("", size=(30, 1), key="DATE_UNDER_CONDITION")],
                                 [sg.Table([["parionssport", "0000", "0000", "0000"]],
@@ -373,6 +375,8 @@ gagnant_layout = [
      sg.Column(column_gagnant),
      sg.Column(options_gagnant)],
     [sg.Button("Calculer", key="BEST_MATCH_GAGNANT")],
+    [sg.Button("Ignorer ce match", key="DELETE_MATCH_GAGNANT", visible=False)],
+    [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_GAGNANT", visible=False)],
     [sg.Text("", size=(60, 1), key="MATCH_GAGNANT")],
     [sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
     [sg.Column([[sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
@@ -613,6 +617,13 @@ while True:
         sb.ABORT = True
     elif event == "BEST_MATCH_UNDER_CONDITION":
         best_match_under_conditions_interface(window, values)
+    elif event == "DELETE_MATCH_UNDER_CONDITION":
+        match_under_condition = window["MATCH_UNDER_CONDITION"].get()
+        sport_under_condition = window["SPORT_UNDER_CONDITION"].get()
+        if sport_under_condition and match_under_condition in sb.ODDS[sport_under_condition[0]]:
+            del sb.ODDS[sport_under_condition[0]][match_under_condition]
+    elif event == "RELOAD_ODDS_UNDER_CONDITION":
+        sb.ODDS = load_odds(PATH_DATA)
     elif event == "SPORT_STAKE":
         try:
             matches = sorted(list(sb.ODDS[values["SPORT_STAKE"][0]]))
@@ -683,6 +694,13 @@ while True:
                                                                       visible_freebets)
     elif event == "BEST_MATCH_GAGNANT":
         best_match_pari_gagnant_interface(window, values)
+    elif event == "DELETE_MATCH_GAGNANT":
+        match_gagnant = window["MATCH_GAGNANT"].get()
+        sport_gagnant = window["SPORT_GAGNANT"].get()
+        if sport_gagnant and match_gagnant in sb.ODDS[sport_gagnant[0]]:
+            del sb.ODDS[sport_gagnant[0]][match_gagnant]
+    elif event == "RELOAD_ODDS_GAGNANT":
+        sb.ODDS = load_odds(PATH_DATA)
     elif event == "SPORT_ODDS":
         try:
             matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]))

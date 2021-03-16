@@ -145,6 +145,7 @@ def best_match_under_conditions_interface(window, values):
         match, date = infos(what_was_printed)
         if match is None:
             window["MATCH_UNDER_CONDITION"].update("Aucun match trouvé")
+            window["DELETE_MATCH_UNDER_CONDITION"].update(visible=False)
             window["DATE_UNDER_CONDITION"].update("")
             window["ODDS_UNDER_CONDITION"].update(visible=False)
             window["RESULT_UNDER_CONDITION"].update(visible=False)
@@ -154,6 +155,8 @@ def best_match_under_conditions_interface(window, values):
                 window["RESULTS_UNDER_CONDITION" + str(i)].update(visible=False)
         else:
             window["MATCH_UNDER_CONDITION"].update(match)
+            window["DELETE_MATCH_UNDER_CONDITION"].update(visible=True)
+            window["RELOAD_ODDS_UNDER_CONDITION"].update(visible=True)
             window["DATE_UNDER_CONDITION"].update(date)
             window["ODDS_UNDER_CONDITION"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_UNDER_CONDITION"].update(stakes(what_was_printed), visible=True)
@@ -490,6 +493,7 @@ def best_match_pari_gagnant_interface(window, values):
         match, date = infos(what_was_printed)
         if match is None:
             window["MATCH_GAGNANT"].update("Aucun match trouvé")
+            window["DELETE_MATCH_GAGNANT"].update(visible=False)
             window["DATE_GAGNANT"].update("")
             window["ODDS_GAGNANT"].update(visible=False)
             window["ODDS_COMBINE_GAGNANT"].update(visible=False)
@@ -507,6 +511,8 @@ def best_match_pari_gagnant_interface(window, values):
             else:
                 window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
                 window["ODDS_COMBINE_GAGNANT"].update(visible=False)
+                window["DELETE_MATCH_GAGNANT"].update(visible=True)
+                window["RELOAD_ODDS_GAGNANT"].update(visible=True)
             window["RESULT_GAGNANT"].update(stakes(what_was_printed), visible=True)
             window["TEXT_GAGNANT"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
