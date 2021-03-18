@@ -22,6 +22,7 @@ def parse(site, url=""):
     """
     parse_functions = {
         "betclic" : betclic.parse_betclic,
+        "barrierebet": lambda x: pasinobet.parse_pasinobet(x, True),
         "pokerstars" : pokerstars.parse_pokerstars,
         "bwin" : bwin.parse_bwin,
         "france_pari" : france_pari.parse_france_pari,

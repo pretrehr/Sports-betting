@@ -54,6 +54,8 @@ except FileNotFoundError:
     pass
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
+nb_bookmakers = len(sb.BOOKMAKERS)
+
 
 # All the stuff inside your window.
 sg.set_options(enable_treeview_869_patch=False)
@@ -64,7 +66,7 @@ parsing_layout = [
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS", visible=sb.DB_MANAGEMENT)],
                    [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
-        sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITES", select_mode='multiple')],
+        sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL")],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
@@ -106,7 +108,7 @@ column_indicators_under_condition = [[sg.Text("", size=(18, 1),
 column_results_under_condition = [[sg.Text("", size=(30, 1),
                                            key="RESULTS_UNDER_CONDITION" + str(_),
                                            visible=False)] for _ in range(6)]
-match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_UNDER_CONDITION"),
+match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_UNDER_CONDITION"),
                                  sg.Column(column_under_condition),
                                  sg.Column(options_under_condition)],
                                 [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")],
@@ -118,7 +120,7 @@ match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="S
                                           headings=["Cotes", "1", "N", "2"],
                                           key="ODDS_UNDER_CONDITION",
                                           visible=False, hide_vertical_scroll=True,
-                                          size=(None, 12)),
+                                          size=(None, nb_bookmakers)),
                                  sg.Column([[sg.Text(
                                      "Répartition des mises (les totaux affichés prennent en "
                                      "compte les éventuels freebets) :",
@@ -139,14 +141,14 @@ column_indicators_stake = [[sg.Text("", size=(15, 1), key="INDICATORS_STAKE" + s
 column_results_stake = [[sg.Text("", size=(30, 1), key="RESULTS_STAKE" + str(_),
                                  visible=False)] for _ in range(6)]
 stake_layout = [
-    [sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_STAKE"),
+    [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_STAKE"),
      sg.Column(column_stake),
      sg.Listbox([], size=(40, 12), key="MATCHES")],
     [sg.Button("Calculer", key="BEST_STAKE")],
     [sg.Text("", size=(30, 1), key="MATCH_STAKE"),
      sg.Text("", size=(30, 1), key="DATE_STAKE")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
-              key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, 12)),
+              key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, nb_bookmakers)),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_STAKE", visible=False)],
@@ -162,14 +164,14 @@ column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET"
 column_results_freebet = [[sg.Text("", size=(30, 1), key="RESULTS_FREEBET" + str(_),
                                    visible=False)] for _ in range(5)]
 freebet_layout = [
-    [sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_FREEBET"),
+    [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_FREEBET"),
      sg.Column(column_freebet)],
     [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
     [sg.Text("", size=(30, 1), key="MATCH_FREEBET"),
      sg.Text("", size=(30, 1), key="DATE_FREEBET")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]],
               headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
-              hide_vertical_scroll=True, size=(None, 12)),
+              hide_vertical_scroll=True, size=(None, nb_bookmakers)),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_FREEBET", visible=False)],
@@ -206,14 +208,14 @@ column_indicators_cashback = [[sg.Text("", size=(15, 1), key="INDICATORS_CASHBAC
 column_results_cashback = [[sg.Text("", size=(30, 1), key="RESULTS_CASHBACK" + str(_),
                                     visible=False)] for _ in range(5)]
 cashback_layout = [
-    [sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_CASHBACK"),
+    [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_CASHBACK"),
      sg.Column(column_cashback), sg.Column(options_cashback)],
     [sg.Button("Calculer", key="BEST_MATCH_CASHBACK")],
     [sg.Text("", size=(30, 1), key="MATCH_CASHBACK"),
      sg.Text("", size=(30, 1), key="DATE_CASHBACK")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]],
               headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False,
-              hide_vertical_scroll=True, size=(None, 12)),
+              hide_vertical_scroll=True, size=(None, nb_bookmakers)),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_CASHBACK", visible=False)],
@@ -246,7 +248,7 @@ column_indicators_combine = [[sg.Text("", size=(15, 1), key="INDICATORS_COMBINE"
                                       visible=False)] for _ in range(5)]
 column_results_combine = [[sg.Text("", size=(6, 1), key="RESULTS_COMBINE" + str(_),
                                    visible=False)] for _ in range(5)]
-combine_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_COMBINE"), sg.Column(column_combine),
+combine_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_COMBINE"), sg.Column(column_combine),
                    sg.Column(options_combine)],
                   [sg.Button("Calculer", key="BEST_MATCHES_COMBINE"),
                    sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_COMBINE', visible=False)],
@@ -335,7 +337,7 @@ column_results_freebets = [[sg.Text("", size=(6, 1), key="RESULTS_FREEBETS" + st
 
 freebets_layout = [[sg.Column(column_sites_freebets),
                     sg.Column(column_freebets_freebets),
-                    sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITES_FREEBETS", select_mode='multiple'),
+                    sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITES_FREEBETS", select_mode='multiple'),
                     sg.Column(column_matches_freebets)],
                    [sg.Button("Calculer", key="BEST_MATCH_FREEBETS")],
                    [sg.Text("", size=(100, 1), key="MATCH_FREEBETS")],
@@ -371,7 +373,7 @@ column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT"
 column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
                                    visible=False)] for _ in range(5)]
 gagnant_layout = [
-    [sg.Listbox(sb.BOOKMAKERS, size=(20, 12), key="SITE_GAGNANT"),
+    [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_GAGNANT"),
      sg.Column(column_gagnant),
      sg.Column(options_gagnant)],
     [sg.Button("Calculer", key="BEST_MATCH_GAGNANT")],
@@ -380,7 +382,7 @@ gagnant_layout = [
     [sg.Text("", size=(60, 1), key="MATCH_GAGNANT")],
     [sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
     [sg.Column([[sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
-              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, 12))],
+              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, nb_bookmakers))],
      [sg.Button("Voir les cotes combinées", key="ODDS_COMBINE_GAGNANT", visible=False)]]),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
@@ -398,7 +400,7 @@ odds_layout = [
              [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
              [sg.Table([["parionssport", "0000", "0000", "0000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
-                       hide_vertical_scroll=True, size=(None, 12))],
+                       hide_vertical_scroll=True, size=(None, nb_bookmakers))],
              [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]])
      ]
@@ -457,7 +459,7 @@ surebets_layout = [
                 [sg.Text("", size=(30, 1), key="DATE_SUREBETS", visible=False)],
                 [sg.Table([["parionssport", "0000", "0000", "0000"]],
                             headings=["Cotes", "1", "N", "2"], key="ODDS_SUREBETS", visible=False,
-                            hide_vertical_scroll=True, size=(None, 12))]])
+                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
      ]
 ]
 
