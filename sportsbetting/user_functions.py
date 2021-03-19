@@ -56,7 +56,6 @@ def parse_competition(competition, sport, *sites):
         if len(sites) > 1:
             print(site)
         url = get_competition_by_id(_id, site)
-        print(url)
         try:
             if url:
                 res_parsing[site] = parse(site, url)
@@ -659,3 +658,36 @@ def trj_match(match_odds):
                 odds[i] = tmp_odd
                 bookmakers[i] = bookmaker
     return gain(odds), bookmakers, odds
+
+def get_values(match_odds, rate):
+    odds = []
+    bookmakers = []
+    sums = []
+    for bookmaker in match_odds["odds"]:
+        tmp_odds = match_odds["odds"][bookmaker]
+        tmp_bookmakers = [bookmaker for _ in tmp_odds]
+        if not odds:
+            odds = copy.deepcopy(tmp_odds)
+            sums = copy.deepcopy(tmp_odds)
+            bookmakers = copy.deepcopy(tmp_bookmakers)
+            continue
+        for i, tmp_odd in enumerate(tmp_odds):
+            sums[i] += tmp_odd
+            if tmp_odd > odds[i]:
+                odds[i] = tmp_odd
+                bookmakers[i] = bookmaker
+    values = []
+    best_rate = rate-1
+    n = len(match_odds["odds"])
+    for odd, sum, bookmaker in zip(odds, sums, bookmakers):
+        if odd < 1.1:
+            return 0, []
+        mean = sum/n
+        rate_tmp = (odd)/(mean)-1
+        if rate_tmp >= rate:
+            best_rate = max(best_rate, rate_tmp)
+        value = [odd, rate_tmp, bookmaker]
+        values.append(value)
+    return best_rate, values
+
+

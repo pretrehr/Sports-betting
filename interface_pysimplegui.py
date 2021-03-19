@@ -35,7 +35,8 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                delete_site_interface,
                                                get_current_competitions_interface,
                                                best_combine_reduit_interface,
-                                               find_surebets_interface, odds_match_surebets_interface)
+                                               find_surebets_interface, odds_match_surebets_interface,
+                                               find_values_interface, odds_match_values_interface)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -463,6 +464,24 @@ surebets_layout = [
      ]
 ]
 
+values_layout = [
+    [
+        sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_VALUES")],
+                   [sg.Text("Value minimale", size=(12, 1)), sg.InputText(key='RATE_VALUES', size=(6, 1), default_text="20"), sg.Text("%", size=(3, 1))],
+                   [sg.Button("Chercher", key="FIND_VALUES")],
+                   [sg.Text("", size=(30, 1), key="MESSAGE_VALUES")]
+                   ]),
+        sg.Listbox([], size=(40, 12), key="MATCHES_VALUES", enable_events=True),
+        sg.Col([[sg.Text("", size=(30, 1), key="MATCH_VALUES", visible=False)],
+                [sg.Text("", size=(30, 1), key="INFOS_VALUE_VALUES")],
+                [sg.Text("", size=(70, 1), key="INFOS_ODDS_VALUES")],
+                [sg.Text("", size=(30, 1), key="DATE_VALUES", visible=False)],
+                [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                            headings=["Cotes", "1", "N", "2"], key="ODDS_VALUES", visible=False,
+                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
+     ]
+]
+
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
@@ -474,7 +493,8 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Freebets à placer', freebets_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout),
-                         sg.Tab('Surebets', surebets_layout)
+                         sg.Tab('Surebets', surebets_layout),
+                         sg.Tab('Values', values_layout)
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -756,6 +776,10 @@ while True:
         find_surebets_interface(window, values)
     elif event == "MATCHES_SUREBETS":
         odds_match_surebets_interface(window, values)
+    elif event == "FIND_VALUES":
+        find_values_interface(window, values)
+    elif event == "MATCHES_VALUES":
+        odds_match_values_interface(window, values)
     else:
         pass
 sb.INTERFACE = False

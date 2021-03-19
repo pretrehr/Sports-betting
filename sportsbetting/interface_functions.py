@@ -20,7 +20,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_matches_freebet, best_matches_combine,
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
-                                          best_combine_booste, trj_match, best_matches_freebet_one_site)
+                                          best_combine_booste, trj_match, best_matches_freebet_one_site, get_values)
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -680,5 +680,56 @@ def odds_match_surebets_interface(window, values):
         trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
         window["INFOS_TRJ_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
         window["INFOS_ODDS_SUREBETS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
+    except (IndexError, ValueError) as _:
+        pass
+
+
+
+def find_values_interface(window, values):
+    matches = []
+    sport = values["SPORT_VALUES"][0]
+    rate_min = float(values["RATE_VALUES"])/100
+    for match in sb.ODDS[sport]:
+        if get_values(sb.ODDS[sport][match], rate_min)[0] > rate_min:
+            matches.append(match)
+    matches.sort(key=lambda x :get_values(sb.ODDS[sport][x], rate_min)[0], reverse=True)
+    window["MATCHES_VALUES"].update(matches)
+    if not matches:
+        window["MESSAGE_VALUES"].update("Aucune value trouvée")
+    else:
+        window["MESSAGE_VALUES"].update("")
+
+
+def odds_match_values_interface(window, values):
+    """
+    :param window: Fenêtre principale PySimpleGUI
+    :param values: Valeurs de la fenêtre principale
+    :return: Affiche le résultat de la fonction odds_match dans l'interface
+    """
+    try:
+        match = values["MATCHES_VALUES"][0]
+        sport = values["SPORT_VALUES"][0]
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = io.StringIO()
+        odds_dict = odds_match(match, sport)[1]
+        sys.stdout = old_stdout  # Put the old stream back in place
+        odds = odds_dict["odds"]
+        date = odds_dict["date"]
+        if len(list(odds.values())[0]) == 2:
+            for key in odds.keys():
+                odds[key].insert(1, "-   ")
+        table = []
+        for key, value in odds.items():
+            table.append([key] + list(map(str, value)))
+        table.sort()
+        window["ODDS_VALUES"].update(table, visible=True)
+        if date:
+            window["DATE_VALUES"].update(date.strftime("%A %d %B %Y %H:%M"), visible=True)
+        else:
+            window["DATE_VALUES"].update(visible=False)
+        window["MATCH_VALUES"].update(match, visible=True)
+        rate, infos_value = get_values(sb.ODDS[sport][match], 0)
+        window["INFOS_VALUE_VALUES"].update("Value max : {}%".format(round(rate*100, 2)))
+        window["INFOS_ODDS_VALUES"].update(" / ".join("{} @ {} (+{}%)".format(bookmaker, odd, round(r*100, 2)) for bookmaker, r, odd in infos_value))
     except (IndexError, ValueError) as _:
         pass
