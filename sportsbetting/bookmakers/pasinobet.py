@@ -64,7 +64,7 @@ async def get_json_sport_pasinobet_api(sport, barriere):
             await websocket.send(data)
             response = await websocket.recv()
             parsed_league = json.loads(response)
-            odds_league = get_odds_from_league_json(parsed_league)
+            odds_league = get_odds_from_league_json(parsed_league, barriere)
             list_odds.append(odds_league)
         return merge_dicts(list_odds)
 
