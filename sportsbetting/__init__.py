@@ -78,9 +78,9 @@ try:
     PATH_DRIVER = chromedriver_autoinstaller.install(True)
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
-except urllib.error.URLError:
-    print("Aucune connection internet")
-    sys.exit()
+#except urllib.error.URLError:
+#    print("Aucune connection internet")
+#    sys.exit()
 print(PATH_DRIVER)
 
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
