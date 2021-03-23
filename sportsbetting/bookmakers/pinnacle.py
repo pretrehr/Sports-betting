@@ -73,7 +73,7 @@ def parse_pinnacle(id_league):
     """
     Get odds from Pinnacle API
     """
-    if id_league.isnumeric():
+    if not id_league.isnumeric():
         return parse_sport_pinnacle(id_league)
     token = get_pinnacle_token()
     url_straight = "https://guest.api.arcadia.pinnacle.com/0.1/leagues/{}/markets/straight".format(id_league)
