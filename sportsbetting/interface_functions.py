@@ -253,6 +253,8 @@ def best_match_freebet_interface(window, values):
             window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=not split_freebet)
             window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
             window["TEXT_FREEBET"].update(visible=True)
+            window["DELETE_MATCH_FREEBET"].update(visible=True)
+            window["RELOAD_ODDS_FREEBET"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_FREEBET" + str(i)].update(elem[0].capitalize(), visible=True)
                 window["RESULTS_FREEBET" + str(i)].update(elem[1], visible=True)

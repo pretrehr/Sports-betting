@@ -170,6 +170,8 @@ freebet_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_FREEBET"),
      sg.Column(column_freebet)],
     [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
+    [sg.Button("Ignorer ce match", key="DELETE_MATCH_FREEBET", visible=False)],
+    [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_FREEBET", visible=False)],
     [sg.Text("", size=(30, 1), key="MATCH_FREEBET"),
      sg.Text("", size=(30, 1), key="DATE_FREEBET")],
     [sg.Table([["parionssport", "0000", "0000", "0000"]],
@@ -658,6 +660,13 @@ while True:
         best_stakes_match_interface(window, values)
     elif event == "BEST_MATCH_FREEBET":
         best_match_freebet_interface(window, values)
+    elif event == "DELETE_MATCH_FREEBET":
+        match_freebet = window["MATCH_FREEBET"].get()
+        sport_freebet = window["SPORT_FREEBET"].get()
+        if sport_freebet and match_freebet in sb.ODDS[sport_freebet[0]]:
+            del sb.ODDS[sport_freebet[0]][match_freebet]
+    elif event == "RELOAD_ODDS_FREEBET":
+        sb.ODDS = load_odds(PATH_DATA)
     elif event == "BEST_MATCH_CASHBACK":
         best_match_cashback_interface(window, values)
     elif event == "BEST_MATCHES_COMBINE":
