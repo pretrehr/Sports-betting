@@ -55,6 +55,8 @@ except FileNotFoundError:
     pass
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
+if "--ha" not in sys.argv:
+    sb.BOOKMAKERS.remove("pinnacle")
 nb_bookmakers = len(sb.BOOKMAKERS)
 
 
