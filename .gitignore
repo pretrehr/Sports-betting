@@ -19,3 +19,5 @@ sportsbetting/resources/*.jpg
 sportsbetting/resources/*.pub
 TODO.txt
 teams2.db
+sportsbetting/bookmakers/tokens.txt
+sportsbetting/resources/data.json
