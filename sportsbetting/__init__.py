@@ -2,6 +2,7 @@
 initialisation du module
 """
 import collections
+import json
 import os
 import queue
 import re
@@ -28,11 +29,12 @@ SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "te
 PATH_DRIVER = ""
 SELENIUM_SITES = {"joa"}
 BOOKMAKERS = ["betclic", "barrierebet", "bwin", "france_pari", "joa", "netbet", "parionssport",
-              "pasinobet", "pmu", "pokerstars", "unibet", "winamax", "zebet"]
+              "pasinobet", "pinnacle", "pmu", "pokerstars", "unibet", "winamax", "zebet"]
 TEST = False
 DB_MANAGEMENT = False
 TOKENS = {}
 COOKIES_JOA_ACCEPTED = False
+TRANSLATION = {}
 
 
 class UnavailableCompetitionException(Exception):
@@ -87,3 +89,8 @@ PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
 print(PATH_DB)
 
 PATH_TOKENS = os.path.dirname(__file__) + "/bookmakers/tokens.txt"
+
+PATH_TRANSLATION = os.path.dirname(__file__) + "/resources/translation.json"
+with open(PATH_TRANSLATION, encoding='utf-8') as file:
+    TRANSLATION = json.load(file)
+

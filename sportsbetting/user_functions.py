@@ -100,7 +100,7 @@ def parse_competitions_site(competitions, sport, site):
 
 def parse_competitions(competitions, sport, *sites):
     sites_order = ['joa', 'pmu', 'barrierebet', 'pasinobet', 'france_pari', 'netbet', 'zebet',
-                   'winamax', 'betclic', 'pokerstars', 'unibet', 'bwin', 'parionssport']
+                   'winamax', 'pinnacle', 'betclic', 'pokerstars', 'unibet', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5

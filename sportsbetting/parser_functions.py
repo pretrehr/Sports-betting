@@ -6,7 +6,7 @@ import locale
 import sys
 
 from sportsbetting.bookmakers import (betclic, bwin, france_pari, joa, netbet, parionssport,
-                                      pasinobet, pmu, pokerstars, unibet, winamax, zebet)
+                                      pasinobet, pinnacle, pmu, pokerstars, unibet, winamax, zebet)
 
 
 if sys.platform.startswith("win"):
@@ -30,6 +30,7 @@ def parse(site, url=""):
         "netbet" : netbet.parse_netbet,
         "parionssport" : parionssport.parse_parionssport,
         "pasinobet" : pasinobet.parse_pasinobet,
+        "pinnacle" : pinnacle.parse_pinnacle,
         "pmu" : pmu.parse_pmu,
         "unibet" : unibet.parse_unibet,
         "winamax" : winamax.parse_winamax,
