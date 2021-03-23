@@ -195,6 +195,8 @@ def merge_dict_odds(dict_odds):
                                 and odds[match]["date"]):  # Si la date est None
                             new_dict[match]["date"] = odds[match]["date"]
                             date_found = True
+                        if date_found and abs(new_dict[match]["date"] - odds[match]["date"]) > datetime.timedelta(days=1.5):
+                            continue
                         if site in odds[match]["odds"]:
                             new_dict[match]["odds"][site] = odds[match]["odds"][site]
                         if "id" in odds[match] and site in odds[match]["id"]:
