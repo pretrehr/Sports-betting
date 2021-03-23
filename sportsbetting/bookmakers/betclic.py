@@ -41,6 +41,7 @@ def parse_betclic_api(id_league):
         odds_match[name] = {}
         odds_match[name]["date"] = truncate_datetime(date)
         odds_match[name]["odds"] = {"betclic":odds}
+        odds_match[name]["id"] = {"betclic":match["id"]}
     return odds_match
 
 

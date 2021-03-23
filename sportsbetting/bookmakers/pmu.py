@@ -80,6 +80,9 @@ def parse_pmu_html(soup):
             match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"pmu": odds}
             match_odds_hash[match]['date'] = date_time
+            match_odds_hash[match]['id'] = {"pmu": match_id}
+        elif "data-ev_id" in line.attrs:
+            match_id = line["data-ev_id"]
     if not match_odds_hash:
         raise sb.UnavailableCompetitionException
     return match_odds_hash

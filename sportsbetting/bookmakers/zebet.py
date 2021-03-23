@@ -48,6 +48,10 @@ def parse_zebet(url):
             match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"zebet": odds}
             match_odds_hash[match]['date'] = date_time
+        elif "href" in line.attrs and "/fr/event/" in line["href"]:
+            match_id = line["href"].split("-")[0].split("/")[-1]
+            match_odds_hash[match]['id'] = {"zebet": match_id}
+            
     return match_odds_hash
 
 

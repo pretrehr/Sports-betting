@@ -183,6 +183,7 @@ def merge_dict_odds(dict_odds):
     for match in all_keys:
         new_dict[match] = {}
         new_dict[match]["odds"] = {}
+        new_dict[match]["id"] = {}
         new_dict[match]["date"] = None
         date_found = False
         for odds in dict_odds:
@@ -196,6 +197,8 @@ def merge_dict_odds(dict_odds):
                             date_found = True
                         if site in odds[match]["odds"]:
                             new_dict[match]["odds"][site] = odds[match]["odds"][site]
+                        if "id" in odds[match] and site in odds[match]["id"]:
+                            new_dict[match]["id"][site] = odds[match]["id"][site]
         if not date_found:
             new_dict[match]["date"] = datetime.datetime.today()
     return new_dict

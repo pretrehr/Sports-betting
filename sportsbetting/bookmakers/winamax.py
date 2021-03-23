@@ -55,6 +55,8 @@ def parse_winamax(url):
                             match_odds_hash[match_name]['odds'] = {
                                 "winamax": odds}
                             match_odds_hash[match_name]['date'] = date_time
+                            match_odds_hash[match_name]['id'] = {
+                                "winamax": str(match["matchId"])}
                         except KeyError:
                             pass
             if not match_odds_hash:
