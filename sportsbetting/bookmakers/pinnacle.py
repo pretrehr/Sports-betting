@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import urllib
+import time
 
 import dateutil.parser
 import seleniumwire
@@ -58,16 +59,15 @@ def get_pinnacle_token():
     options.add_argument("--headless")
     options.add_argument("--disable-extensions")
     driver = seleniumwire.webdriver.Chrome(sb.PATH_DRIVER, options=options)
-    token = None
-    while not token:
-        driver.get("https://www.pinnacle.com/")
-        for request in driver.requests:
-            if request.response:
-                token = request.headers.get("X-API-KEY")
-                if token:
-                    with open(sb.PATH_TOKENS, "a+") as file:
-                        file.write("pinnacle {}\n".format(token))
-                    break
+    driver.get("https://www.pinnacle.com/")
+    time.sleep(30)
+    for request in driver.requests:
+        if request.response:
+            token = request.headers.get("X-API-KEY")
+            if token:
+                with open(sb.PATH_TOKENS, "a+") as file:
+                    file.write("pinnacle {}\n".format(token))
+                break
     driver.quit()
     return token
 
