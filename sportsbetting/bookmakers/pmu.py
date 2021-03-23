@@ -33,6 +33,7 @@ def parse_pmu_html(soup):
     live = False
     handicap = False
     date = ""
+    match_id = None
     for line in soup.find_all():
         if "n'est pas accessible pour le moment !" in line.text:
             raise sb.UnavailableSiteException
