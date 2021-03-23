@@ -679,15 +679,18 @@ def get_values(match_odds, rate):
     values = []
     best_rate = rate-1
     n = len(match_odds["odds"])
+    i = 0
+    has_pinnacle = "pinnacle" in match_odds["odds"]
     for odd, sum, bookmaker in zip(odds, sums, bookmakers):
         if odd < 1.1:
             return 0, []
-        mean = sum/n
-        rate_tmp = (odd)/(mean)-1
+        ref = sum/n if not has_pinnacle else match_odds["odds"]["pinnacle"][i]
+        rate_tmp = odd/ref-1
         if rate_tmp >= rate:
             best_rate = max(best_rate, rate_tmp)
         value = [odd, rate_tmp, bookmaker]
         values.append(value)
+        i += 1
     return best_rate, values
 
 

@@ -470,12 +470,14 @@ values_layout = [
     [
         sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_VALUES")],
                    [sg.Text("Value minimale", size=(12, 1)), sg.InputText(key='RATE_VALUES', size=(6, 1), default_text="20"), sg.Text("%", size=(3, 1))],
+                   [sg.Text("TRJ minimal", size=(12, 1)), sg.InputText(key='TRJ_VALUES', size=(6, 1), default_text="95"), sg.Text("%", size=(3, 1))],
                    [sg.Button("Chercher", key="FIND_VALUES")],
                    [sg.Text("", size=(30, 1), key="MESSAGE_VALUES")]
                    ]),
         sg.Listbox([], size=(40, 12), key="MATCHES_VALUES", enable_events=True),
         sg.Col([[sg.Text("", size=(30, 1), key="MATCH_VALUES", visible=False)],
                 [sg.Text("", size=(30, 1), key="INFOS_VALUE_VALUES")],
+                [sg.Text("", size=(30, 1), key="INFOS_TRJ_VALUES")],
                 [sg.Text("", size=(70, 1), key="INFOS_ODDS_VALUES")],
                 [sg.Text("", size=(30, 1), key="DATE_VALUES", visible=False)],
                 [sg.Table([["parionssport", "0000", "0000", "0000"]],

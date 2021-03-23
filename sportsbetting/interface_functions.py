@@ -691,8 +691,9 @@ def find_values_interface(window, values):
     matches = []
     sport = values["SPORT_VALUES"][0]
     rate_min = float(values["RATE_VALUES"])/100
+    trj_min = float(values["TRJ_VALUES"])/100
     for match in sb.ODDS[sport]:
-        if get_values(sb.ODDS[sport][match], rate_min)[0] > rate_min:
+        if get_values(sb.ODDS[sport][match], rate_min)[0] >= rate_min and trj_match(sb.ODDS[sport][match])[0] >= trj_min:
             matches.append(match)
     matches.sort(key=lambda x :get_values(sb.ODDS[sport][x], rate_min)[0], reverse=True)
     window["MATCHES_VALUES"].update(matches)
@@ -733,5 +734,7 @@ def odds_match_values_interface(window, values):
         rate, infos_value = get_values(sb.ODDS[sport][match], 0)
         window["INFOS_VALUE_VALUES"].update("Value max : {}%".format(round(rate*100, 2)))
         window["INFOS_ODDS_VALUES"].update(" / ".join("{} @ {} (+{}%)".format(bookmaker, odd, round(r*100, 2)) for bookmaker, r, odd in infos_value))
+        trj = trj_match(sb.ODDS[sport][match])[0]
+        window["INFOS_TRJ_VALUES"].update("TRJ : {}%".format(round(trj*100, 2)))
     except (IndexError, ValueError) as _:
         pass
