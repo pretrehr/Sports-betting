@@ -23,6 +23,8 @@ def parse_pokerstars_api(id_league):
     for match in matches:
         if match["isInplay"]:
             continue
+        if match.get("state") == "SUSPENDED":
+            continue
         participants = match["participants"]
         if not participants:
             continue
@@ -41,7 +43,7 @@ def parse_pokerstars_api(id_league):
         odd_home, odd_away, odd_draw = 0, 0, 0
         for selection in markets[0]["selection"]:
             odd = selection["odds"]["dec"]
-            if odd == "-":
+            if odd == "-" or selection.get("suspended"):
                 odd = "1.01"
             if selection["type"] in ["A", "AH", "playerA"]:
                 odd_home = float(odd)
