@@ -4,9 +4,7 @@ France-pari odds scraper
 
 import datetime
 import re
-import urllib
-import urllib.error
-import urllib.request
+import requests
 
 from bs4 import BeautifulSoup
 
@@ -16,7 +14,7 @@ def parse_france_pari(url):
     """
     Retourne les cotes disponibles sur france-pari
     """
-    soup = BeautifulSoup(urllib.request.urlopen(url), features="lxml")
+    soup = BeautifulSoup(requests.get(url).content, features="lxml")
     match_odds_hash = {}
     today = datetime.datetime.today()
     today = datetime.datetime(today.year, today.month, today.day)

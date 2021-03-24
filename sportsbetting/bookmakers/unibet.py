@@ -4,7 +4,9 @@ Unibet odds scraper
 
 import datetime
 import json
-import urllib
+import requests
+
+from collections import defaultdict
 
 def get_id_league(url):
     """
@@ -14,7 +16,7 @@ def get_id_league(url):
         return None, None
     public_url = url.split("https://www.unibet.fr")[1]
     request_url = "https://www.unibet.fr/zones/navigation.json?publicUrl="+public_url
-    content = urllib.request.urlopen(request_url).read()
+    content = requests.get(request_url).content
     parsed = json.loads(content)
     sport = public_url.split("/")[2]
     if parsed["requestData"]:
@@ -35,7 +37,7 @@ def parse_unibet_api(id_league, sport):
         parameter = "R%25C3%25A9sultat%2520du%2520match"
     url = ("https://www.unibet.fr/zones/sportnode/markets.json?nodeId={}&filter=R%25C3%25A9sultat&marketname={}"
            .format(id_league, parameter))
-    content = urllib.request.urlopen(url).read()
+    content = requests.get(url).content
     parsed = json.loads(content)
     markets_by_type = parsed.get("marketsByType", [])
     odds_match = {}
