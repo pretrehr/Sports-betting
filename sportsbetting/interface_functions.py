@@ -21,7 +21,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
                                           best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
-                                          best_matches_freebet2)
+                                          best_matches_freebet2, best_match_defi_rembourse_ou_gagnant)
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -497,6 +497,8 @@ def best_match_pari_gagnant_interface(window, values):
         sys.stdout = buffer = io.StringIO()
         if values["RISKY_GAGNANT"] and nb_matches_combine>1:
             best_matches_combine3(site, minimum_odd, bet, sport, date_max, time_max, date_min, time_min, nb_matches_combine)
+        elif values["DEFI_REMBOURSE_OU_GAGNANT"] and nb_matches_combine == 1:
+            best_match_defi_rembourse_ou_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min, time_min)
         else:
             best_match_pari_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min,
                                     time_min, nb_matches_combine)

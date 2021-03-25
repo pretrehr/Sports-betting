@@ -171,6 +171,42 @@ def gain3(odds, best_odds, stake, minimum_odd):
                 profit = profit_combination
     return profit
 
+def mises_defi_rembourse_ou_gagnant(odds, stake, winning_outcome, output=False):
+    stakes = []
+    for i, odd in enumerate(odds):
+        if i == winning_outcome:
+            stakes.append(stake)
+            continue
+        parameter = sum([1/x for j, x in enumerate(odds) if j not in [i, winning_outcome]])
+        stakes.append(stake/(odd*(1-parameter)-1))
+    if output:
+        rounded_stakes = list(map(lambda x: round(x, 2), stakes))
+        print("taux de retour au joueur =", round(gain(odds)*100, 3), "%")
+        print("gain min =", min([round(rounded_stakes[i] * odds[i], 2)
+                                 for i in range(len(odds))]))
+        print("gain max =", max([round(rounded_stakes[i] * odds[i], 2)
+                                 for i in range(len(odds))]))
+        print("plus-value min =",
+              round(min([round(rounded_stakes[i] * odds[i], 2)
+                         for i in range(len(odds))]) - sum(rounded_stakes), 2))
+        print("plus-value max =",
+              round(max([round(rounded_stakes[i] * odds[i], 2)
+                         for i in range(len(odds))]) - sum(rounded_stakes), 2))
+        print("mises arrondies =", rounded_stakes)
+        return
+    return stakes
+
+
+def gain_defi_rembourse_ou_gagnant(odds, stake, winning_outcome):
+    stakes = []
+    for i, odd in enumerate(odds):
+        if i == winning_outcome:
+            stakes.append(stake)
+            continue
+        parameter = sum([1/x for j, x in enumerate(odds) if j not in [i, winning_outcome]])
+        stakes.append(stake/(odd*(1-parameter)-1))
+    return stake * odds[winning_outcome] - sum(stakes)
+
 
 def cotes_freebet(cotes):
     """
@@ -585,3 +621,4 @@ def cotes_combine_optimise(odds):
                 tmp_odds.append(round(odd, 4))
             all_odds.append(tmp_odds)
     return all_odds, all_outcomes
+

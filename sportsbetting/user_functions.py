@@ -31,7 +31,8 @@ from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, me
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
                                            mises_pari_rembourse_si_perdant, gain_promo_gain_cote, mises_promo_gain_cote,
-                                           gain_gains_nets_boostes, mises_gains_nets_boostes, gain3, mises3, cotes_combine_optimise)
+                                           gain_gains_nets_boostes, mises_gains_nets_boostes, gain3, mises3, cotes_combine_optimise,
+                                           gain_defi_rembourse_ou_gagnant, mises_defi_rembourse_ou_gagnant)
 from sportsbetting.lambda_functions import get_best_odds, get_profit
 
 
@@ -758,7 +759,8 @@ def convert_indices_to_opponents(combination_indices, matches, sport):
 def best_match_stakes_to_bet2(stakes, nb_matches=2, sport="football", date_max=None, time_max=None, identical_stakes=False):
     second_sites = {stake[1] for stake in stakes}
     main_sites = sb.BOOKMAKERS
-    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max)
+    all_odds = get_matches_with_best_trj(sport, 20)
+    all_odds = filter_dict_dates(all_odds, date_max, time_max)
     best_profit = -sum(stake[0] for stake in stakes)
     n = 5#get_nb_outcomes(sport) ** nb_matches
     nb_stakes = len(stakes)
@@ -873,4 +875,15 @@ def get_matches_with_best_trj(sport, nb_matches):
     matches = sorted(sb.ODDS[sport].items(), key=lambda x:trj_match(x[1])[0], reverse=True)[:nb_matches]
     return {match:odds for match, odds in matches}
     
-            
+
+def best_match_defi_rembourse_ou_gagnant(site, minimum_odd, stake, sport, date_max=None,
+                                         time_max=None, date_min=None, time_min=None):
+    odds_function = get_best_odds(False)
+    profit_function = lambda best_overall_odds, best_rank: gain_defi_rembourse_ou_gagnant(best_overall_odds, stake, best_rank, True)
+    profit_function = lambda odds_to_check, i: gain_defi_rembourse_ou_gagnant(odds_to_check, stake, i)
+    criteria = lambda odds_to_check, i: odds_to_check[i] >= minimum_odd
+    display_function = lambda best_overall_odds, best_rank: mises_defi_rembourse_ou_gagnant(best_overall_odds, stake, best_rank, True)
+    result_function = lambda best_overall_odds, best_rank: mises_defi_rembourse_ou_gagnant(best_overall_odds, stake, best_rank, False)
+    best_match_base(odds_function, profit_function, criteria, display_function,
+                    result_function, site, sport, date_max, time_max, date_min,
+                    time_min)

@@ -373,7 +373,8 @@ options_gagnant = [[sg.Text("Options")],
                     sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_GAGNANT"),
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")],
                    [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")],
-                   [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")]]
+                   [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")],
+                   [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT")]]
 column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
@@ -393,7 +394,7 @@ gagnant_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_GAGNANT", visible=False)],
-         [sg.MLine(size=(90, 12), key="RESULT_GAGNANT", font="Consolas 10",
+         [sg.MLine(size=(120, 12), key="RESULT_GAGNANT", font="Consolas 10",
                    visible=False)]])],
     [sg.Column(column_indicators_gagnant),
      sg.Column(column_results_gagnant)]
