@@ -692,7 +692,7 @@ def odds_match_surebets_interface(window, values):
             window["DATE_SUREBETS"].update(visible=False)
         window["MATCH_SUREBETS"].update(match, visible=True)
         trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
-        window["INFOS_TRJ_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 2)))
+        window["INFOS_TRJ_SUREBETS"].update("TRJ : {}%".format(round(trj*100, 3)))
         window["INFOS_ODDS_SUREBETS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
     except (IndexError, ValueError) as _:
         pass
@@ -747,6 +747,6 @@ def odds_match_values_interface(window, values):
         window["INFOS_VALUE_VALUES"].update("Value max : {}%".format(round(rate*100, 2)))
         window["INFOS_ODDS_VALUES"].update(" / ".join("{} @ {} (+{}%)".format(bookmaker, odd, round(r*100, 2)) for bookmaker, r, odd in infos_value))
         trj = trj_match(sb.ODDS[sport][match])[0]
-        window["INFOS_TRJ_VALUES"].update("TRJ : {}%".format(round(trj*100, 2)))
+        window["INFOS_TRJ_VALUES"].update("TRJ : {}%".format(round(trj*100, 3)))
     except (IndexError, ValueError) as _:
         pass

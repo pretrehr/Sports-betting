@@ -55,7 +55,7 @@ def mises(cotes, mise=1, output=False, freebet_display=False):
             print("mise totale =", round(sum(mis), 2))
             print("mises arrondies =", mis)
             return
-        print("taux de retour au joueur =", round(gain(cotes)*100, 2), "%")
+        print("taux de retour au joueur =", round(gain(cotes)*100, 3), "%")
         print("somme des mises =", round(sum(mis), 2))
         print("gain min =", min([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))
@@ -95,7 +95,7 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
     mises_reelles = list(map(lambda x: gains / x, cotes))
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
-        print("taux de retour au joueur =", round(gain(cotes)*100, 2), "%")
+        print("taux de retour au joueur =", round(gain(cotes)*100, 3), "%")
         print("somme des mises =", round(sum(mis), 2))
         print("gain min =", min([round(mis[i] * cotes[i], 2)
                                  for i in range(len(mis))]))

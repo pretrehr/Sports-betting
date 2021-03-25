@@ -494,9 +494,9 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         name_combine = " / ".join(x for x in names if x)
         diff = nb_chars - len(name_combine)
         if freebet and combine == combinaison_boostee:
-            sites_bet_combinaison = {site:{"mise freebet":round(stake, 2), "cote":round(cote+1, 2)}, "total":round(round(stake, 2)*cote, 2)}
+            sites_bet_combinaison = {site:{"mise freebet":round(stake, 2), "cote":round(cote+1, 3)}, "total":round(round(stake, 2)*cote, 2)}
         else:
-            sites_bet_combinaison = {site:{"mise":round(stake, 2), "cote":round(cote, 2)}, "total":round(round(stake, 2)*cote, 2)}
+            sites_bet_combinaison = {site:{"mise":round(stake, 2), "cote":round(cote, 3)}, "total":round(round(stake, 2)*cote, 2)}
         print(name_combine + " " * diff + "\t", sites_bet_combinaison)
 
 
