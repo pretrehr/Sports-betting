@@ -11,7 +11,7 @@ import urllib
 import urllib.error
 import urllib.request
 
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 from multiprocessing.pool import ThreadPool
 from pprint import pprint
 
@@ -27,11 +27,11 @@ from sportsbetting.parser_functions import parse
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets, binomial, best_match_base,
                                                filter_dict_dates, get_nb_outcomes, best_combine_reduit,
-                                               filter_dict_minimum_odd)
+                                               filter_dict_minimum_odd, cotes_combine_reduit_all_sites)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
                                            mises_pari_rembourse_si_perdant, gain_promo_gain_cote, mises_promo_gain_cote,
-                                           gain_gains_nets_boostes, mises_gains_nets_boostes, gain3, mises3)
+                                           gain_gains_nets_boostes, mises_gains_nets_boostes, gain3, mises3, cotes_combine_optimise)
 from sportsbetting.lambda_functions import get_best_odds, get_profit
 
 
@@ -694,3 +694,183 @@ def get_values(match_odds, rate):
     return best_rate, values
 
 
+def best_matches_combine2(site, minimum_odd, bet, sport, minimum_odd_selection, date_max=None, time_max=None,
+                          date_min=None, time_min=None):
+    nb_matches = 2
+    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max, date_min, time_min)
+    all_odds = filter_dict_minimum_odd(all_odds, minimum_odd_selection, site)
+    odds_combine_opt = [{} for _ in range(6)]
+    nb_combine = binomial(len(all_odds), nb_matches)
+    sb.PROGRESS = 0
+    combis = cotes_combine_optimise([[1 for _ in range(3)] for i in range(nb_matches)])[1]
+    print(combis)
+    def compute_all_odds_combine_optimise(nb_combine, combine, odds_combine_opt):
+        sb.PROGRESS += 100/nb_combine
+        try:
+            cotes_combination = cotes_combine_reduit_all_sites(
+                *[match[1] for match in combine]
+            )
+            for i in range(6):
+                odds_combine_opt[i][" / ".join([match[0] for match in combine])] = cotes_combination[i]
+#                 combis[i] = cotes_combination[i][1]
+        except KeyError:
+            pass
+    ThreadPool(4).map(lambda x: compute_all_odds_combine_optimise(nb_combine, x, odds_combine_opt),
+                      combinations(all_odds.items(), nb_matches))
+    sb.PROGRESS = 0
+    odds_function = get_best_odds(False)
+    profit_function = get_profit(bet, False)
+    criteria = lambda odds_to_check, i: all(odd >= minimum_odd for odd in odds_to_check)
+    for i, combination in enumerate(combis):
+        sb.ALL_ODDS_COMBINE = odds_combine_opt[i]
+#         display_function = lambda odds_to_check, i: mises_combine_optimise(odds_to_check, combination, bet, minimum_odd, True)
+#         result_function = lambda odds_to_check, i: mises_combine_optimise(odds_to_check, combination, bet, minimum_odd, False)
+        display_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet, best_rank, True)
+        result_function = lambda best_overall_odds, best_rank: mises2(best_overall_odds, bet, best_rank, False)
+        best_match_base(odds_function, profit_function, criteria, display_function, result_function, site, sport, date_max, time_max, date_min,
+                    time_min, True, nb_matches, combine_opt=True)
+
+
+def best_matches_combine3(site, minimum_odd, bet, sport="football",
+                          date_max=None, time_max=None, date_min=None,
+                          time_min=None, nb_matches_combine=2):
+    stakes = []
+    for _ in range(5):
+        stakes.append([bet, site, minimum_odd])
+    best_match_stakes_to_bet2(stakes, nb_matches_combine, sport, date_max, time_max, True)
+
+
+def convert_indices_to_opponents(combination_indices, matches, sport):
+    combination_opponents = []
+    matches_outcomes = [match.split(" - ") for match in matches]
+    if get_nb_outcomes(sport) == 3:
+        for match in matches_outcomes:
+            match.insert(1, "Nul")
+    for indices in combination_indices:
+        opponents = []
+        for i, index in enumerate(indices):
+            if index == float("inf"):
+                continue
+            opponents.append(matches_outcomes[i][index])
+        combination_opponents.append(tuple(opponents))
+    return combination_opponents
+
+def best_match_stakes_to_bet2(stakes, nb_matches=2, sport="football", date_max=None, time_max=None, identical_stakes=False):
+    second_sites = {stake[1] for stake in stakes}
+    main_sites = sb.BOOKMAKERS
+    all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max)
+    best_profit = -sum(stake[0] for stake in stakes)
+    n = 5#get_nb_outcomes(sport) ** nb_matches
+    nb_stakes = len(stakes)
+    all_odds_combine = [{} for _ in range(6)]
+    combis = list(combinations(all_odds.items(), nb_matches))
+    nb_combis = len(combis)
+    best_combine = None
+    best_bets = None
+    main_site_odds = []
+    main_sites_distribution = []
+    sb.PROGRESS = 0
+    list_combinations = cotes_combine_optimise([[1 for _ in range(3)] for i in range(nb_matches)])[1]
+    for k in range(6):
+        for i, combine in enumerate(combis):
+            sb.PROGRESS += 100 / nb_combis
+            match_combine = " / ".join([match[0] for match in combine])
+            cotes_combination = cotes_combine_reduit_all_sites(
+                *[match[1] for match in combine]
+            )
+#             print(cotes_combination[k])
+            all_odds_combine[k][match_combine] = cotes_combination[k]
+            for main0 in main_sites:
+                try:
+                    main_sites_distribution = [main0 for _ in range(n)]
+                    main_site_odds = copy.deepcopy(all_odds_combine[k][match_combine]["odds"][main0])
+                    break
+                except KeyError:
+                    pass
+            for main in main_sites[:i] + main_sites[i + 1:]:
+                try:
+                    potential_odds = all_odds_combine[k][match_combine]["odds"][main]
+                    for j, odd in enumerate(potential_odds):
+                        if odd > main_site_odds[j]:
+                            main_site_odds[j] = odd
+                            main_sites_distribution[j] = main
+                except KeyError:
+                    pass
+            second_odds = {second_site: all_odds_combine[k][match_combine]["odds"][second_site]
+                        for second_site in second_sites if second_site in all_odds_combine[k][match_combine]["odds"]}
+            if not second_odds:
+                continue
+            dict_combine_odds = copy.deepcopy(second_odds)
+            for perm in permutations(range(n), nb_stakes):
+                valid_perm = True
+                defined_second_sites = [[perm[j], stake[0], stake[1]]
+                                        for j, stake in enumerate(stakes)]
+                for j, stake in enumerate(stakes):
+                    if dict_combine_odds[defined_second_sites[j][2]][defined_second_sites[j][0]] < stake[2]:
+                        valid_perm = False
+                        break
+                if not valid_perm:
+                    if identical_stakes:
+                        break
+                    continue
+                defined_bets_temp = defined_bets(main_site_odds, dict_combine_odds,
+                                                main_sites_distribution,
+                                                defined_second_sites)
+                profit = defined_bets_temp[0] - np.sum(defined_bets_temp[1])
+                if profit > best_profit:
+                    best_profit = profit
+                    best_combine = combine
+                    best_bets = defined_bets_temp
+                    best_combination = k
+                if identical_stakes:
+                    break
+    if best_combine:
+        best_match_combine = " / ".join([match[0] for match in best_combine])
+        odds_best_match = copy.deepcopy(all_odds_combine[best_combination][best_match_combine])
+        all_sites = main_sites + list(second_sites)
+        for site in all_odds_combine[best_combination][best_match_combine]["odds"]:
+            if site not in all_sites:
+                del odds_best_match["odds"][site]
+        print(best_match_combine)
+        pprint(odds_best_match, compact=1)
+        print("Plus-value =", round(best_profit, 2))
+        print("Gain référence =", round(best_bets[0], 2))
+        print("Somme des mises =", round(np.sum(best_bets[1]), 2))
+        afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
+                               all_odds_combine[best_combination][best_match_combine]["odds"], sport,
+                               combinaisons=convert_indices_to_opponents(list_combinations[best_combination], [x[0] for x in best_combine], sport))
+    else:
+        print("No match found")
+
+def best_matches_freebet2(site, freebet, sport, nb_matches=2):
+#     all_odds = sb.ODDS[sport]
+    all_odds = get_matches_with_best_trj(sport, 10)
+    best_profit = float("-inf")
+    combis = list(combinations(all_odds.items(), nb_matches))
+    nb_combis = len(combis)
+    best_combine = None
+    best_bets = None
+    choices = list(product(*[range(get_nb_outcomes(sport)) for _ in range(nb_matches)]))
+    for combi in combis:
+        if any([site not in x[1]["odds"] for x in combi]):
+            continue
+        matches = [x[0] for x in combi]
+        for choice in choices:
+            choice_list = list(choice)
+            odd = 1
+            for match, outcome in zip(combi, choice_list):
+                odd *= match[1]["odds"][site][outcome]
+            profit = best_combine_reduit(matches, choice_list, site, freebet, sport, odd-1, output=False)
+            if profit < best_profit:
+                continue
+            best_profit = profit
+            best_matches = matches
+            best_choice = choice_list
+            best_odd = odd
+    best_combine_reduit(best_matches, best_choice, site, freebet, sport, best_odd-1, freebet=True)
+
+def get_matches_with_best_trj(sport, nb_matches):
+    matches = sorted(sb.ODDS[sport].items(), key=lambda x:trj_match(x[1])[0], reverse=True)[:nb_matches]
+    return {match:odds for match, odds in matches}
+    
+            

@@ -17,10 +17,11 @@ from sportsbetting.auxiliary_functions import get_nb_outcomes
 from sportsbetting.database_functions import get_all_current_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
-                                          best_matches_freebet, best_matches_combine,
+                                          best_matches_freebet, best_matches_combine, best_matches_combine3,
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
-                                          best_combine_booste, trj_match, best_matches_freebet_one_site, get_values)
+                                          best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
+                                          best_matches_freebet2)
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -229,12 +230,15 @@ def best_match_freebet_interface(window, values):
         freebet = float(values["BET_FREEBET"])
         sport = values["SPORT_FREEBET"][0]
         split_freebet = values["SPLIT_FREEBET"]
+        nb_matches = values["NB_MATCHES_FREEBET"]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
         if split_freebet:
             best_matches_freebet_one_site(site, freebet, sport)
-        else:
+        elif nb_matches == 1:
             best_match_freebet(site, freebet, sport)
+        else:
+            best_matches_freebet2(site, freebet, sport, nb_matches)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)
@@ -250,7 +254,7 @@ def best_match_freebet_interface(window, values):
         else:
             window["MATCH_FREEBET"].update(match)
             window["DATE_FREEBET"].update(date)
-            window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=not split_freebet)
+            window["ODDS_FREEBET"].update(odds_table(what_was_printed), visible=not split_freebet and nb_matches == 1)
             window["RESULT_FREEBET"].update(stakes(what_was_printed), visible=True)
             window["TEXT_FREEBET"].update(visible=True)
             window["DELETE_MATCH_FREEBET"].update(visible=True)
@@ -488,8 +492,11 @@ def best_match_pari_gagnant_interface(window, values):
         nb_matches_combine = values["NB_MATCHES_GAGNANT"]
         old_stdout = sys.stdout  # Memorize the default stdout stream
         sys.stdout = buffer = io.StringIO()
-        best_match_pari_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min,
-                                time_min, nb_matches_combine)
+        if values["RISKY_GAGNANT"] and nb_matches_combine>1:
+            best_matches_combine3(site, minimum_odd, bet, sport, date_max, time_max, date_min, time_min, nb_matches_combine)
+        else:
+            best_match_pari_gagnant(site, minimum_odd, bet, sport, date_max, time_max, date_min,
+                                    time_min, nb_matches_combine)
         sys.stdout = old_stdout  # Put the old stream back in place
         what_was_printed = buffer.getvalue()
         match, date = infos(what_was_printed)

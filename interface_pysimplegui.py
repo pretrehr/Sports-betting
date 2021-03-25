@@ -159,7 +159,9 @@ stake_layout = [
 ]
 
 column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1)), sg.Checkbox("Fractionnable", key='SPLIT_FREEBET')],
-                  [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_FREEBET")]]
+                  [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_FREEBET")],
+                  [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_FREEBET")],
+                  ]
 column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_freebet = [[sg.Text("", size=(30, 1), key="RESULTS_FREEBET" + str(_),
@@ -178,7 +180,7 @@ freebet_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_FREEBET", visible=False)],
-         [sg.MLine(size=(100, 12), key="RESULT_FREEBET", font="Consolas 10",
+         [sg.MLine(size=(150, 12), key="RESULT_FREEBET", font="Consolas 10",
                    visible=False)]])],
     [sg.Column(column_indicators_freebet), sg.Column(column_results_freebet)]
 ]
@@ -370,7 +372,8 @@ options_gagnant = [[sg.Text("Options")],
                    [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_GAGNANT_BOOL"),
                     sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1), key="DATE_MAX_GAGNANT"),
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")],
-                   [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")]]
+                   [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")],
+                   [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")]]
 column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),

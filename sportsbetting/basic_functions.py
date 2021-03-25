@@ -4,7 +4,7 @@ Assistant de paris sportifs
 """
 
 import copy
-from itertools import product, combinations
+from itertools import product, combinations, permutations
 import numpy as np
 
 
@@ -482,3 +482,106 @@ def mises_pari_rembourse_si_perdant_paliers(cotes, output=False):
         print("mises arrondies =", mis)
         return
     return mis_reelles
+
+def combine_reduit_rec(combi_to_keep, nb_outcomes):
+    n = len(combi_to_keep)
+    if n <= 1:
+        return [[[i] for i in range(nb_outcomes)]]
+    out = []
+    for i in range(n):
+        ref_combi = combi_to_keep[:i]+combi_to_keep[i+1:]
+        combines_partiels = combine_reduit_rec(ref_combi, nb_outcomes)
+        for list_combi in combines_partiels:
+            new_combi = []
+            for combi in list_combi:
+                if combi != ref_combi:
+                    copy_combi = copy.deepcopy(combi)
+                    copy_combi.insert(i, float("inf"))
+                    new_combi.append(copy_combi)
+                else:
+                    for j in range(nb_outcomes):
+                        copy_combi = copy.deepcopy(combi)
+                        copy_combi.insert(i, j)
+                        new_combi.append(copy_combi)
+            out.append(new_combi)
+    return out
+
+
+def mises_combine_optimise(odds, combination, stake, minimum_odd, output=False):
+    nb_outcomes = len(odds[0])
+    best_odds = []
+    best_profit = float("-inf")
+    best_combination = []
+    for outcomes in combine_reduit_rec(combination, nb_outcomes):
+        tmp_odds = []
+        for i, combi in enumerate(outcomes):
+            odd = 1
+            if combi == combination:
+                i_tmp = i
+            for j, outcome in enumerate(combi):
+                if outcome == float("inf"):
+                    continue
+                odd *= odds[j][outcome]
+            if odd < minimum_odd:
+                break
+            tmp_odds.append(odd)
+        else:
+            tmp_profit = gain2(tmp_odds, i_tmp, stake)
+            if tmp_profit > best_profit:
+                best_odds = tmp_odds
+                best_profit = tmp_profit
+                best_combination = outcomes
+    if not best_combination:
+        return
+    if output:
+        mises2(best_odds, stake, best_combination.index(combination), output)
+        print("combinaisons = ", best_combination)
+    else:
+        return mises2(best_odds, stake, best_combination.index(combination), output), best_combination
+
+
+def gain_combine_optimise(odds, combination, stake, minimum_odd):
+    nb_outcomes = len(odds[0])
+    best_profit = float("-inf")
+    for outcomes in combine_reduit_rec(combination, nb_outcomes):
+        tmp_odds = []
+        for i, combi in enumerate(outcomes):
+            odd = 1
+            if combi == combination:
+                i_tmp = i
+            for j, outcome in enumerate(combi):
+                if outcome == float("inf"):
+                    continue
+                odd *= odds[j][outcome]
+            if odd < minimum_odd:
+                break
+            tmp_odds.append(odd)
+        else:
+            tmp_profit = gain2(tmp_odds, i_tmp, stake)
+            if tmp_profit > best_profit:
+                best_profit = tmp_profit
+    return best_profit
+
+def cotes_combine_optimise(odds):
+    """
+    Calcule les cotes optimisees de plusieurs matches combines
+    """
+    nb_outcomes = len(odds[0])
+    nb_matches = len(odds)
+    all_odds = []
+    all_outcomes = []
+    for combination in permutations(range(nb_outcomes), nb_matches):
+        for outcomes in combine_reduit_rec(list(combination), nb_outcomes):
+            tmp_odds = []
+            if outcomes in all_outcomes:
+                continue
+            all_outcomes.append(outcomes)
+            for i, combi in enumerate(outcomes):
+                odd = 1
+                for j, outcome in enumerate(combi):
+                    if outcome == float("inf"):
+                        continue
+                    odd *= odds[j][outcome]
+                tmp_odds.append(round(odd, 4))
+            all_odds.append(tmp_odds)
+    return all_odds, all_outcomes
