@@ -92,6 +92,9 @@ def parse_bwin(url):
     if "/0" in url:
         id_sport = re.findall(r'\d+', url)[0]
         parameter = "sportIds=" + id_sport
+    elif "0:" in url:
+        id_virtual_league = url.split("0:")[-1]
+        parameter = "virtualCompetitionIds=" + id_virtual_league
     else:
         id_league = re.findall(r'\d+', url)[-1]
         parameter = "competitionIds=" + id_league
