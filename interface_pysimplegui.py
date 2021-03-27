@@ -72,6 +72,7 @@ parsing_layout = [
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
+     sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING")]]),
      sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
@@ -539,6 +540,7 @@ while True:
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sb.ABORT:
                 window["START_PARSING"].update(visible=True)
+                window["START_ALL_PARSING"].update(visible=True)
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
@@ -641,6 +643,32 @@ while True:
             for site in selected_sites:
                 window["TEXT_{}_PARSING".format(site)].update(visible=True)
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=True)
+    elif event == 'START_ALL_PARSING':
+        selected_sites = values["SITES"]
+        window["MATCHES_ODDS"].update([])
+        window["MATCHES"].update([])
+        if selected_sites:
+            window["STOP_PARSING"].update(visible=True)
+            window["START_PARSING"].update(visible=False)
+            window["START_ALL_PARSING"].update(visible=False)
+            def parse_all_thread():
+                """
+                :return: Crée un thread pour le parsing des compétitions
+                """
+                sb.PROGRESS = 0
+                for sport in ["football", "tennis", "basketball"]:
+                    parse_competitions(["Tout le {}".format(sport)], sport, *selected_sites)
+
+
+            thread = threading.Thread(target=parse_all_thread)
+            thread.start()
+            start_time = time.time()
+            start_parsing = 0
+            palier = 20
+            window['PROGRESS_PARSING'].update(0, 100, visible=True)
+            window["TEXT_PARSING"].update(visible=True)
+            window["REMAINING_TIME_PARSING"].update(sb.EXPECTED_TIME)
+            sb.SITE_PROGRESS = collections.defaultdict(int)
     elif event == "STOP_PARSING":
         window["STOP_PARSING"].update(visible=False)
         window["TEXT_PARSING"].update("Interruption en cours")
