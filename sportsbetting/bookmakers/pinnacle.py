@@ -117,7 +117,7 @@ def parse_sport_pinnacle(sport):
     id_sports = {"football" : 29,
                  "tennis" : 33,
                  "basketball" : 4,
-                 "rugby" : 6,
+                 "rugby" : 27,
                  "hockey-sur-glace" :19,
                  "handball" : 18}
     url = "https://guest.api.arcadia.pinnacle.com/0.1/sports/{}/leagues?all=false".format(id_sports[sport])
