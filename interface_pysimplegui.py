@@ -108,30 +108,30 @@ options_under_condition = [[sg.Text("Options")],
 column_indicators_under_condition = [[sg.Text("", size=(18, 1),
                                               key="INDICATORS_UNDER_CONDITION" + str(_),
                                               visible=False)] for _ in range(6)]
-column_results_under_condition = [[sg.Text("", size=(30, 1),
+column_results_under_condition = [[sg.Text("", size=(8, 1),
                                            key="RESULTS_UNDER_CONDITION" + str(_),
                                            visible=False)] for _ in range(6)]
 match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_UNDER_CONDITION"),
                                  sg.Column(column_under_condition),
-                                 sg.Column(options_under_condition)],
+                                 sg.Column(options_under_condition),
+                                 sg.Column([[sg.Text("", size=(30, 1), key="MATCH_UNDER_CONDITION")],
+                                            [sg.Text("", size=(30, 1), key="DATE_UNDER_CONDITION")],
+                                            [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                                                        headings=["Cotes", "1", "N", "2"],
+                                                        key="ODDS_UNDER_CONDITION",
+                                                        visible=False, hide_vertical_scroll=True,
+                                                        size=(None, nb_bookmakers))]]),],
                                 [sg.Button("Calculer", key="BEST_MATCH_UNDER_CONDITION")],
                                 [sg.Button("Ignorer ce match", key="DELETE_MATCH_UNDER_CONDITION", visible=False)],
                                 [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_UNDER_CONDITION", visible=False)],
-                                [sg.Text("", size=(30, 1), key="MATCH_UNDER_CONDITION"),
-                                 sg.Text("", size=(30, 1), key="DATE_UNDER_CONDITION")],
-                                [sg.Table([["parionssport", "0000", "0000", "0000"]],
-                                          headings=["Cotes", "1", "N", "2"],
-                                          key="ODDS_UNDER_CONDITION",
-                                          visible=False, hide_vertical_scroll=True,
-                                          size=(None, nb_bookmakers)),
+                                [sg.Column(column_indicators_under_condition),
+                                 sg.Column(column_results_under_condition),
                                  sg.Column([[sg.Text(
                                      "Répartition des mises (les totaux affichés prennent en "
                                      "compte les éventuels freebets) :",
                                      key="TEXT_UNDER_CONDITION", visible=False)],
                                      [sg.MLine(size=(100, 12), key="RESULT_UNDER_CONDITION",
                                                font="Consolas 10", visible=False)]])],
-                                [sg.Column(column_indicators_under_condition),
-                                 sg.Column(column_results_under_condition)]
                                 ]
 
 column_text_stake = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
