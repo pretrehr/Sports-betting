@@ -12,7 +12,7 @@ Athletic Bilbao - Betis
           'unibet': [2.11, 3.25, 3.48],
           'winamax': [2.1, 3.3, 3.5],
           'zebet': [2.05, 3.25, 3.45]}}
-taux de retour au joueur = 95.01 %
+taux de retour au joueur = 95.014 %
 somme des mises = 22.1
 gain min = 20.99
 gain max = 21.0

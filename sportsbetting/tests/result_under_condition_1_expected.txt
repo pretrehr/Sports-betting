@@ -12,7 +12,7 @@ Liverpool - Leicester City
           'unibet': [1.88, 4.0, 3.9],
           'winamax': [1.88, 4, 3.9],
           'zebet': [1.85, 3.95, 3.8]}}
-taux de retour au joueur = 96.88 %
+taux de retour au joueur = 96.878 %
 somme des mises = 19.41
 gain min = 18.8
 gain max = 18.82

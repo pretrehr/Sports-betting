@@ -10,7 +10,7 @@ Bologne - Crotone
           'unibet': [1.75, 3.9, 4.15],
           'winamax': [1.74, 3.9, 4.1],
           'zebet': [1.68, 3.9, 4.2]}}
-taux de retour au joueur = 94.59 %
+taux de retour au joueur = 94.594 %
 somme des mises = 18.5
 gain min = 17.5
 gain max = 17.5
