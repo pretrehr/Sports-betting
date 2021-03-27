@@ -21,7 +21,7 @@ import termcolor
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes, load_odds, save_odds
 from sportsbetting.database_functions import get_all_competitions
-from sportsbetting.user_functions import parse_competitions
+from sportsbetting.user_functions import parse_competitions, is_surebet_available
 from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_under_conditions_interface,
                                                best_match_freebet_interface,
@@ -71,6 +71,7 @@ parsing_layout = [
                    [sg.Button("Tout sélectionner", key="SELECT_ALL")],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
     ],
+    [sg.Text("", size=(100, 1), key="SUREBET_PARSING", visible=False)],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
      sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING")]]),
      sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
@@ -541,6 +542,12 @@ while True:
             if not sb.ABORT:
                 window["START_PARSING"].update(visible=True)
                 window["START_ALL_PARSING"].update(visible=True)
+                window['SUREBET_PARSING'].update("Recherche de surebet en cours", text_color="white", visible=True)
+                has_surebet, match = is_surebet_available()
+                if has_surebet:
+                    window['SUREBET_PARSING'].update("Surebet disponible ({})".format(match), text_color="red")
+                else:
+                    window['SUREBET_PARSING'].update("Aucun surebet")
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
