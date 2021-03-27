@@ -21,7 +21,7 @@ import termcolor
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes, load_odds, save_odds
 from sportsbetting.database_functions import get_all_competitions
-from sportsbetting.user_functions import parse_competitions, is_surebet_available
+from sportsbetting.user_functions import parse_competitions, get_sports_with_surebet
 from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_under_conditions_interface,
                                                best_match_freebet_interface,
@@ -55,6 +55,7 @@ except FileNotFoundError:
     pass
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
+sb.BETA = "--beta" in sys.argv
 nb_bookmakers = len(sb.BOOKMAKERS)
 
 
@@ -73,7 +74,7 @@ parsing_layout = [
     ],
     [sg.Text("", size=(100, 1), key="SUREBET_PARSING", visible=False)],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
-     sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING")]]),
+     sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING", visible=sb.BETA)]]),
      sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
@@ -162,7 +163,7 @@ stake_layout = [
 
 column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1)), sg.Checkbox("Fractionnable", key='SPLIT_FREEBET')],
                   [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_FREEBET")],
-                  [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_FREEBET")],
+                  [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_FREEBET", visible=sb.BETA)],
                   ]
 column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET" + str(_),
                                       visible=False)] for _ in range(5)]
@@ -376,7 +377,7 @@ options_gagnant = [[sg.Text("Options")],
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")],
                    [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")],
                    [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")],
-                   [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT")]]
+                   [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT", visible=sb.BETA)]]
 column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
@@ -504,7 +505,7 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Freebets à placer', freebets_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout),
                          sg.Tab('Surebets', surebets_layout),
-                         sg.Tab('Values', values_layout)
+                         sg.Tab('Values', values_layout, visible=sb.BETA)
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -541,11 +542,11 @@ while True:
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sb.ABORT:
                 window["START_PARSING"].update(visible=True)
-                window["START_ALL_PARSING"].update(visible=True)
-                window['SUREBET_PARSING'].update("Recherche de surebet en cours", text_color="white", visible=True)
-                has_surebet, match = is_surebet_available()
-                if has_surebet:
-                    window['SUREBET_PARSING'].update("Surebet disponible ({})".format(match), text_color="red")
+                window["START_ALL_PARSING"].update(visible=sb.BETA)
+                window['SUREBET_PARSING'].update("Recherche de surebet en cours", text_color="white", visible=sb.BETA)
+                sports_with_surebet = get_sports_with_surebet()
+                if sports_with_surebet:
+                    window['SUREBET_PARSING'].update("Surebet disponible ({})".format(", ".join(sports_with_surebet)), text_color="red")
                 else:
                     window['SUREBET_PARSING'].update("Aucun surebet")
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,

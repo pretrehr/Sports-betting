@@ -35,6 +35,7 @@ DB_MANAGEMENT = False
 TOKENS = {}
 COOKIES_JOA_ACCEPTED = False
 TRANSLATION = {}
+BETA = False
 
 
 class UnavailableCompetitionException(Exception):

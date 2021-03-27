@@ -888,11 +888,13 @@ def best_match_defi_rembourse_ou_gagnant(site, minimum_odd, stake, sport, date_m
                     result_function, site, sport, date_max, time_max, date_min,
                     time_min)
 
-def is_surebet_available():
-    for sport in ["football", "tennis", "basketball"]:
+def get_sports_with_surebet():
+    sports_with_surebet = []
+    for sport in ["basketball", "football", "tennis"]:
         if sport not in sb.ODDS:
             continue
         for match in sb.ODDS[sport]:
-            if trj_match(sb.ODDS[sport][match])[0]>1:
-                return True, match
-    return False, None
+            if trj_match(sb.ODDS[sport][match])[0]>=1:
+                sports_with_surebet.append(sport)
+                break
+    return sports_with_surebet
