@@ -568,6 +568,9 @@ def odds_match_interface(window, values):
         else:
             window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(match, visible=True)
+        trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
+        window["TRJ_ODDS"].update("TRJ : {}%".format(round(trj*100, 3)))
+        window["INFOS_ODDS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
         window["DELETE_SITE_ODDS"].update(visible=True)
         window["DELETE_MATCH_ODDS"].update(visible=True)
     except IndexError:

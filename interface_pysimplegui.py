@@ -21,7 +21,7 @@ import termcolor
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes, load_odds, save_odds
 from sportsbetting.database_functions import get_all_competitions
-from sportsbetting.user_functions import parse_competitions, get_sports_with_surebet
+from sportsbetting.user_functions import parse_competitions, get_sports_with_surebet, trj_match
 from sportsbetting.interface_functions import (odds_table_combine,
                                                best_match_under_conditions_interface,
                                                best_match_freebet_interface,
@@ -140,52 +140,54 @@ column_fields_stake = [[sg.InputText(key='BET_STAKE', size=(6, 1))],
                        [sg.InputText(key='ODD_STAKE', size=(6, 1))]]
 column_stake = [[sg.Column(column_text_stake), sg.Column(column_fields_stake)],
                 [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_STAKE", enable_events=True)]]
-column_indicators_stake = [[sg.Text("", size=(15, 1), key="INDICATORS_STAKE" + str(_),
+column_indicators_stake = [[sg.Text("", size=(18, 1), key="INDICATORS_STAKE" + str(_),
                                     visible=False)] for _ in range(6)]
-column_results_stake = [[sg.Text("", size=(30, 1), key="RESULTS_STAKE" + str(_),
+column_results_stake = [[sg.Text("", size=(8, 1), key="RESULTS_STAKE" + str(_),
                                  visible=False)] for _ in range(6)]
 stake_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_STAKE"),
      sg.Column(column_stake),
-     sg.Listbox([], size=(40, 12), key="MATCHES")],
+     sg.Listbox([], size=(40, 12), key="MATCHES"),
+     sg.Column([[sg.Text("", size=(30, 1), key="MATCH_STAKE")],
+                [sg.Text("", size=(30, 1), key="DATE_STAKE")],
+                [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                            headings=["Cotes", "1", "N", "2"],
+                            key="ODDS_STAKE",
+                            visible=False, hide_vertical_scroll=True,
+                            size=(None, nb_bookmakers))]]),],
     [sg.Button("Calculer", key="BEST_STAKE")],
-    [sg.Text("", size=(30, 1), key="MATCH_STAKE"),
-     sg.Text("", size=(30, 1), key="DATE_STAKE")],
-    [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
-              key="ODDS_STAKE", visible=False, hide_vertical_scroll=True, size=(None, nb_bookmakers)),
+    [sg.Column(column_indicators_stake),
+     sg.Column(column_results_stake),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_STAKE", visible=False)],
-         [sg.MLine(size=(100, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])],
-    [sg.Column(column_indicators_stake),
-     sg.Column(column_results_stake)]
+         [sg.MLine(size=(100, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])]
 ]
 
 column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1)), sg.Checkbox("Fractionnable", key='SPLIT_FREEBET')],
                   [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_FREEBET")],
                   [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_FREEBET", visible=sb.BETA)],
                   ]
-column_indicators_freebet = [[sg.Text("", size=(15, 1), key="INDICATORS_FREEBET" + str(_),
+column_indicators_freebet = [[sg.Text("", size=(18, 1), key="INDICATORS_FREEBET" + str(_),
                                       visible=False)] for _ in range(5)]
-column_results_freebet = [[sg.Text("", size=(30, 1), key="RESULTS_FREEBET" + str(_),
+column_results_freebet = [[sg.Text("", size=(8, 1), key="RESULTS_FREEBET" + str(_),
                                    visible=False)] for _ in range(5)]
 freebet_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_FREEBET"),
-     sg.Column(column_freebet)],
+     sg.Column(column_freebet),
+     sg.Column([[sg.Text("", size=(30, 1), key="MATCH_FREEBET")],
+                [sg.Text("", size=(30, 1), key="DATE_FREEBET")],
+                [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                        headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
+                        hide_vertical_scroll=True, size=(None, nb_bookmakers))]])],
     [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
     [sg.Button("Ignorer ce match", key="DELETE_MATCH_FREEBET", visible=False)],
     [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_FREEBET", visible=False)],
-    [sg.Text("", size=(30, 1), key="MATCH_FREEBET"),
-     sg.Text("", size=(30, 1), key="DATE_FREEBET")],
-    [sg.Table([["parionssport", "0000", "0000", "0000"]],
-              headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
-              hide_vertical_scroll=True, size=(None, nb_bookmakers)),
-     sg.Column([[sg.Text(
-         "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
-         key="TEXT_FREEBET", visible=False)],
-         [sg.MLine(size=(150, 12), key="RESULT_FREEBET", font="Consolas 10",
-                   visible=False)]])],
-    [sg.Column(column_indicators_freebet), sg.Column(column_results_freebet)]
+    [sg.Column(column_indicators_freebet),
+     sg.Column(column_results_freebet),
+     sg.Column([[sg.Text("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
+                         key="TEXT_FREEBET", visible=False)],
+                [sg.MLine(size=(120, 12), key="RESULT_FREEBET", font="Consolas 10", visible=False)]])],
 ]
 
 column_text_cashback = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -378,35 +380,40 @@ options_gagnant = [[sg.Text("Options")],
                    [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")],
                    [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")],
                    [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT", visible=sb.BETA)]]
-column_indicators_gagnant = [[sg.Text("", size=(15, 1), key="INDICATORS_GAGNANT" + str(_),
+column_indicators_gagnant = [[sg.Text("", size=(18, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
-column_results_gagnant = [[sg.Text("", size=(30, 1), key="RESULTS_GAGNANT" + str(_),
+column_results_gagnant = [[sg.Text("", size=(8, 1), key="RESULTS_GAGNANT" + str(_),
                                    visible=False)] for _ in range(5)]
 gagnant_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_GAGNANT"),
      sg.Column(column_gagnant),
-     sg.Column(options_gagnant)],
+     sg.Column(options_gagnant),
+     sg.Column([[sg.Text("", size=(60, 1), key="MATCH_GAGNANT")],
+                [sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
+                [sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
+                          key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, nb_bookmakers))],
+                [sg.Button("Voir les cotes combinées", key="ODDS_COMBINE_GAGNANT", visible=False)]])],
     [sg.Button("Calculer", key="BEST_MATCH_GAGNANT")],
     [sg.Button("Ignorer ce match", key="DELETE_MATCH_GAGNANT", visible=False)],
     [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_GAGNANT", visible=False)],
-    [sg.Text("", size=(60, 1), key="MATCH_GAGNANT")],
-    [sg.Text("", size=(30, 1), key="DATE_GAGNANT")],
-    [sg.Column([[sg.Table([["parionssport", "0000", "0000", "0000"]], headings=["Cotes", "1", "N", "2"],
-              key="ODDS_GAGNANT", visible=False, hide_vertical_scroll=True, size=(None, nb_bookmakers))],
-     [sg.Button("Voir les cotes combinées", key="ODDS_COMBINE_GAGNANT", visible=False)]]),
+    [sg.Column(column_indicators_gagnant),
+     sg.Column(column_results_gagnant),
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_GAGNANT", visible=False)],
          [sg.MLine(size=(120, 12), key="RESULT_GAGNANT", font="Consolas 10",
-                   visible=False)]])],
-    [sg.Column(column_indicators_gagnant),
-     sg.Column(column_results_gagnant)]
+                   visible=False)]])]
 ]
 
 odds_layout = [
     [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_ODDS", enable_events=True),
-     sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True),
+     sg.Col([[sg.InputText(key='SEARCH_ODDS', size=(40, 1), enable_events=True)],
+             [sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True)],
+             [sg.Button("Trier par TRJ", key="TRJ_SORT_ODDS"), 
+              sg.Button("Trier par nom", key="NAME_SORT_ODDS")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_ODDS", visible=False)],
+             [sg.Text("", size=(30, 1), key="TRJ_ODDS")],
+             [sg.Text("", size=(50, 1), key="INFOS_ODDS")],
              [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
              [sg.Table([["parionssport", "0000", "0000", "0000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
@@ -433,11 +440,12 @@ combi_opt_layout = [
     [sg.Text("Match"),
      sg.Button("Retirer match", key="REMOVE_COMBI_OPT"),
      sg.Button("Ajouter match", key="ADD_COMBI_OPT"),  sg.Text("\t\t\t\tIssue boostée")],
-    [sg.Col([[sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_0")]]),
+    [sg.Col([[sg.InputText(size=(60, 1), key="SEARCH_MATCH_COMBI_OPT_0", enable_events=True)], [sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_0")]]),
      sg.Col([[sg.Radio('1', "RES_COMBI_OPT_0", key="1_RES_COMBI_OPT_0", default=True)]]),
      sg.Col([[sg.Radio('N', "RES_COMBI_OPT_0", key="N_RES_COMBI_OPT_0")]]),
      sg.Col([[sg.Radio('2', "RES_COMBI_OPT_0", key="2_RES_COMBI_OPT_0")]])],
-     *([sg.Col([[sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)]]),
+     *([sg.Col([[sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)],
+                [sg.InputText(size=(60, 1), key="SEARCH_MATCH_COMBI_OPT_" + str(i), enable_events=True, visible=False)]]),
      sg.Col([[sg.Radio('1', "RES_COMBI_OPT_" + str(i), key="1_RES_COMBI_OPT_" + str(i), visible=False, default=True)]]),
      sg.Col([[sg.Radio('N', "RES_COMBI_OPT_" + str(i), key="N_RES_COMBI_OPT_" + str(i), visible=False)]]),
      sg.Col([[sg.Radio('2', "RES_COMBI_OPT_" + str(i), key="2_RES_COMBI_OPT_" + str(i), visible=False)]])]
@@ -507,7 +515,7 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Surebets', surebets_layout),
                          sg.Tab('Values', values_layout, visible=sb.BETA)
                          ]])],
-          [sg.Button('Quitter', button_color=("white", "red"))]]
+          [sg.Button('Quitter', button_color=("white", "red")), sg.Button('Fermer les drivers ouverts', key="CLOSE_DRIVERS", button_color=("black", "orange"))]]
 
 # Create the Window
 window = sg.Window('Paris sportifs', layout, location=(0, 0))
@@ -631,6 +639,7 @@ while True:
         if selected_competitions and selected_sites:
             window["STOP_PARSING"].update(visible=True)
             window["START_PARSING"].update(visible=False)
+            window["START_ALL_PARSING"].update(visible=False)
             def parse_thread():
                 """
                 :return: Crée un thread pour le parsing des compétitions
@@ -774,14 +783,26 @@ while True:
             del sb.ODDS[sport_gagnant[0]][match_gagnant]
     elif event == "RELOAD_ODDS_GAGNANT":
         sb.ODDS = load_odds(PATH_DATA)
-    elif event == "SPORT_ODDS":
+    elif event == "NAME_SORT_ODDS":
         try:
             matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]))
             window['MATCHES_ODDS'].update(values=matches)
         except KeyError:
             window['MATCHES_ODDS'].update(values=[])
+    elif event == "SEARCH_ODDS":
+        try:
+            matches = sorted(list([x for x in sb.ODDS[values["SPORT_ODDS"][0]] if values["SEARCH_ODDS"].lower() in x.lower()]))
+            window['MATCHES_ODDS'].update(values=matches)
+        except KeyError:
+            window['MATCHES_ODDS'].update(values=[])
     elif event == "MATCHES_ODDS":
         odds_match_interface(window, values)
+    elif event == "SPORT_ODDS" or event == "TRJ_SORT_ODDS":
+        try:
+            matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]), key=lambda x:trj_match(sb.ODDS[values["SPORT_ODDS"][0]][x])[0], reverse=True)
+            window['MATCHES_ODDS'].update(values=matches)
+        except KeyError:
+            window['MATCHES_ODDS'].update(values=[])    
     elif event == "DELETE_SITE_ODDS":
         delete_site_interface(window, values)
         save_odds(sb.ODDS, PATH_DATA)
@@ -815,12 +836,29 @@ while True:
                 window["N_RES_COMBI_OPT_"+str(i)].update(visible=True)
         for i in range(9):
             if sport in sb.ODDS:
-                matches = sorted(list(sb.ODDS[sport]))
+                matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport]]))
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=matches)
             else:
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=[])
                 sg.Popup("Aucun match disponible en {}".format(sport))
                 break
+    elif "SEARCH_MATCH_COMBI_OPT_" in event:
+        sport = values["SPORT_COMBI_OPT"][0]
+        i = event.split("_")[-1]
+        if sport in sb.ODDS:
+            matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport] if values["SEARCH_MATCH_COMBI_OPT_"+i].lower() in x.lower()]))
+            window['MATCH_COMBI_OPT_' + i].update(values=matches)
+    elif event == "CLOSE_DRIVERS":
+        for site in sb.SELENIUM_SITES:
+            if site in sb.selenium_init.DRIVER:
+                sb.selenium_init.DRIVER[site].quit()
+        sb.selenium_init.DRIVER = {}
+        colorama.init()
+        print(termcolor.colored('Drivers closed{}'
+                                .format(colorama.Style.RESET_ALL),
+                                'green'))
+        colorama.deinit()
+        sg.Popup("Drivers fermés")
     elif event in (None, 'Quitter'):  # if user closes window or clicks cancel
         break
     elif event == "FIND_SUREBETS":
