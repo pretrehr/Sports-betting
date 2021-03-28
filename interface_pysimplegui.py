@@ -445,7 +445,8 @@ combi_opt_layout = [
      sg.Col([[sg.Radio('N', "RES_COMBI_OPT_0", key="N_RES_COMBI_OPT_0")]]),
      sg.Col([[sg.Radio('2', "RES_COMBI_OPT_0", key="2_RES_COMBI_OPT_0")]])],
      *([sg.Col([[sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)],
-                [sg.InputText(size=(60, 1), key="SEARCH_MATCH_COMBI_OPT_" + str(i), enable_events=True, visible=False)]]),
+     *([sg.Col([[sg.InputText(size=(60, 1), key="SEARCH_MATCH_COMBI_OPT_" + str(i), enable_events=True, visible=False)],
+                [sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)]]),
      sg.Col([[sg.Radio('1', "RES_COMBI_OPT_" + str(i), key="1_RES_COMBI_OPT_" + str(i), visible=False, default=True)]]),
      sg.Col([[sg.Radio('N', "RES_COMBI_OPT_" + str(i), key="N_RES_COMBI_OPT_" + str(i), visible=False)]]),
      sg.Col([[sg.Radio('2', "RES_COMBI_OPT_" + str(i), key="2_RES_COMBI_OPT_" + str(i), visible=False)]])]
@@ -815,6 +816,7 @@ while True:
             sport = values["SPORT_COMBI_OPT"][0]
         if visible_combi_opt < 9:
             window["MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
+            window["SEARCH_MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
             issues = ["1", "N", "2"] if sport and get_nb_outcomes(sport) == 3 else ["1", "2"]
             for issue in issues:
                 window[issue+"_RES_COMBI_OPT_" + str(visible_combi_opt)].update(visible=True)
@@ -823,6 +825,7 @@ while True:
         if visible_combi_opt > 1:
             visible_combi_opt -= 1
             window["MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=False)
+            window["SEARCH_MATCH_COMBI_OPT_" + str(visible_combi_opt)].update(visible=False)
             for issue in ["1", "N", "2"]:
                 window[issue+"_RES_COMBI_OPT_" + str(visible_combi_opt)].update(visible=False)
     elif event == "BEST_COMBI_OPT":
@@ -843,6 +846,8 @@ while True:
                 sg.Popup("Aucun match disponible en {}".format(sport))
                 break
     elif "SEARCH_MATCH_COMBI_OPT_" in event:
+        if not values["SPORT_COMBI_OPT"]:
+            continue
         sport = values["SPORT_COMBI_OPT"][0]
         i = event.split("_")[-1]
         if sport in sb.ODDS:
