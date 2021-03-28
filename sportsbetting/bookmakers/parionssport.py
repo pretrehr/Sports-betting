@@ -141,6 +141,8 @@ def parse_sport_parionssport(sport):
     list_odds = []
     for competition in competitions:
         for id_competition in competition["items"]:
+            if "Cotes Boostées" in competition["name"]:
+                continue
             list_odds.append(parse_parionssport_api(id_competition))
     return merge_dicts(list_odds)
 

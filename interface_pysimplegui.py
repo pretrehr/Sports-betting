@@ -444,7 +444,6 @@ combi_opt_layout = [
      sg.Col([[sg.Radio('1', "RES_COMBI_OPT_0", key="1_RES_COMBI_OPT_0", default=True)]]),
      sg.Col([[sg.Radio('N', "RES_COMBI_OPT_0", key="N_RES_COMBI_OPT_0")]]),
      sg.Col([[sg.Radio('2', "RES_COMBI_OPT_0", key="2_RES_COMBI_OPT_0")]])],
-     *([sg.Col([[sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)],
      *([sg.Col([[sg.InputText(size=(60, 1), key="SEARCH_MATCH_COMBI_OPT_" + str(i), enable_events=True, visible=False)],
                 [sg.Combo([], size=(60, 10), key="MATCH_COMBI_OPT_" + str(i), visible=False)]]),
      sg.Col([[sg.Radio('1', "RES_COMBI_OPT_" + str(i), key="1_RES_COMBI_OPT_" + str(i), visible=False, default=True)]]),
