@@ -36,7 +36,8 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                get_current_competitions_interface,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface,
-                                               find_values_interface, odds_match_values_interface)
+                                               find_values_interface, odds_match_values_interface,
+                                               open_bookmaker_odds)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -417,6 +418,7 @@ odds_layout = [
              [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
              [sg.Table([["parionssport", "0000", "0000", "0000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
+                       enable_events=True,
                        hide_vertical_scroll=True, size=(None, nb_bookmakers))],
              [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]])
@@ -515,7 +517,7 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Surebets', surebets_layout),
                          sg.Tab('Values', values_layout, visible=sb.BETA)
                          ]])],
-          [sg.Button('Quitter', button_color=("white", "red")), sg.Button('Fermer les drivers ouverts', key="CLOSE_DRIVERS", button_color=("black", "orange"))]]
+          [sg.Button('Quitter', button_color=("white", "red"))]]
 
 # Create the Window
 window = sg.Window('Paris sportifs', layout, location=(0, 0))
@@ -809,6 +811,8 @@ while True:
     elif event == "DELETE_MATCH_ODDS":
         delete_odds_interface(window, values)
         save_odds(sb.ODDS, PATH_DATA)
+    elif event == "ODDS_ODDS":
+        open_bookmaker_odds(window, values)
     elif event == "ADD_COMBI_OPT":
         sport = ""
         if values["SPORT_COMBI_OPT"]:
@@ -852,17 +856,6 @@ while True:
         if sport in sb.ODDS:
             matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport] if values["SEARCH_MATCH_COMBI_OPT_"+i].lower() in x.lower()]))
             window['MATCH_COMBI_OPT_' + i].update(values=matches)
-    elif event == "CLOSE_DRIVERS":
-        for site in sb.SELENIUM_SITES:
-            if site in sb.selenium_init.DRIVER:
-                sb.selenium_init.DRIVER[site].quit()
-        sb.selenium_init.DRIVER = {}
-        colorama.init()
-        print(termcolor.colored('Drivers closed{}'
-                                .format(colorama.Style.RESET_ALL),
-                                'green'))
-        colorama.deinit()
-        sg.Popup("Drivers fermés")
     elif event in (None, 'Quitter'):  # if user closes window or clicks cancel
         break
     elif event == "FIND_SUREBETS":

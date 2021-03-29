@@ -11,6 +11,7 @@ import sys
 import io
 import numpy as np
 import PySimpleGUI as sg
+import webbrowser
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import get_nb_outcomes
@@ -753,3 +754,32 @@ def odds_match_values_interface(window, values):
         window["INFOS_TRJ_VALUES"].update("TRJ : {}%".format(round(trj*100, 3)))
     except (IndexError, ValueError) as _:
         pass
+
+def get_url_by_id(bookmaker, id_match):
+    if not id_match:
+        print("Match non trouvé")
+        return
+    if bookmaker == "betclic":
+        return "https://www.betclic.fr/a-m"+str(id_match)
+    if bookmaker == "winamax":
+        return "https://www.winamax.fr/paris-sportifs/match/"+id_match
+    if bookmaker == "pmu":
+        return "https://paris-sportifs.pmu.fr/event/"+id_match
+    if bookmaker == "zebet":
+        return "https://www.zebet.fr/fr/event/{}-a".format(id_match)
+    if bookmaker == "parionssport":
+        return "https://www.enligne.parionssport.fdj.fr/paris-football/a/a/{}/a".format(id_match.strip("e"))
+    if bookmaker == "unibet":
+        return "https://www.unibet.fr/sport/a/event/a-{}.html".format(id_match)
+    return ""
+
+
+def open_bookmaker_odds(windows, values):
+    match = values["MATCHES_ODDS"][0]
+    sport = values["SPORT_ODDS"][0]
+    rank = values["ODDS_ODDS"][0]
+    bookmaker = sorted(sb.ODDS[sport][match]["odds"].keys())[rank]
+    url = get_url_by_id(bookmaker, sb.ODDS[sport][match]["id"].get(bookmaker))
+    if url:
+        webbrowser.open(url, new=2)
+    
