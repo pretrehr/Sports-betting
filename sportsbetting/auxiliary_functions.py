@@ -219,6 +219,10 @@ def merge_dicts(dict_args):
             def_dict[key]["odds"].update(val["odds"])
         except KeyError:
             def_dict[key]["odds"] = val["odds"]
+        try:
+            def_dict[key]["id"].update(val["id"])
+        except KeyError:
+            def_dict[key]["id"] = val["id"]
     return dict(def_dict)
 
 
