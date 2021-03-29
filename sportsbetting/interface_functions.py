@@ -775,8 +775,11 @@ def get_url_by_id(bookmaker, id_match):
     return ""
 
 
-def open_bookmaker_odds(windows, values):
-    match = values["MATCHES_ODDS"][0]
+def open_bookmaker_odds(window, values):
+    if not window["MATCH_ODDS"] or not values["SPORT_ODDS"] or not values["ODDS_ODDS"]:
+        print("Merci de sélectionner un sport, un match et un bookmaker")
+        return
+    match = window["MATCH_ODDS"].get()
     sport = values["SPORT_ODDS"][0]
     rank = values["ODDS_ODDS"][0]
     bookmaker = sorted(sb.ODDS[sport][match]["odds"].keys())[rank]
