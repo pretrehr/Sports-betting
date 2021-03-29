@@ -418,8 +418,8 @@ odds_layout = [
              [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
              [sg.Table([["parionssport", "0000", "0000", "0000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
-                       enable_events=True,
                        hide_vertical_scroll=True, size=(None, nb_bookmakers))],
+             [sg.Button("Aller sur la page du match", key="GOTO_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]])
      ]
@@ -811,7 +811,7 @@ while True:
     elif event == "DELETE_MATCH_ODDS":
         delete_odds_interface(window, values)
         save_odds(sb.ODDS, PATH_DATA)
-    elif event == "ODDS_ODDS":
+    elif event == "GOTO_SITE_ODDS":
         open_bookmaker_odds(window, values)
     elif event == "ADD_COMBI_OPT":
         sport = ""
