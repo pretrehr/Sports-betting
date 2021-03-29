@@ -9,7 +9,6 @@ import requests
 from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
 
 def get_id_league(url):
     """
