@@ -8,6 +8,9 @@ import requests
 
 from collections import defaultdict
 
+import sportsbetting as sb
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
+
 def get_id_league(url):
     """
     Get league id from url
@@ -17,6 +20,8 @@ def get_id_league(url):
     public_url = url.split("https://www.unibet.fr")[1]
     request_url = "https://www.unibet.fr/zones/navigation.json?publicUrl="+public_url
     content = requests.get(request_url).content
+    if "Nos services ne sont pas accessibles pour le moment et seront de retour au plus vite." in str(content):
+        raise sb.UnavailableSiteException
     parsed = json.loads(content)
     sport = public_url.split("/")[2]
     if parsed["requestData"]:

@@ -625,7 +625,7 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
     sport = values["SPORT_COMBI_OPT"][0]
     issues = ["1", "N", "2"] if sport and get_nb_outcomes(sport) == 3 else ["1", "2"]
     for i in range(visible_combi_opt):
-        match_list.append(values["MATCH_COMBI_OPT_" + str(i)])
+        match_list.append(values["MATCH_COMBI_OPT_" + str(i)].split(" / ")[0])
         for j, issue in enumerate(issues):
             if values[issue + "_RES_COMBI_OPT_" + str(i)]:
                 combi_boostee.append(j)
