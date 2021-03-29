@@ -199,7 +199,7 @@ def merge_dict_odds(dict_odds):
                             continue
                         if site in odds[match]["odds"]:
                             new_dict[match]["odds"][site] = odds[match]["odds"][site]
-                        if "id" in odds[match] and site in odds[match]["id"]:
+                        if "id" in odds[match] and odds[match]["id"] and site in odds[match]["id"]:
                             new_dict[match]["id"][site] = odds[match]["id"][site]
         if not date_found:
             new_dict[match]["date"] = datetime.datetime.today()
@@ -220,9 +220,9 @@ def merge_dicts(dict_args):
         except KeyError:
             def_dict[key]["odds"] = val["odds"]
         try:
-            def_dict[key]["id"].update(val["id"])
-        except KeyError:
-            def_dict[key]["id"] = val["id"]
+            def_dict[key]["id"].update(val.get("id"))
+        except (AttributeError, KeyError) as _:
+            def_dict[key]["id"] = val.get("id")
     return dict(def_dict)
 
 
