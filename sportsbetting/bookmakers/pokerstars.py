@@ -61,6 +61,7 @@ def parse_pokerstars_api(id_league):
         odds_match[name] = {}
         odds_match[name]["date"] = date
         odds_match[name]["odds"] = {"pokerstars":odds}
+        odds_match[name]["id"] = {"pokerstars":str(match["id"])}
     return odds_match
 
 def parse_sport_pokerstars(sport):

@@ -70,6 +70,7 @@ def parse_bwin_api(parameter):
         participants = fixture["participants"]
         name = " - ".join(map(lambda x: x["name"]["value"], participants))
         games = fixture["games"]
+        id = str(fixture["id"])
         for game in games:
             odds_type = game["name"]["value"]
             if odds_type not in ["1 X 2", "Pari sur le vainqueur (US)", "1X2 (temps réglementaire)", "Vainqueur 1 2"]:
@@ -77,10 +78,10 @@ def parse_bwin_api(parameter):
             for result in game["results"]:
                 odds.append(result["odds"])
             break
-        date = truncate_datetime(dateutil.parser.isoparse(fixture["startDate"]))+datetime.timedelta(hours=1)
+        date = truncate_datetime(dateutil.parser.isoparse(fixture["startDate"]))+datetime.timedelta(hours=2)
         if reversed_odds:
             name, odds = reverse_match_odds(name, odds)
-        odds_match[name] = {"date": date, "odds":{"bwin":odds}}
+        odds_match[name] = {"date": date, "odds":{"bwin":odds}, "id":{"bwin":id}}
     return odds_match
 
 

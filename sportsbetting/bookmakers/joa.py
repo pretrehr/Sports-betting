@@ -69,10 +69,13 @@ def parse_joa_html(inner_html):
     match = None
     date_time = None
     soup = BeautifulSoup(inner_html, features="lxml")
+    id = None
     for line in soup.findAll():
         if "class" in line.attrs and "bet-event-name" in line["class"]:
             match = " - ".join(map(lambda x: x.replace(" - ",
                                                        "-"), list(line.stripped_strings)[2:4]))
+            if "_" in line.get("id", ""):
+                id = line["id"].split("_")[1]
         if "class" in line.attrs and "bet-event-date-info-top" in line["class"]:
             date_time = format_joa_time(line.text)
         if "class" in line.attrs and "bet-outcome-list" in line["class"]:
@@ -82,9 +85,11 @@ def parse_joa_html(inner_html):
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"joa": odds}
                     match_odds_hash[match]['date'] = date_time
+                    match_odds_hash[match]['id'] = {"joa": id}
                 except ValueError:
                     pass
                 match = None
+                id = None
     return match_odds_hash
 
 

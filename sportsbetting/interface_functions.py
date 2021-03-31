@@ -756,7 +756,7 @@ def odds_match_values_interface(window, values):
     except (IndexError, ValueError) as _:
         pass
 
-def get_url_by_id(bookmaker, id_match):
+def get_url_by_id(bookmaker, id_match, sport):
     if not id_match:
         print("Match non trouvé")
         return
@@ -772,6 +772,19 @@ def get_url_by_id(bookmaker, id_match):
         return "https://www.enligne.parionssport.fdj.fr/paris-football/a/a/{}/a".format(id_match.strip("e"))
     if bookmaker == "unibet":
         return "https://www.unibet.fr/sport/a/event/a-{}.html".format(id_match)
+    if bookmaker == "bwin":
+        return "https://sports.bwin.fr/fr/sports/tournois/a-{}".format(id_match)
+    if bookmaker == "joa":
+        return "https://www.joabet.fr/fr/sport/evenement/0/0/0/{}".format(id_match)
+    if bookmaker == "pokerstars":
+        return "https://www.pokerstarssports.fr/#/a/event/{}".format(id_match)
+    if bookmaker == "france_pari":
+        return "https://www.france-pari.fr/evenement/{}-a".format(id_match)
+    if bookmaker in ["barrierebet", "pasinobet"]:
+        sports = {"football":"Soccer", "tennis":"Tennis", "rugby":"RugbyUnion",
+                  "handball":"Handball", "hockey-sur-glace":"IceHockey",
+                  "basketball":"Basketball"}
+        return "https://www.{}.fr/paris-sportifs#/{}/a/1/{}".format(bookmaker, sports[sport], id_match)
     return ""
 
 
@@ -783,7 +796,7 @@ def open_bookmaker_odds(window, values):
     sport = values["SPORT_ODDS"][0]
     rank = values["ODDS_ODDS"][0]
     bookmaker = sorted(sb.ODDS[sport][match]["odds"].keys())[rank]
-    url = get_url_by_id(bookmaker, sb.ODDS[sport][match]["id"].get(bookmaker))
+    url = get_url_by_id(bookmaker, sb.ODDS[sport][match]["id"].get(bookmaker), sport)
     if url:
         webbrowser.open(url, new=2)
     

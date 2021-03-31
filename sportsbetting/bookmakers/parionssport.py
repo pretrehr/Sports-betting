@@ -77,11 +77,12 @@ def parse_parionssport_match_basketball(id_match):
             continue
         event = items[market["parent"]]
         if "date" not in odds_match:
-            odds_match["date"] = datetime.datetime.strptime(event["start"], "%y%m%d%H%M") + datetime.timedelta(hours=1)
+            odds_match["date"] = datetime.datetime.strptime(event["start"], "%y%m%d%H%M") + datetime.timedelta(hours=2)
         odds.append(float(odd["price"].replace(",", ".")))
     if not odds:
         return odds_match
     odds_match["odds"] = {"parionssport" : odds}
+    odds_match["id"] = {"parionssport" : market["parent"]}
     return odds_match
 
 
@@ -117,9 +118,10 @@ def parse_parionssport_api(id_league):
             if not name in odds_match:
                 odds_match[name] = {}
                 odds_match[name]["date"] = (datetime.datetime.strptime(event["start"], "%y%m%d%H%M")
-                                            + datetime.timedelta(hours=1))
+                                            + datetime.timedelta(hours=2))
                 odds_match[name]["odds"] = {"parionssport":[]}
             odds_match[name]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))
+            odds_match[name]["id"] = {"parionssport":market["parent"]}
     return odds_match
 
 def parse_sport_parionssport(sport):

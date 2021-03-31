@@ -33,7 +33,7 @@ def parse_betclic_api(id_league):
         if not contestants:
             continue
         name = " - ".join(contestant["name"] for contestant in contestants)
-        date = dateutil.parser.isoparse(match["date"])+datetime.timedelta(hours=1)
+        date = dateutil.parser.isoparse(match["date"])+datetime.timedelta(hours=2)
         markets = match["markets"]
         if not markets:
             continue

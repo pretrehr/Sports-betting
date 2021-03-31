@@ -24,7 +24,7 @@ async def get_json_pasinobet_api(id_league, barriere):
         await websocket.send(json.dumps(data))
         response = await websocket.recv()
         data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
-                '"game":["start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                '"game":["id", "start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
                 '"where":{"competition":{"id":'+str(id_league)+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
                 '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}}}}')
         await websocket.send(data)
@@ -57,7 +57,7 @@ async def get_json_sport_pasinobet_api(sport, barriere):
             if "Compétition" in league["name"]:
                 continue
             data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
-                    '"game":["start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                    '"game":["id", "start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
                     '"where":{"competition":{"id":'+str(league["id"])+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
                     '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}'
                     '}}}}')
@@ -84,6 +84,7 @@ def get_odds_from_league_json(parsed_league, barrierebet):
                 continue
             if not game.get("team1_name") or not game.get("team2_name"):
                 continue
+            id = str(game["id"])
             name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
             date = datetime.datetime.fromtimestamp(game["start_ts"])
             markets = game["market"]
@@ -93,7 +94,7 @@ def get_odds_from_league_json(parsed_league, barrierebet):
                     odds.append(event["price"])
             if reversed_odds:
                 name, odds = reverse_match_odds(name, odds)
-            odds_league[name] = {"date":date, "odds":{bookmaker:odds}}
+            odds_league[name] = {"date":date, "odds":{bookmaker:odds}, "id":{bookmaker:id}}
     return odds_league
 
 
