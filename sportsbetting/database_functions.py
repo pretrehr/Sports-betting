@@ -649,7 +649,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
     assert sport == "tennis"
     if site in ["netbet", "france_pari"]:
         separator_team = "-"
-    elif site in ["betclic", "winamax", "pmu", "zebet"]:
+    elif site in ["betclic", "winamax", "pmu", "zebet", "pinnacle"]:
         separator_team = " / "
         if " / " not in team: # pour zebet (varie entre / et -)
             separator_team = "-"
@@ -673,7 +673,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
                 players = list(map(lambda x: x.split(", ")[0], complete_names))
             else:
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
-        elif site in ["betclic"]:
+        elif site in ["betclic", "pinnacle"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["zebet", "joa"]:
             if "." in team:
@@ -873,3 +873,87 @@ def is_id_consistent(_id):
                 out = False
             previous = results[i][j]
     return out
+
+
+def is_player_in_db(player):
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT name FROM players WHERE name="{}"
+    """.format(player))
+    if c.fetchall():
+        return True
+    return False
+
+def is_player_added_in_db(player, site):
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT name FROM players WHERE name_{}="{}"
+    """.format(site, player))
+    ref_player = c.fetchone()
+    if ref_player:
+        return ref_player[0]
+    return None
+
+def add_player_to_db(player, site):
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    UPDATE players
+    SET name_{0} = "{1}"
+    WHERE _rowid_ = (
+        SELECT _rowid_
+        FROM players
+        WHERE name = "{1}"
+        ORDER BY _rowid_
+        LIMIT 1
+    )
+    """.format(site, player))
+    c.close()
+    conn.commit()
+
+def get_close_player_name(name, site):
+    """
+    Cherche un nom proche dans la base de données si le nom est de la forme "Initiale prénom + Nom"
+    Par exemple "R. Nadal" renverra "Rafael Nadal"
+    """
+    results = []
+    if "." in name:
+        split_name = name.split("(")[0].split(".")
+        if len(split_name) == 2 and len(split_name[0]) == 1:
+            init_first_name = split_name[0]
+            last_name = split_name[1].strip()
+            reg_exp = r'{}[a-zA-Z\-\']+\s{}'.format(init_first_name, last_name)
+            conn = sqlite3.connect(sb.PATH_DB)
+            c = conn.cursor()
+            c.execute("""
+            SELECT name FROM players WHERE name_{} IS NULL
+            """.format(site))
+            for line in c.fetchall():
+                if re.match(reg_exp, line[0]):
+                    results.append(line[0])
+    return results
+
+def add_close_player_to_db(player, site):
+    close_players = get_close_player_name(player, site)
+    if len(set(close_players)) != 1:
+        return False
+    player_ref = close_players[0]
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    UPDATE players
+    SET name_{} = "{}"
+    WHERE _rowid_ = (
+        SELECT _rowid_
+        FROM players
+        WHERE name = "{}"
+        ORDER BY _rowid_
+        LIMIT 1
+    )
+    """.format(site, player, player_ref))
+    c.close()
+    conn.commit()
+    return player_ref
+    

@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 
 from bs4 import BeautifulSoup
+from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
@@ -133,3 +134,34 @@ def parse_sport_pmu(sport):
             except sb.UnavailableCompetitionException:
                 break
     return merge_dicts(list_odds)
+
+def get_odds_from_market_id(id_market):
+    url = 'https://paris-sportifs.pmu.fr/pservices/render-market/{}?referrer_page=event'.format(id_market)
+    soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
+    fields = list(soup.find('tbody').stripped_strings)
+    return (fields[1], [float(fields[2].replace(',', '.')), float(fields[5].replace(',', '.'))])
+
+def get_sub_markets_players_basketball_pmu(id_match):
+    if not id_match:
+        return {}
+    url = 'https://paris-sportifs.pmu.fr/event/' + id_match
+    markets_to_keep = {'Passes décisives':'Passes',  'Rebonds':'Rebonds'}
+    soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
+    sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
+    market_name = None
+    for line in soup.find_all():
+        if 'aria-controls' in line.attrs:
+            if 'table-content' in line['aria-controls']:
+                id_market = line['aria-controls'].strip('table-content-')
+        if 'class' in line.attrs and 'table--header-title' in line['class']:
+            market_title = line.text.strip()
+            if 'Rebonds' in market_title or 'Passes décisives' in market_title:
+                player, market_name = market_title.split(' - ')
+                player = player.split()[1]
+                limit, odds = get_odds_from_market_id(id_market)
+                sub_markets[markets_to_keep[market_name]][player + "_" + limit] = odds
+    
+    for sub_market in sub_markets:
+        sub_markets[sub_market] = dict(sub_markets[sub_market])
+    
+    return sub_markets

@@ -9,6 +9,7 @@ import requests
 from collections import defaultdict
 
 import sportsbetting as sb
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
 
 def get_id_league(url):
     """
@@ -73,3 +74,47 @@ def parse_unibet(url):
         return parse_unibet_api(id_league, sport)
     print("Wrong unibet url")
     return {}
+
+
+def get_sub_markets_players_basketball_unibet(id_match):
+    if not id_match:
+        return {}
+    url = 'https://www.unibet.fr/zones/event.json?eventId=' + id_match
+    content = requests.get(url).content
+    parsed = json.loads(content)
+    markets_class_list = parsed.get('marketClassList', [])
+    markets_to_keep = {'Performance du Joueur (Points + Rebonds + Passes)':'Points + passes + rebonds',  'Nombre de passes du joueur':'Passes', 
+    'Nombre de rebonds du joueur':'Rebonds', 
+    'Performance du Joueur (Points + Passes)':'Points + passes', 
+    'Performance du Joueur (Points + Rebonds)':'Points + rebonds',
+    'Performance du Joueur (Passes + Rebonds)':'Passes + rebonds'}
+    sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
+    for market_class_list in markets_class_list:
+        market_name = market_class_list['marketName']
+        if market_name not in markets_to_keep:
+            continue
+        markets = market_class_list['marketList']
+        for market in markets:
+            selections = market['selections']
+            for selection in selections:
+                player = selection['name'].split(' - ')[0].split()[1]
+                limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
+                price_up = int(selection['currentPriceUp'])
+                price_down = int(selection['currentPriceDown'])
+                odd = round(price_up / price_down + 1, 2)
+                player = selection['name'].split(' - ')[0]
+                ref_player = player
+                if is_player_added_in_db(player, "unibet"):
+                    ref_player = is_player_added_in_db(player, "unibet")
+                elif is_player_in_db(player):
+                    add_player_to_db(player, "unibet")
+                else:
+                    if sb.DB_MANAGEMENT:
+                        print(player, "unibet")
+                    continue
+                sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit].insert(0, odd)
+    
+    for sub_market in sub_markets:
+        sub_markets[sub_market] = dict(sub_markets[sub_market])
+    
+    return sub_markets

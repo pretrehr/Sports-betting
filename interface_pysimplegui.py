@@ -37,7 +37,8 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface,
                                                find_values_interface, odds_match_values_interface,
-                                               open_bookmaker_odds)
+                                               open_bookmaker_odds, find_perf_players, display_middle_info,
+                                               display_surebet_info)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -503,6 +504,22 @@ values_layout = [
      ]
 ]
 
+perf_players_layout = [
+    [sg.Button("Chercher middle bets et surebets", key="FIND_PERF"),
+     sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_PERF', visible=False)],
+    [sg.Col([[sg.Listbox([], size=(40, 10), key="SUREBETS_PERF", enable_events=True)],
+             [sg.Text("Surebets")]]),
+     sg.Col([[sg.Listbox([], size=(40, 10), key="MIDDLES_PERF", enable_events=True)],
+             [sg.Text("Middle bets")]]),
+     sg.Col([[sg.Text("", size=(30, 1), key="MATCH_PERF")],
+             [sg.Text("", size=(30, 1), key="PLAYER_PERF")],
+             [sg.Text("", size=(30, 1), key="MARKET_PERF")],
+             [sg.Text("", size=(30, 1), key="OUTCOME0_PERF")],
+             [sg.Text("", size=(30, 1), key="OUTCOME1_PERF")],
+             [sg.Text("", size=(30, 1), key="TRJ_PERF")]])
+    ]
+]
+
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
@@ -515,7 +532,8 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Freebets à placer', freebets_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout),
                          sg.Tab('Surebets', surebets_layout),
-                         sg.Tab('Values', values_layout, visible=sb.BETA)
+                         sg.Tab('Values', values_layout, visible=sb.BETA),
+                         sg.Tab('Perf players', perf_players_layout, visible=sb.BETA)
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -526,6 +544,7 @@ sb.PROGRESS = 0
 thread = None
 thread_stakes = None
 thread_combine = None
+thread_perf = None
 window_odds_active = False
 sport = ''
 old_stdout = sys.stdout
@@ -608,6 +627,14 @@ while True:
             thread_combine = None
         else:
             window["PROGRESS_COMBINE"].update(ceil(sb.PROGRESS), 100)
+    except AttributeError:
+        pass
+    try:
+        if not thread_perf.is_alive():
+            window["PROGRESS_PERF"].update(0, 100, visible=False)
+            thread_perf = None
+        else:
+            window["PROGRESS_PERF"].update(ceil(sb.PROGRESS), 100)
     except AttributeError:
         pass
     try:  # see if something has been posted to Queue
@@ -866,6 +893,18 @@ while True:
         find_values_interface(window, values)
     elif event == "MATCHES_VALUES":
         odds_match_values_interface(window, values)
+    elif event == "FIND_PERF":
+        def perf_thread():
+            find_perf_players(window)
+
+
+        thread_perf = threading.Thread(target=perf_thread)
+        thread_perf.start()
+        window["PROGRESS_PERF"].update(0, 100, visible=True)
+    elif event == "MIDDLES_PERF":
+        display_middle_info(window, values)
+    elif event == "SUREBETS_PERF":
+        display_surebet_info(window, values)
     else:
         pass
 sb.INTERFACE = False

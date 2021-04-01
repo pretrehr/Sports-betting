@@ -36,6 +36,8 @@ TOKENS = {}
 COOKIES_JOA_ACCEPTED = False
 TRANSLATION = {}
 BETA = False
+SUREBETS = {}
+MIDDLES = {}
 
 
 class UnavailableCompetitionException(Exception):

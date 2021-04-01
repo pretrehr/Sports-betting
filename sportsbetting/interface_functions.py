@@ -23,6 +23,8 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
                                           best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
                                           best_matches_freebet2, best_match_defi_rembourse_ou_gagnant)
+from sportsbetting.performances import get_surebets_players_nba
+from sportsbetting.basic_functions import gain
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -799,4 +801,39 @@ def open_bookmaker_odds(window, values):
     url = get_url_by_id(bookmaker, sb.ODDS[sport][match]["id"].get(bookmaker), sport)
     if url:
         webbrowser.open(url, new=2)
-    
+
+
+def find_perf_players(window):
+    sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(True)
+    window["SUREBETS_PERF"].update(sorted(sb.SUREBETS.keys(), key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True))
+    window["MIDDLES_PERF"].update(sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True))
+
+def display_surebet_info(window, values):
+    player_limit_market = values["SUREBETS_PERF"][0]
+    player, limit_market = player_limit_market.split(" / ")
+    limit, market = limit_market.split(".5 ")
+    limit += ".5 "
+    odds = sb.SUREBETS[player_limit_market]["odds"]
+    bookmakers = sb.SUREBETS[player_limit_market]["bookmakers"]
+    window["MATCH_PERF"].update(sb.SUREBETS[player_limit_market]["match"])
+    window["PLAYER_PERF"].update(player)
+    window["MARKET_PERF"].update(market)
+    window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(limit, odds[0], bookmakers[0]))
+    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, odds[1], bookmakers[1]))
+    window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
+
+
+def display_middle_info(window, values):
+    player_down_up_market = values["MIDDLES_PERF"][0]
+    player, down_up_market = player_down_up_market.split(" / ")
+    down, up_market = down_up_market.split(" - ")
+    up, market = up_market.split(".5 ")
+    up += ".5 "
+    odds = sb.MIDDLES[player_down_up_market]["odds"]
+    bookmakers = sb.MIDDLES[player_down_up_market]["bookmakers"]
+    window["MATCH_PERF"].update(sb.MIDDLES[player_down_up_market]["match"])
+    window["PLAYER_PERF"].update(player)
+    window["MARKET_PERF"].update(market)
+    window["OUTCOME0_PERF"].update("Over {} : {} @ {}".format(down, bookmakers[0], odds[0]))
+    window["OUTCOME1_PERF"].update("Under {} : {} @ {}".format(up, bookmakers[1], odds[1]))
+    window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
