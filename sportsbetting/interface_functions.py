@@ -811,6 +811,8 @@ def find_perf_players(window):
     window["SUREBETS_PERF"].update(surebets)
 
 def display_surebet_info(window, values):
+    if not values["SUREBETS_PERF"]:
+        return
     player_limit_market = values["SUREBETS_PERF"][0]
     player, limit_market = player_limit_market.split(" / ")
     limit, market = limit_market.split(".5 ")
@@ -826,6 +828,8 @@ def display_surebet_info(window, values):
 
 
 def display_middle_info(window, values):
+    if not values["MIDDLES_PERF"]:
+        return
     player_down_up_market = values["MIDDLES_PERF"][0]
     player, down_up_market = player_down_up_market.split(" / ")
     down, up_market = down_up_market.split(" - ")
