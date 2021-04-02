@@ -805,8 +805,10 @@ def open_bookmaker_odds(window, values):
 
 def find_perf_players(window):
     sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(True)
-    window["SUREBETS_PERF"].update(sorted(sb.SUREBETS.keys(), key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True))
-    window["MIDDLES_PERF"].update(sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True))
+    middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
+    surebets = sorted(sb.SUREBETS.keys(), key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True)
+    window["MIDDLES_PERF"].update(middles)
+    window["SUREBETS_PERF"].update(surebets)
 
 def display_surebet_info(window, values):
     player_limit_market = values["SUREBETS_PERF"][0]
