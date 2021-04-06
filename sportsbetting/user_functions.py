@@ -890,7 +890,7 @@ def best_match_defi_rembourse_ou_gagnant(site, minimum_odd, stake, sport, date_m
 
 def get_sports_with_surebet():
     sports_with_surebet = []
-    for sport in ["basketball", "football", "tennis"]:
+    for sport in sb.SPORTS:
         if sport not in sb.ODDS:
             continue
         for match in sb.ODDS[sport]:
