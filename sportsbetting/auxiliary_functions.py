@@ -24,7 +24,7 @@ from sportsbetting.database_functions import (get_formatted_name, is_in_db_site,
                                               get_id_by_opponent_thesportsdb, get_competition_id,
                                               is_matching_next_match, get_time_next_match)
 
-from sportsbetting.basic_functions import (cotes_combine, cotes_freebet, mises2, mises, gain2,
+from sportsbetting.basic_functions import (cotes_combine, cotes_freebet, mises2, mises, gain2, gain,
                                            gain_pari_rembourse_si_perdant, mises_pari_rembourse_si_perdant, cotes_combine_optimise)
 
 
@@ -489,7 +489,8 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             "odds" :odds}, compact=True)
     print("plus-value =", round(best_gain + freebet*mise, 2))
     if freebet:
-        print("taux de conversion =", round((best_gain+mise)/mise, 2))
+        print("taux de conversion =", round((best_gain+mise)/mise*100, 3), "%")
+    print("taux de retour au joueur =", round(gain(best_cotes)*100, 3), "%")
     print()
     print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
     for combine, stake, cote, site in zip(best_combinaison, stakes, best_cotes, best_sites):
