@@ -80,6 +80,8 @@ def get_sub_markets_players_basketball_betclic(id_match):
     url = 'https://offer.cdn.betclic.fr/api/pub/v4/events/{}?application=2&countrycode=fr&language=fr&sitecode=frfr'.format(str(id_match))
     content = urllib.request.urlopen(url).read()
     parsed = json.loads(content)
+    if not parsed:
+        return {}
     markets = parsed['markets']
     sub_markets = {}
     markets_to_keep = {'Bkb_Ppf2':'Points + passes + rebonds',  'Bkb_Pta2':'Passes', 
