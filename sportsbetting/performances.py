@@ -1,5 +1,5 @@
 import sportsbetting as sb
-from sportsbetting.bookmakers import betclic, parionssport, pmu, unibet, winamax, zebet
+from sportsbetting.bookmakers import betclic, parionssport, pinnacle, pmu, unibet, winamax, zebet
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.basic_functions import gain
 
@@ -15,10 +15,11 @@ def keep_maximum_odds(odds1, odds2, books1, books2):
     return out
 
 
-def merge_dicts_nba(match, id_betclic, id_parionssport, id_pmu, id_unibet, id_winamax, id_zebet):
+def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_unibet, id_winamax, id_zebet):
     odds = {
         "betclic": betclic.get_sub_markets_players_basketball_betclic(id_betclic),
         "parionssport": parionssport.get_sub_markets_players_basketball_parionssport(id_parionssport),
+        "pinnacle": pinnacle.get_sub_markets_players_basketball_pinnacle(id_pinnacle),
 #         "pmu": pmu.get_sub_markets_players_basketball_pmu(id_pmu),
         "unibet": unibet.get_sub_markets_players_basketball_unibet(id_unibet),
         "winamax": winamax.get_sub_markets_players_basketball_winamax(id_winamax),
@@ -80,9 +81,9 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pmu, id_unibet, id_wi
     return surebets, middles
 
 
-def get_surebets_players_nba(reload_matches=False):
+def get_surebets_players_nba(bookmakers, reload_matches=False):
     if reload_matches:
-        parse_competitions(["Etats-Unis - NBA"], "basketball", "betclic", "parionssport", "unibet", "winamax", "zebet")
+        parse_competitions(["Etats-Unis - NBA"], "basketball", *bookmakers)
     surebets = {}
     middles = {}
     sb.PROGRESS = 0
@@ -93,11 +94,12 @@ def get_surebets_players_nba(reload_matches=False):
 #         print(match)
         id_betclic = sb.ODDS["basketball"][match]["id"].get("betclic")
         id_parionssport = sb.ODDS["basketball"][match]["id"].get("parionssport")
+        id_pinnacle = sb.ODDS["basketball"][match]["id"].get("pinnacle")
         id_pmu = 0# sb.ODDS["basketball"][match]["id"].get("pmu")
         id_unibet = sb.ODDS["basketball"][match]["id"].get("unibet")
         id_winamax = sb.ODDS["basketball"][match]["id"].get("winamax")
         id_zebet = sb.ODDS["basketball"][match]["id"].get("zebet")
-        surebets_match, middles_match = merge_dicts_nba(match, id_betclic, id_parionssport, id_pmu, id_unibet, id_winamax, id_zebet)
+        surebets_match, middles_match = merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_unibet, id_winamax, id_zebet)
         surebets = {**surebets, **surebets_match}
         middles = {**middles, **middles_match}
         sb.PROGRESS += 100/n

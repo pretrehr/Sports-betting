@@ -16,12 +16,13 @@ from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
 
 
 def convert_american_odds(american_odds):
     decimal_odds = []
     for odd in american_odds:
-        if odd>0:
+        if odd>=0:
             decimal_odds.append(round(odd/100+1, 3))
         else:
             decimal_odds.append(round(-100/odd+1, 3))
@@ -35,6 +36,16 @@ def get_pinnacle_odds_from_match_id(id_match, all_odds):
             continue
         odds_match = list(x["price"] for x in sorted(odds["prices"], key=lambda x: x["designation"], reverse=True))
         return convert_american_odds(odds_match)
+
+
+def get_pinnacle_odds_from_market_id(id_market, all_odds):
+    for odds in all_odds:
+        if not (odds["matchupId"] == int(id_market) and odds["type"] == "total" and odds["period"] == 0):
+            continue
+        if not odds["prices"] or "price" not in odds["prices"][0] or "points" not in odds["prices"][0] or "participantId" not in odds["prices"][0]:
+            continue
+        odds_market = list(x["price"] for x in sorted(odds["prices"], key=lambda x: x["participantId"]))
+        return convert_american_odds(odds_market), odds["prices"][0]["points"]
                 
 
 def get_pinnacle_token():
@@ -109,7 +120,7 @@ def parse_pinnacle(id_league):
         date_time = truncate_datetime(dateutil.parser.isoparse(match["startTime"])+datetime.timedelta(hours=2))
         odds = get_pinnacle_odds_from_match_id(id_match, all_odds)
         if odds:
-            odds_match[match_name] = {"odds":{"pinnacle":odds}, "date":date_time, "id":str(id_match)}
+            odds_match[match_name] = {"odds":{"pinnacle":odds}, "date":date_time, "id":{"pinnacle" :str(id_match)}}
     return odds_match
 
 
@@ -132,3 +143,44 @@ def parse_sport_pinnacle(sport):
         id_league = str(league["id"])
         list_odds.append(parse_pinnacle(id_league))
     return merge_dicts(list_odds)
+
+
+def get_sub_markets_players_basketball_pinnacle(id_match):
+    if not id_match:
+        return {}
+    token = get_pinnacle_token()
+    url_straight = "https://guest.api.arcadia.pinnacle.com/0.1/matchups/{}/markets/related/straight".format(id_match)
+    url_related = "https://guest.api.arcadia.pinnacle.com/0.1/matchups/{}/related".format(id_match)
+    req_straight = urllib.request.Request(url_straight, headers={'x-api-key': token})
+    req_related = urllib.request.Request(url_related, headers={'x-api-key': token})
+    content_straight = urllib.request.urlopen(req_straight).read()
+    content_related = urllib.request.urlopen(req_related).read()
+    all_odds = json.loads(content_straight)
+    markets = json.loads(content_related)
+    markets_to_keep = {'PointsReboundsAssist':'Points + passes + rebonds',
+                       'Assists':'Passes', 
+                       'Rebounds':'Rebonds'}
+    sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
+    for market in markets:
+        if market.get("type") != "special":
+            continue
+        market_type = markets_to_keep.get(market["units"])
+        if not market_type:
+            continue
+        id_market = market["id"]
+        player = market["special"]["description"].split("(")[0].strip()
+        ref_player = player
+        if is_player_added_in_db(player, "pinnacle"):
+            ref_player = is_player_added_in_db(player, "pinnacle")
+        elif is_player_in_db(player):
+            add_player_to_db(player, "pinnacle")
+        else:
+            if sb.DB_MANAGEMENT:
+                print(player, "pinnacle")
+            continue
+        odds, limit = get_pinnacle_odds_from_market_id(id_market, all_odds)
+        sub_markets[market_type][ref_player + "_" + str(limit)] = odds
+
+    for sub_market in sub_markets:
+        sub_markets[sub_market] = dict(sub_markets[sub_market])
+    return sub_markets

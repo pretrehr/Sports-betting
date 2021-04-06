@@ -803,8 +803,10 @@ def open_bookmaker_odds(window, values):
         webbrowser.open(url, new=2)
 
 
-def find_perf_players(window):
-    sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(True)
+def find_perf_players(window, values):
+    if not values["SITES_PERF"]:
+        return
+    sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(values["SITES_PERF"], True)
     middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
     surebets = sorted(sb.SUREBETS.keys(), key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True)
     window["MIDDLES_PERF"].update(middles)
