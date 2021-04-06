@@ -202,6 +202,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
             continue
         if not odd.get("price"):
             continue
+        if "flags" in odd and "hidden" in odd["flags"]:
+            continue
         event = items[market["parent"]]
         player = odd["desc"].split(" - ")[0].split(".")[1]
         limit = odd["desc"].split()[-1].replace(",", ".")
