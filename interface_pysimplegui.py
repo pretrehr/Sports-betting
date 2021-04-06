@@ -427,9 +427,9 @@ odds_layout = [
 ]
 
 visible_combi_opt = 1
-column_indicators_combi_opt = [[sg.Text("", size=(15, 1), key="INDICATORS_COMBI_OPT" + str(_),
+column_indicators_combi_opt = [[sg.Text("", size=(18, 1), key="INDICATORS_COMBI_OPT" + str(_),
                                      visible=False)] for _ in range(5)]
-column_results_combi_opt = [[sg.Text("", size=(6, 1), key="RESULTS_COMBI_OPT" + str(_),
+column_results_combi_opt = [[sg.Text("", size=(8, 1), key="RESULTS_COMBI_OPT" + str(_),
                                   visible=False)] for _ in range(5)]
 column_text_combi_opt = [[sg.Text("Mise maximale")], [sg.Text("Cote boostée")], [sg.Text("Site boosté")]]
 column_fields_combi_opt = [[sg.InputText(key='STAKE_COMBI_OPT', size=(6, 1))],
@@ -505,11 +505,13 @@ values_layout = [
 ]
 
 perf_players_layout = [
+    [sg.Listbox(["betclic", "parionssport", "pinnacle", "unibet", "winamax", "zebet"], size=(20, 6), key="SITES_PERF", select_mode='multiple', 
+                default_values=["betclic", "parionssport", "pinnacle", "unibet", "winamax", "zebet"])],
     [sg.Button("Chercher middle bets et surebets", key="FIND_PERF"),
      sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_PERF', visible=False)],
-    [sg.Col([[sg.Listbox([], size=(40, 10), key="SUREBETS_PERF", enable_events=True)],
+    [sg.Col([[sg.Listbox([], size=(50, 10), key="SUREBETS_PERF", enable_events=True)],
              [sg.Text("Surebets")]]),
-     sg.Col([[sg.Listbox([], size=(40, 10), key="MIDDLES_PERF", enable_events=True)],
+     sg.Col([[sg.Listbox([], size=(50, 10), key="MIDDLES_PERF", enable_events=True)],
              [sg.Text("Middle bets")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_PERF")],
              [sg.Text("", size=(30, 1), key="PLAYER_PERF")],
@@ -895,7 +897,7 @@ while True:
         odds_match_values_interface(window, values)
     elif event == "FIND_PERF":
         def perf_thread():
-            find_perf_players(window)
+            find_perf_players(window, values)
 
 
         thread_perf = threading.Thread(target=perf_thread)
