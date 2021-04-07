@@ -69,7 +69,7 @@ def mises(cotes, mise=1, output=False, freebet_display=False):
     return mises_reelles
 
 
-def mises2(cotes, mise_requise, choix=-1, output=False):
+def mises2(cotes, mise_requise, choix=-1, output=False, bonus_miles=0):
     """
     Calcule la repartition des mises en pariant mise_requise sur l'une des
     issues. Par défaut, mise_requise est placée sur la cote la plus basse.
@@ -97,22 +97,22 @@ def mises2(cotes, mise_requise, choix=-1, output=False):
         mis = list(map(lambda x: round(x, 2), mises_reelles))
         print("taux de retour au joueur =", round(gain(cotes)*100, 3), "%")
         print("somme des mises =", round(sum(mis), 2))
-        print("gain min =", min([round(mis[i] * cotes[i], 2)
+        print("gain min =", min([round(mis[i] * cotes[i]+bonus_miles, 2)
                                  for i in range(len(mis))]))
-        print("gain max =", max([round(mis[i] * cotes[i], 2)
+        print("gain max =", max([round(mis[i] * cotes[i]+bonus_miles, 2)
                                  for i in range(len(mis))]))
         print("plus-value min =",
               round(min([round(mis[i] * cotes[i], 2)
-                         for i in range(len(mis))]) - sum(mis), 2))
+                         for i in range(len(mis))]) - sum(mis)+bonus_miles, 2))
         print("plus-value max =",
               round(max([round(mis[i] * cotes[i], 2)
-                         for i in range(len(mis))]) - sum(mis), 2))
+                         for i in range(len(mis))]) - sum(mis)+bonus_miles, 2))
         print("mises arrondies =", mis)
         return
     return mises_reelles
 
 
-def mises3(odds, best_odds, stake, minimum_odd, output=False):
+def mises3(odds, best_odds, stake, minimum_odd, output=False, miles=False, rate_eur_miles=0, multiplicator=1):
     """
     Répartition optimale d'une certaine somme sur les différentes cotes en prenant en compte les cotes des autres
     bookmakers
@@ -125,6 +125,7 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False):
     odds_best_profit = []
     best_combination = []
     reference_stake = []
+    nb_miles = 0
     for i in range(n_valid_odds):
         for combination in combinations(indices_valid_odds, i+1):
             odds_to_check = []
@@ -134,21 +135,28 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False):
             odds_site = [odds[k] for k in combination]
             first_stake_site = mises(odds_site, stake)[0]
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            if miles:
+                profit_combination += rate_eur_miles * sum(0.4*(1-1/odds[outcome]) for outcome in combination)
             if profit_combination > profit:
                 reference_stake = first_stake_site
                 odds_best_profit = copy.deepcopy(odds_to_check)
                 best_combination = copy.deepcopy(combination)
                 profit = profit_combination
+    if miles:
+        nb_miles = stake*round(sum(0.4*(1-1/odds[outcome]) for outcome in best_combination), 2)*multiplicator
     if output:
-        mises2(odds_best_profit, reference_stake, best_combination[0], True)
+        if miles:
+            print("miles =", nb_miles)
+            print("miles convertis =", round(nb_miles*rate_eur_miles, 2))
+        mises2(odds_best_profit, reference_stake, best_combination[0], True, round(nb_miles*rate_eur_miles, 2))
         print("cotes =", odds_best_profit)
         return
     if best_combination:
-        return mises2(odds_best_profit, reference_stake, best_combination[0]), best_combination
+        return mises2(odds_best_profit, reference_stake, best_combination[0], False, round(nb_miles*rate_eur_miles, 2)), best_combination
     return
 
 
-def gain3(odds, best_odds, stake, minimum_odd):
+def gain3(odds, best_odds, stake, minimum_odd, miles=False, rate_eur_miles=0, multiplicator=1):
     """
     Profit avec répartition optimale d'une certaine somme sur les différentes cotes en prenant en compte les cotes des autres
     bookmakers
@@ -158,6 +166,7 @@ def gain3(odds, best_odds, stake, minimum_odd):
     indices_valid_odds = [i for i in range(n) if odds[i] >= minimum_odd]
     n_valid_odds = len(indices_valid_odds)
     profit = -float("inf")
+    best_combination = []
     for i in range(n_valid_odds):
         for combination in combinations(indices_valid_odds, i+1):
             odds_to_check = []
@@ -167,6 +176,8 @@ def gain3(odds, best_odds, stake, minimum_odd):
             odds_site = [odds[k] for k in combination]
             first_stake_site = mises(odds_site, stake)[0]
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            if miles:
+                profit_combination += rate_eur_miles * sum(0.4*(1-1/odds[outcome]) for outcome in combination) * multiplicator
             if profit_combination > profit:
                 profit = profit_combination
     return profit

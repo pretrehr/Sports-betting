@@ -845,3 +845,48 @@ def display_middle_info(window, values):
     window["OUTCOME0_PERF"].update("Over {} : {} @ {}".format(down, bookmakers[0], odds[0]))
     window["OUTCOME1_PERF"].update("Under {} : {} @ {}".format(up, bookmakers[1], odds[1]))
     window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
+
+def best_match_miles_interface(window, values):
+    try:
+        bet = float(values["BET_MILES"])
+        sport = values["SPORT_MILES"][0]
+        ticket = values["TICKET_MILES"][0]
+        multiplicator = int(values["MULTIPLICATOR_MILES"])
+        rate = int(ticket.strip("€"))/sb.MILES_RATES[ticket]
+        date_max, time_max = None, None
+        if values["DATE_MAX_MILES_BOOL"]:
+            date_max = values["DATE_MAX_MILES"]
+            time_max = values["TIME_MAX_MILES"].replace(":", "h")
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = buffer = io.StringIO()
+        best_match_under_conditions2("winamax", 1.05, bet, sport, date_max, time_max, miles=True, rate_eur_miles=rate, multiplicator=multiplicator)
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()  # contains the entire contents of the buffer.
+        match, date = infos(what_was_printed)
+        if match is None:
+            window["MATCH_MILES"].update("Aucun match trouvé")
+            window["DELETE_MATCH_MILES"].update(visible=False)
+            window["DATE_MILES"].update("")
+            window["ODDS_MILES"].update(visible=False)
+            window["RESULT_MILES"].update(visible=False)
+            window["TEXT_MILES"].update(visible=False)
+            for i in range(8):
+                window["INDICATORS_MILES" + str(i)].update(visible=False)
+                window["RESULTS_MILES" + str(i)].update(visible=False)
+        else:
+            window["MATCH_MILES"].update(match)
+            window["DELETE_MATCH_MILES"].update(visible=True)
+            window["RELOAD_ODDS_MILES"].update(visible=True)
+            window["DATE_MILES"].update(date)
+            window["ODDS_MILES"].update(odds_table(what_was_printed), visible=True)
+            window["RESULT_MILES"].update(stakes(what_was_printed), visible=True)
+            window["TEXT_MILES"].update(visible=True)
+            for i, elem in enumerate(indicators(what_was_printed)):
+                window["INDICATORS_MILES" + str(i)].update(elem[0].capitalize(),
+                                                                        visible=True)
+                window["RESULTS_MILES" + str(i)].update(elem[1], visible=True)
+        buffer.close()
+    except IndexError:
+        pass
+    except ValueError:
+        pass

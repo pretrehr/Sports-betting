@@ -214,7 +214,7 @@ def best_match_under_conditions(site, minimum_odd, bet, sport="football", date_m
                     time_min, one_site=one_site)
 
 def best_match_under_conditions2(site, minimum_odd, stake, sport="football", date_max=None,
-                                 time_max=None, date_min=None, time_min=None):
+                                 time_max=None, date_min=None, time_min=None, miles=False, rate_eur_miles=0, multiplicator=1):
     all_odds = filter_dict_dates(sb.ODDS[sport], date_max, time_max, date_min, time_min)
     best_profit = -float("inf")
     best_match = None
@@ -236,18 +236,18 @@ def best_match_under_conditions2(site, minimum_odd, stake, sport="football", dat
                 if odd_i < 1.1 and site_i != "pmu":
                     break
             else:
-                profit = gain3(odds_site, best_odds, stake, minimum_odd)
+                profit = gain3(odds_site, best_odds, stake, minimum_odd, miles, rate_eur_miles, multiplicator)
                 if profit > best_profit:
                     best_profit = profit
                     best_odds_site = copy.deepcopy(odds_site)
                     best_best_odds = copy.deepcopy(best_odds)
                     best_match = match
-                    stakes, best_indices = mises3(odds_site, best_odds, stake, minimum_odd)
+                    stakes, best_indices = mises3(odds_site, best_odds, stake, minimum_odd, False, miles, rate_eur_miles, multiplicator)
                     sites = [site if i in best_indices else best_sites[i] for i in range(n)]
     if best_match:
         print(best_match)
         pprint(all_odds[best_match])
-        mises3(best_odds_site, best_best_odds, stake, minimum_odd, True)
+        mises3(best_odds_site, best_best_odds, stake, minimum_odd, True, miles, rate_eur_miles, multiplicator)
         afficher_mises_combine([best_match], [sites], [stakes],
                                all_odds[best_match]["odds"], sport)
     else:
@@ -898,3 +898,4 @@ def get_sports_with_surebet():
                 sports_with_surebet.append(sport)
                 break
     return sports_with_surebet
+    

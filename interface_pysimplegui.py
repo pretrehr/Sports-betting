@@ -38,7 +38,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                find_surebets_interface, odds_match_surebets_interface,
                                                find_values_interface, odds_match_values_interface,
                                                open_bookmaker_odds, find_perf_players, display_middle_info,
-                                               display_surebet_info)
+                                               display_surebet_info, best_match_miles_interface)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -522,6 +522,49 @@ perf_players_layout = [
     ]
 ]
 
+column_text_miles = [[sg.Text("Mise")]]
+column_fields_miles = [[sg.InputText(key='BET_MILES', size=(6, 1))]]
+column_miles = [[sg.Column(column_text_miles),
+                           sg.Column(column_fields_miles)],
+                          [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_MILES")]]
+options_miles = [[sg.Text("Ticket cash visé")],
+                          [sg.Listbox(list(sb.MILES_RATES), size=(20, 6), key="TICKET_MILES")],
+                 [sg.Text("Multiplicateur statut VIP"), sg.Input(1, size=(6,1), key="MULTIPLICATOR_MILES")],
+                          [sg.Text("Options")],
+                           [sg.Checkbox("Date/Heure maximale", key="DATE_MAX_MILES_BOOL"),
+                            sg.InputText(tooltip="DD/MM/YYYY", size=(12, 1),
+                                         key="DATE_MAX_MILES"),
+                            sg.InputText(tooltip="HH:MM", size=(7, 1),
+                                         key="TIME_MAX_MILES")]]
+column_indicators_miles = [[sg.Text("", size=(18, 1),
+                                              key="INDICATORS_MILES" + str(_),
+                                              visible=False)] for _ in range(8)]
+column_results_miles = [[sg.Text("", size=(8, 1),
+                                           key="RESULTS_MILES" + str(_),
+                                           visible=False)] for _ in range(8)]
+miles_layout = [[sg.Column(column_miles),
+                                 sg.Column(options_miles),
+                                 sg.Column([[sg.Text("", size=(30, 1), key="MATCH_MILES")],
+                                            [sg.Text("", size=(30, 1), key="DATE_MILES")],
+                                            [sg.Table([["parionssport", "0000", "0000", "0000"]],
+                                                        headings=["Cotes", "1", "N", "2"],
+                                                        key="ODDS_MILES",
+                                                        visible=False, hide_vertical_scroll=True,
+                                                        size=(None, nb_bookmakers))]]),],
+                                [sg.Button("Calculer", key="BEST_MATCH_MILES")],
+                                [sg.Button("Ignorer ce match", key="DELETE_MATCH_MILES", visible=False)],
+                                [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_MILES", visible=False)],
+                                [sg.Column(column_indicators_miles),
+                                 sg.Column(column_results_miles),
+                                 sg.Column([[sg.Text(
+                                     "Répartition des mises (les totaux affichés prennent en "
+                                     "compte les éventuels freebets) :",
+                                     key="TEXT_MILES", visible=False)],
+                                     [sg.MLine(size=(100, 12), key="RESULT_MILES",
+                                               font="Consolas 10", visible=False)]])],
+                                ]
+
+
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
                          sg.Tab('Pari simple', match_under_condition_layout),
@@ -535,7 +578,8 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout),
                          sg.Tab('Surebets', surebets_layout),
                          sg.Tab('Values', values_layout, visible=sb.BETA),
-                         sg.Tab('Perf players', perf_players_layout, visible=sb.BETA)
+                         sg.Tab('Perf players', perf_players_layout, visible=sb.BETA),
+                         sg.Tab('Miles', miles_layout, visible=sb.BETA)
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -907,6 +951,8 @@ while True:
         display_middle_info(window, values)
     elif event == "SUREBETS_PERF":
         display_surebet_info(window, values)
+    elif event == "BEST_MATCH_MILES":
+        best_match_miles_interface(window, values)
     else:
         pass
 sb.INTERFACE = False
