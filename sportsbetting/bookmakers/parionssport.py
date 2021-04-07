@@ -207,7 +207,6 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         event = items[market["parent"]]
         player = odd["desc"].split(" - ")[0].split(".")[1]
         limit = odd["desc"].split()[-1].replace(",", ".")
-        sub_markets[markets_to_keep[market["desc"]]][player + "_" + limit].append(float(odd["price"].replace(",", ".")))
         player = odd["desc"].split(" - ")[0].strip()
         ref_player = add_close_player_to_db(player, "parionssport")
         if is_player_added_in_db(player, "parionssport"):
