@@ -133,6 +133,7 @@ def parse_competitions(competitions, sport, *sites):
         print(traceback.format_exc(), file=sys.stderr)
     sb.IS_PARSING = False
     sb.ABORT = False
+    sb.SEEN_SUREBET[sport] = False
 
 
 def odds_match(match, sport="football"):
@@ -893,6 +894,8 @@ def best_match_defi_rembourse_ou_gagnant(site, minimum_odd, stake, sport, date_m
 def get_sports_with_surebet():
     sports_with_surebet = []
     for sport in sb.SPORTS:
+        if sb.SEEN_SUREBET[sport]:
+            continue
         if sport not in sb.ODDS:
             continue
         for match in sb.ODDS[sport]:

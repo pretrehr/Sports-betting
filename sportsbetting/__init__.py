@@ -39,6 +39,7 @@ BETA = False
 SUREBETS = {}
 MIDDLES = {}
 MILES_RATES = {"5€" : 385, "10€" : 770, "20€" : 1510, "50€" : 3700, "100€": 7270, "200€" : 14290, "500€" : 35090, "1000€" : 69000, "2000€":135600, "5000€": 333330}
+SEEN_SUREBET = {x:True for x in SPORTS}
 
 
 class UnavailableCompetitionException(Exception):
