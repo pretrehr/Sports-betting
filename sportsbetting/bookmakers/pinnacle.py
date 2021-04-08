@@ -46,6 +46,7 @@ def get_pinnacle_odds_from_market_id(id_market, all_odds):
             continue
         odds_market = list(x["price"] for x in sorted(odds["prices"], key=lambda x: x["participantId"]))
         return convert_american_odds(odds_market), odds["prices"][0]["points"]
+    return [], 0
                 
 
 def get_pinnacle_token():
@@ -179,7 +180,8 @@ def get_sub_markets_players_basketball_pinnacle(id_match):
                 print(player, "pinnacle")
             continue
         odds, limit = get_pinnacle_odds_from_market_id(id_market, all_odds)
-        sub_markets[market_type][ref_player + "_" + str(limit)] = odds
+        if odds:
+            sub_markets[market_type][ref_player + "_" + str(limit)] = odds
 
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
