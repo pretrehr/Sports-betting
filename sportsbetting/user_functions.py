@@ -686,6 +686,8 @@ def get_values(match_odds, rate):
         if odd < 1.1:
             return 0, []
         ref = sum/n if not has_pinnacle else match_odds["odds"]["pinnacle"][i]
+        if ref < 1.1:
+            return 0, []
         rate_tmp = odd/ref-1
         if rate_tmp >= rate:
             best_rate = max(best_rate, rate_tmp)
