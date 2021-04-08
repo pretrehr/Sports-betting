@@ -851,7 +851,7 @@ def best_match_miles_interface(window, values):
         bet = float(values["BET_MILES"])
         sport = values["SPORT_MILES"][0]
         ticket = values["TICKET_MILES"][0]
-        multiplicator = int(values["MULTIPLICATOR_MILES"])
+        multiplicator = float(values["MULTIPLICATOR_MILES"])
         rate = int(ticket.strip("€"))/sb.MILES_RATES[ticket]
         date_max, time_max = None, None
         if values["DATE_MAX_MILES_BOOL"]:
