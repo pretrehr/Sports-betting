@@ -468,7 +468,8 @@ combi_opt_layout = [
 
 surebets_layout = [
     [
-        sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_SUREBETS")],
+        sg.Column([[sg.Text("Cet onglet sera bientôt supprimé, utilisez plutôt l'onglet \"Cotes\"", text_color="red")],
+                   [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_SUREBETS")],
                    [sg.Text("TRJ minimal", size=(10, 1)), sg.InputText(key='TRJ_SUREBETS', size=(6, 1), default_text="100"), sg.Text("%", size=(3, 1))],
                    [sg.Button("Chercher", key="FIND_SUREBETS")],
                    [sg.Text("", size=(30, 1), key="MESSAGE_SUREBETS")]
@@ -953,6 +954,13 @@ while True:
         display_surebet_info(window, values)
     elif event == "BEST_MATCH_MILES":
         best_match_miles_interface(window, values)
+    elif event == "DELETE_MATCH_MILES":
+        match_miles = window["MATCH_MILES"].get()
+        sport_miles = window["SPORT_MILES"].get()
+        if sport_miles and match_miles in sb.ODDS[sport_miles[0]]:
+            del sb.ODDS[sport_miles[0]][match_miles]
+    elif event == "RELOAD_ODDS_MILES":
+        sb.ODDS = load_odds(PATH_DATA)
     else:
         pass
 sb.INTERFACE = False

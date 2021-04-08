@@ -125,6 +125,7 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False, miles=False, rate_
     odds_best_profit = []
     best_combination = []
     reference_stake = []
+    best_stakes = []
     nb_miles = 0
     for i in range(n_valid_odds):
         for combination in combinations(indices_valid_odds, i+1):
@@ -135,15 +136,17 @@ def mises3(odds, best_odds, stake, minimum_odd, output=False, miles=False, rate_
             odds_site = [odds[k] for k in combination]
             first_stake_site = mises(odds_site, stake)[0]
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            stakes = mises2(odds_to_check, first_stake_site, combination[0])
             if miles:
-                profit_combination += rate_eur_miles * sum(0.4*(1-1/odds[outcome]) for outcome in combination)
+                profit_combination += rate_eur_miles * sum(stakes[outcome]*0.4*(1-1/odds[outcome]) for outcome in combination)
             if profit_combination > profit:
                 reference_stake = first_stake_site
+                best_stakes = stakes
                 odds_best_profit = copy.deepcopy(odds_to_check)
                 best_combination = copy.deepcopy(combination)
                 profit = profit_combination
     if miles:
-        nb_miles = stake*round(sum(0.4*(1-1/odds[outcome]) for outcome in best_combination), 2)*multiplicator
+        nb_miles = round(sum(best_stakes[outcome]*0.4*(1-1/odds[outcome]) for outcome in best_combination)*multiplicator, 2)
     if output:
         if miles:
             print("miles =", nb_miles)
@@ -176,8 +179,9 @@ def gain3(odds, best_odds, stake, minimum_odd, miles=False, rate_eur_miles=0, mu
             odds_site = [odds[k] for k in combination]
             first_stake_site = mises(odds_site, stake)[0]
             profit_combination = gain2(odds_to_check, combination[0], first_stake_site)
+            stakes = mises2(odds_to_check, first_stake_site, combination[0])
             if miles:
-                profit_combination += rate_eur_miles * sum(0.4*(1-1/odds[outcome]) for outcome in combination) * multiplicator
+                profit_combination += rate_eur_miles * sum(stakes[outcome]*0.4*(1-1/odds[outcome]) for outcome in combination) * multiplicator
             if profit_combination > profit:
                 profit = profit_combination
     return profit
