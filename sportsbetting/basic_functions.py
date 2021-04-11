@@ -219,7 +219,10 @@ def gain_defi_rembourse_ou_gagnant(odds, stake, winning_outcome):
             stakes.append(stake)
             continue
         parameter = sum([1/x for j, x in enumerate(odds) if j not in [i, winning_outcome]])
-        stakes.append(stake/(odd*(1-parameter)-1))
+        stake_i = stake/(odd*(1-parameter)-1)
+        if stake_i < 0:
+            return float("-inf")
+        stakes.append(stake_i)
     return stake * odds[winning_outcome] - sum(stakes)
 
 
