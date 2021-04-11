@@ -88,11 +88,9 @@ def parse_netbet(url):
             try:
                 odds = list(map(lambda x: float(x.replace(",", ".")),
                                 list(line.stripped_strings)[1::2]))
-                if valid_match and match and match not in match_odds_hash:
+                if valid_match and match and match not in match_odds_hash and date_time:
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"netbet": odds}
-                    if not date_time:
-                        date_time = "undefined"
                     match_odds_hash[match]['date'] = date_time
             except ValueError:  # match live (cotes non disponibles)
                 pass
