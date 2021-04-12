@@ -13,6 +13,7 @@ from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
 
 def parse_pmu(url=""):
     """
@@ -43,7 +44,7 @@ def parse_pmu_html(soup):
         elif "class" in line.attrs and "trow--live--remaining-time" in line["class"]:
             hour = line.text
             if "'" in hour:
-                date_time = datetime.datetime.today()+datetime.timedelta(minutes=int(hour.strip().strip("'")) + 1)
+                date_time = datetime.datetime.today()+datetime.timedelta(minutes=int(hour.strip().strip("'")) - 1)
                 date_time = truncate_datetime(date_time)
                 continue
             try:
@@ -144,23 +145,41 @@ def get_odds_from_market_id(id_market):
 def get_sub_markets_players_basketball_pmu(id_match):
     if not id_match:
         return {}
-    url = 'https://paris-sportifs.pmu.fr/event/' + id_match
+    url = 'https://mobile.parier.pmu.fr/PMU-Webkit/page/sportif/match?matchId=' + id_match
     markets_to_keep = {'Passes décisives':'Passes',  'Rebonds':'Rebonds'}
     soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     market_name = None
-    for line in soup.find_all():
-        if 'aria-controls' in line.attrs:
-            if 'table-content' in line['aria-controls']:
-                id_market = line['aria-controls'].strip('table-content-')
-        if 'class' in line.attrs and 'table--header-title' in line['class']:
-            market_title = line.text.strip()
-            if 'Rebonds' in market_title or 'Passes décisives' in market_title:
-                player, market_name = market_title.split(' - ')
-                player = player.split()[1]
-                limit, odds = get_odds_from_market_id(id_market)
-                sub_markets[markets_to_keep[market_name]][player + "_" + limit] = odds
-    
+    odds = []
+    is_perf = False
+    for parent in soup.find_all():
+        if 'class' in parent.attrs and 'market' in parent["class"]:
+            market_title = parent.text.strip()
+            is_perf = 'Rebonds' in market_title or 'Passes décisives' in market_title
+            continue
+        if not is_perf or 'class' not in parent.attrs or 'market-betting-options' not in parent["class"]:
+            continue
+        for line in parent.findChildren():
+            player, market_limit = market_title.split(' - ')
+            market_name, limit = market_limit.split(" (")
+            limit = limit.strip(")")
+            if market_name and 'class' in line.attrs and 'odd' in line['class']:
+                odds.append(float(line.text.strip().replace(",", ".")))
+        if not market_name:
+            continue
+        ref_player = player
+        if is_player_added_in_db(player, "pmu"):
+            ref_player = is_player_added_in_db(player, "pmu")
+        elif is_player_in_db(player):
+            add_player_to_db(player, "pmu")
+        else:
+            if sb.DB_MANAGEMENT:
+                print(player, "pmu")
+            continue
+        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = reversed(odds)
+        market_name = None
+        odds = []
+
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
     

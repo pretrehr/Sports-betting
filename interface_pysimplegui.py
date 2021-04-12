@@ -381,7 +381,7 @@ options_gagnant = [[sg.Text("Options")],
                     sg.InputText(tooltip="HH:MM", size=(7, 1), key="TIME_MAX_GAGNANT")],
                    [sg.Text("Nombre de matches combinés"), sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_GAGNANT")],
                    [sg.Checkbox("Combiné risqué", key="RISKY_GAGNANT")],
-                   [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT")]]
+                   [sg.Checkbox("Défi remboursé ou gagnant", key="DEFI_REMBOURSE_OU_GAGNANT", visible=sb.BETA)]]
 column_indicators_gagnant = [[sg.Text("", size=(18, 1), key="INDICATORS_GAGNANT" + str(_),
                                       visible=False)] for _ in range(5)]
 column_results_gagnant = [[sg.Text("", size=(8, 1), key="RESULTS_GAGNANT" + str(_),
@@ -506,8 +506,8 @@ values_layout = [
 ]
 
 perf_players_layout = [
-    [sg.Listbox(["betclic", "parionssport", "pinnacle", "unibet", "winamax", "zebet"], size=(20, 6), key="SITES_PERF", select_mode='multiple', 
-                default_values=["betclic", "parionssport", "pinnacle", "unibet", "winamax", "zebet"])],
+    [sg.Listbox(["betclic", "parionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"], size=(20, 7), key="SITES_PERF", select_mode='multiple', 
+                default_values=["betclic", "parionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"])],
     [sg.Button("Chercher middle bets et surebets", key="FIND_PERF"),
      sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_PERF', visible=False)],
     [sg.Col([[sg.Listbox([], size=(50, 10), key="SUREBETS_PERF", enable_events=True)],

@@ -20,7 +20,7 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_
         "betclic": betclic.get_sub_markets_players_basketball_betclic(id_betclic),
         "parionssport": parionssport.get_sub_markets_players_basketball_parionssport(id_parionssport),
         "pinnacle": pinnacle.get_sub_markets_players_basketball_pinnacle(id_pinnacle),
-#         "pmu": pmu.get_sub_markets_players_basketball_pmu(id_pmu),
+        "pmu": pmu.get_sub_markets_players_basketball_pmu(id_pmu),
         "unibet": unibet.get_sub_markets_players_basketball_unibet(id_unibet),
         "winamax": winamax.get_sub_markets_players_basketball_winamax(id_winamax),
         "zebet" : zebet.get_sub_markets_players_basketball_zebet(id_zebet)
@@ -95,7 +95,7 @@ def get_surebets_players_nba(bookmakers, reload_matches=False):
         id_betclic = sb.ODDS["basketball"][match]["id"].get("betclic")
         id_parionssport = sb.ODDS["basketball"][match]["id"].get("parionssport")
         id_pinnacle = sb.ODDS["basketball"][match]["id"].get("pinnacle")
-        id_pmu = 0# sb.ODDS["basketball"][match]["id"].get("pmu")
+        id_pmu = sb.ODDS["basketball"][match]["id"].get("pmu")
         id_unibet = sb.ODDS["basketball"][match]["id"].get("unibet")
         id_winamax = sb.ODDS["basketball"][match]["id"].get("winamax")
         id_zebet = sb.ODDS["basketball"][match]["id"].get("zebet")
