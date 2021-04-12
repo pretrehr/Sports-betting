@@ -102,7 +102,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 player = label.split(' - ')[0].split()[1]
                 limit = code.split('_')[(-1)].replace(",", ".")
                 odd = dict_matches['odds'][str(id_outcome)]
-                player = label.split(' - ')[0].split('- Plus de ')[0]
+                player = label.split(' - ')[0].split('- Plus de ')[0].strip()
                 ref_player = player
                 if is_player_added_in_db(player, "winamax"):
                     ref_player = is_player_added_in_db(player, "winamax")
