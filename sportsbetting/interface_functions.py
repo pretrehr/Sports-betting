@@ -846,6 +846,23 @@ def display_middle_info(window, values):
     window["OUTCOME1_PERF"].update("Under {} : {} @ {}".format(up, bookmakers[1], odds[1]))
     window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
 
+def sort_middle_gap(window, values):
+    if not sb.MIDDLES:
+        return
+    def get_gap_length(key):
+        gap = key.split(" / ")[1]
+        limit1, limit2 = gap.split()[:3:2]
+        return float(limit2)-float(limit1), gain(sb.MIDDLES[key]["odds"])
+    middles = sorted(sb.MIDDLES.keys(), key=get_gap_length, reverse=True)
+    window["MIDDLES_PERF"].update(middles)
+
+
+def sort_middle_trj(window, values):
+    if not sb.MIDDLES:
+        return
+    middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
+    window["MIDDLES_PERF"].update(middles)
+
 def best_match_miles_interface(window, values):
     try:
         bet = float(values["BET_MILES"])

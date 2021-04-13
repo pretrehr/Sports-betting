@@ -38,7 +38,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                find_surebets_interface, odds_match_surebets_interface,
                                                find_values_interface, odds_match_values_interface,
                                                open_bookmaker_odds, find_perf_players, display_middle_info,
-                                               display_surebet_info, best_match_miles_interface)
+                                               display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -513,7 +513,8 @@ perf_players_layout = [
     [sg.Col([[sg.Listbox([], size=(50, 10), key="SUREBETS_PERF", enable_events=True)],
              [sg.Text("Surebets")]]),
      sg.Col([[sg.Listbox([], size=(50, 10), key="MIDDLES_PERF", enable_events=True)],
-             [sg.Text("Middle bets")]]),
+             [sg.Text("Middle bets")],
+             [sg.Button("Trier par TRJ", key="TRJ_SORT_PERF"), sg.Button("Trier par gap", key="GAP_SORT_PERF")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_PERF")],
              [sg.Text("", size=(30, 1), key="PLAYER_PERF")],
              [sg.Text("", size=(30, 1), key="MARKET_PERF")],
@@ -952,6 +953,10 @@ while True:
         display_middle_info(window, values)
     elif event == "SUREBETS_PERF":
         display_surebet_info(window, values)
+    elif event == "GAP_SORT_PERF":
+        sort_middle_gap(window, values)
+    elif event == "TRJ_SORT_PERF":
+        sort_middle_trj(window, values)
     elif event == "BEST_MATCH_MILES":
         best_match_miles_interface(window, values)
     elif event == "DELETE_MATCH_MILES":
