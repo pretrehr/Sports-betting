@@ -161,7 +161,10 @@ def get_sub_markets_players_basketball_pmu(id_match):
             continue
         for line in parent.findChildren():
             player, market_limit = market_title.split(' - ')
-            market_name, limit = market_limit.split(" (")
+            try:
+                market_name, limit = market_limit.split(" (")
+            except ValueError:
+                continue
             limit = limit.strip(")")
             if market_name and 'class' in line.attrs and 'odd' in line['class']:
                 odds.append(float(line.text.strip().replace(",", ".")))
@@ -176,7 +179,7 @@ def get_sub_markets_players_basketball_pmu(id_match):
             if sb.DB_MANAGEMENT:
                 print(player, "pmu")
             continue
-        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = reversed(odds)
+        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = list(reversed(odds))
         market_name = None
         odds = []
 
