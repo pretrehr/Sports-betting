@@ -357,6 +357,7 @@ def mises_pari_rembourse_si_perdant(cotes, mise_max, rang=-1, remb_freebet=False
     if output:
         mis = list(map(lambda x: round(x, 2), mis_reelles))
         print("gain net =", round(gains - sum(mis), 2))
+        print("taux de retour au joueur =", round(gain(cotes)*100, 3), "%")
         print("mises arrondies =", mis)
         return
     return mis_reelles

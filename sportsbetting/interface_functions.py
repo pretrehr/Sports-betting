@@ -318,6 +318,7 @@ def best_match_cashback_interface(window, values):
             window["ODDS_CASHBACK"].update(visible=False)
             window["RESULT_CASHBACK"].update(visible=False)
             window["TEXT_CASHBACK"].update(visible=False)
+            window["DELETE_MATCH_CASHBACK"].update(visible=False)
             for i in range(5):
                 window["INDICATORS_CASHBACK" + str(i)].update(visible=False)
                 window["RESULTS_CASHBACK" + str(i)].update(visible=False)
@@ -325,6 +326,8 @@ def best_match_cashback_interface(window, values):
             window["MATCH_CASHBACK"].update(match)
             window["DATE_CASHBACK"].update(date)
             window["ODDS_CASHBACK"].update(odds_table(what_was_printed), visible=True)
+            window["DELETE_MATCH_CASHBACK"].update(visible=nb_matches_combine==1)
+            window["RELOAD_ODDS_CASHBACK"].update(visible=nb_matches_combine==1)
             window["RESULT_CASHBACK"].update(stakes(what_was_printed), visible=True)
             window["TEXT_CASHBACK"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):

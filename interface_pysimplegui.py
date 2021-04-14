@@ -215,25 +215,28 @@ options_cashback = [
     [sg.Text("Nombre de matches combinés"),
      sg.Spin([i for i in range(1, 4)], initial_value=1, key="NB_MATCHES_CASHBACK")],
 ]
-column_indicators_cashback = [[sg.Text("", size=(15, 1), key="INDICATORS_CASHBACK" + str(_),
+column_indicators_cashback = [[sg.Text("", size=(18, 1), key="INDICATORS_CASHBACK" + str(_),
                                        visible=False)] for _ in range(5)]
-column_results_cashback = [[sg.Text("", size=(30, 1), key="RESULTS_CASHBACK" + str(_),
+column_results_cashback = [[sg.Text("", size=(8, 1), key="RESULTS_CASHBACK" + str(_),
                                     visible=False)] for _ in range(5)]
 cashback_layout = [
     [sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE_CASHBACK"),
-     sg.Column(column_cashback), sg.Column(options_cashback)],
+     sg.Column(column_cashback), sg.Column(options_cashback),
+     sg.Column([[sg.Text("", size=(30, 1), key="MATCH_CASHBACK")],
+                [sg.Text("", size=(30, 1), key="DATE_CASHBACK")],
+                [sg.Table([["parionssport", "00000", "00000", "00000"]],
+                          headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False,
+                          hide_vertical_scroll=True, size=(None, nb_bookmakers))]]),],
     [sg.Button("Calculer", key="BEST_MATCH_CASHBACK")],
-    [sg.Text("", size=(30, 1), key="MATCH_CASHBACK"),
-     sg.Text("", size=(30, 1), key="DATE_CASHBACK")],
-    [sg.Table([["parionssport", "0000", "0000", "0000"]],
-              headings=["Cotes", "1", "N", "2"], key="ODDS_CASHBACK", visible=False,
-              hide_vertical_scroll=True, size=(None, nb_bookmakers)),
+    [sg.Button("Ignorer ce match", key="DELETE_MATCH_CASHBACK", visible=False)],
+    [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_CASHBACK", visible=False)],
+    
+    [sg.Column(column_indicators_cashback), sg.Column(column_results_cashback), 
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_CASHBACK", visible=False)],
          [sg.MLine(size=(100, 12), key="RESULT_CASHBACK", font="Consolas 10",
-                   visible=False)]])],
-    [sg.Column(column_indicators_cashback), sg.Column(column_results_cashback)]
+                   visible=False)]])]
 ]
 
 column_text_combine = [[sg.Text("Mise")],
@@ -795,6 +798,13 @@ while True:
         sb.ODDS = load_odds(PATH_DATA)
     elif event == "BEST_MATCH_CASHBACK":
         best_match_cashback_interface(window, values)
+    elif event == "DELETE_MATCH_CASHBACK":
+        match_cashback = window["MATCH_CASHBACK"].get()
+        sport_cashback = window["SPORT_CASHBACK"].get()
+        if sport_cashback and match_cashback in sb.ODDS[sport_cashback[0]]:
+            del sb.ODDS[sport_cashback[0]][match_cashback]
+    elif event == "RELOAD_ODDS_CASHBACK":
+        sb.ODDS = load_odds(PATH_DATA)
     elif event == "BEST_MATCHES_COMBINE":
         def combine_thread():
             best_matches_combine_interface(window, values)
