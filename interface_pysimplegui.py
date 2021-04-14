@@ -37,7 +37,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                best_combine_reduit_interface,
                                                find_surebets_interface, odds_match_surebets_interface,
                                                find_values_interface, odds_match_values_interface,
-                                               open_bookmaker_odds, find_perf_players, display_middle_info,
+                                               open_bookmaker_odds, find_perf_players, display_middle_info, search_perf,
                                                display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
@@ -513,7 +513,8 @@ perf_players_layout = [
                 default_values=["betclic", "parionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"])],
     [sg.Button("Chercher middle bets et surebets", key="FIND_PERF"),
      sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_PERF', visible=False)],
-    [sg.Col([[sg.Listbox([], size=(50, 10), key="SUREBETS_PERF", enable_events=True)],
+    [sg.Col([[sg.InputText(key='SEARCH_PERF', size=(50, 1), enable_events=True)],
+             [sg.Listbox([], size=(50, 10), key="SUREBETS_PERF", enable_events=True)],
              [sg.Text("Surebets")]]),
      sg.Col([[sg.Listbox([], size=(50, 10), key="MIDDLES_PERF", enable_events=True)],
              [sg.Text("Middle bets")],
@@ -967,6 +968,8 @@ while True:
         sort_middle_gap(window, values)
     elif event == "TRJ_SORT_PERF":
         sort_middle_trj(window, values)
+    elif event == "SEARCH_PERF":
+        search_perf(window, values)
     elif event == "BEST_MATCH_MILES":
         best_match_miles_interface(window, values)
     elif event == "DELETE_MATCH_MILES":

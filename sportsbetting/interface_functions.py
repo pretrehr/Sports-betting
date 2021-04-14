@@ -817,6 +817,13 @@ def find_perf_players(window, values):
     window["MIDDLES_PERF"].update(middles)
     window["SUREBETS_PERF"].update(surebets)
 
+def search_perf(window, values):
+    try:
+        perfs = sorted([x for x in sb.SUREBETS.keys() if values["SEARCH_PERF"].lower() in x.lower()], key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True)
+        window['SUREBETS_PERF'].update(values=perfs)
+    except KeyError:
+        window['SUREBETS_PERF'].update(values=[])
+
 def display_surebet_info(window, values):
     if not values["SUREBETS_PERF"]:
         return
