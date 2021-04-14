@@ -100,7 +100,7 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['joa', 'pmu', 'barrierebet', 'pasinobet', 'france_pari', 'netbet', 'zebet',
+    sites_order = ['betfair', 'joa', 'pmu', 'barrierebet', 'pasinobet', 'france_pari', 'netbet', 'zebet',
                    'winamax', 'pinnacle', 'betclic', 'pokerstars', 'unibet', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
