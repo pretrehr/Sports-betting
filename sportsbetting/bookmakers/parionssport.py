@@ -95,7 +95,7 @@ def parse_parionssport_api(id_league):
     """
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/next/50/{}?originId=3&lineId=1&breakdownEventsIntoDays=true"
            "&eType=G&showPromotions=true".format(id_league))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]}, timeout=10)
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
     content = urllib.request.urlopen(req).read()
     parsed = json.loads(content)
     odds_match = {}
