@@ -14,6 +14,11 @@ import time
 import sqlite3
 
 import dateutil.parser
+import tabulate
+
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import win32clipboard
 
 import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -244,6 +249,11 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
     if not combinaisons:
         combinaisons = list(product(*opponents))
     nb_chars = max(map(lambda x: len(" / ".join(x)), combinaisons))
+    table_teams = []
+    table_odds = []
+    table_stakes = []
+    table_totals = []
+    table_bookmakers = []
     print("\nRépartition des mises (les totaux affichés prennent en compte les "
           "éventuels freebets):")
     for i, combinaison in enumerate(combinaisons):
@@ -286,7 +296,59 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                                                            for x in sites_bet_combinaison.values()),
                                                        2)
         dict_combinaison[combinaison] = sites_bet_combinaison
-        print(" / ".join(combinaison) + " " * diff + "\t", sites_bet_combinaison)
+        table_name = combinaison
+        combinaison_odds = []
+        combinaison_stakes = []
+        combinaison_bookmakers = []
+        for site in sites_bet_combinaison:
+            if "total" in site:
+                table_total = sites_bet_combinaison[site]
+                continue
+            combinaison_bookmakers.append(site)
+            combinaison_odds.append(sites_bet_combinaison[site]["cote"])
+            if "mise" in sites_bet_combinaison[site]:
+                combinaison_stakes.append(sites_bet_combinaison[site]["mise"])
+            else:
+                combinaison_stakes.append("{} (freebet)".format(sites_bet_combinaison[site]["mise freebet"]))
+        table_teams.append(" / ".join(combinaison))
+        table_totals.append(table_total)
+        table_odds.append("\n".join(map(str, combinaison_odds)))
+        table_stakes.append("\n".join(map(str, combinaison_stakes)))
+        table_bookmakers.append("\n".join(combinaison_bookmakers))
+            
+    table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
+    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    print(text)
+    copy_to_clipboard(text)
+
+
+def copy_to_clipboard(text):
+    image = Image.new('RGB', (int(20+8.08*len(text.split("\n")[0])), int(20+16.8*len(text.split("\n")))), color = (54, 57, 63))
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype(sb.PATH_FONT, 14)
+    draw.text((10,10), text, fill=(255,255,255), font=font)
+    
+    output = BytesIO()
+    image.convert('RGB').save(output, 'BMP')
+    data = output.getvalue()[14:]
+    output.close()
+
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    win32clipboard.CloseClipboard()
+
+
+def send_to_clipboard(image):
+    output = BytesIO()
+    image.convert('RGB').save(output, 'BMP')
+    data = output.getvalue()[14:]
+    output.close()
+
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    win32clipboard.CloseClipboard()
 
 
 def find_almost_won_matches(best_matches, repartition_mises, sport, output=False):
@@ -493,6 +555,11 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     print("taux de retour au joueur =", round(gain(best_cotes)*100, 3), "%")
     print()
     print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
+    table_teams = []
+    table_odds = []
+    table_stakes = []
+    table_totals = []
+    table_bookmakers = []
     for combine, stake, cote, site in zip(best_combinaison, stakes, best_cotes, best_sites):
         names = [opponents_match[i] if i != float("inf") else ""
                  for match, i, opponents_match in zip(matches, combine, opponents)]
@@ -500,10 +567,19 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         diff = nb_chars - len(name_combine)
         if freebet and combine == combinaison_boostee:
             sites_bet_combinaison = {site:{"mise freebet":round(stake, 2), "cote":round(cote+1, 3)}, "total":round(round(stake, 2)*cote, 2)}
+            table_stakes.append("{} (freebet)".format(stake))
+            table_odds.append(round(cote+1, 3))
         else:
             sites_bet_combinaison = {site:{"mise":round(stake, 2), "cote":round(cote, 3)}, "total":round(round(stake, 2)*cote, 2)}
-        print(name_combine + " " * diff + "\t", sites_bet_combinaison)
-
+            table_stakes.append(round(stake, 2))
+            table_odds.append(round(cote, 3))
+        table_teams.append(name_combine)
+        table_totals.append(round(round(stake, 2)*cote, 2))
+        table_bookmakers.append(site)
+    table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
+    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    print(text)
+    copy_to_clipboard(text)
 
 def convert_decimal_to_base(num, base):
     assert 2 <= base <= 9

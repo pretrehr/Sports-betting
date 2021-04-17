@@ -92,11 +92,12 @@ except IndexError:
 print(PATH_DRIVER)
 
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
-print(PATH_DB)
 
 PATH_TOKENS = os.path.dirname(__file__) + "/bookmakers/tokens.txt"
 
 PATH_TRANSLATION = os.path.dirname(__file__) + "/resources/translation.json"
 with open(PATH_TRANSLATION, encoding='utf-8') as file:
     TRANSLATION = json.load(file)
+
+PATH_FONT = os.path.dirname(__file__) + "/resources/DejaVuSansMono.ttf"
 
