@@ -7,6 +7,7 @@ Interface
 # "sportsbetting\resources\chromedriver.exe;sportsbetting\resources" --add-data
 # "sportsbetting\resources\teams.db;sportsbetting\resources" interface_pysimplegui.py --noconfirm
 import collections
+import json
 import queue
 import threading
 import os
@@ -42,6 +43,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                sort_middle_proba)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
+PATH_SITES = os.path.dirname(sb.__file__) + "/resources/sites.json"
 
 print(r"""
    _____                  __             __         __  __  _            
@@ -76,8 +78,8 @@ parsing_layout = [
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS", visible=sb.DB_MANAGEMENT)],
                    [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
         sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITES", select_mode='multiple')],
-                   [sg.Button("Tout sélectionner", key="SELECT_ALL")],
-                   [sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")]])
+                   [sg.Button("Tout sélectionner", key="SELECT_ALL"), sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")],
+                   [sg.Button("Sélectionner mes sites", key="MY_SITES"), sg.Button("Sauvegarder mes sites", key="SAVE_MY_SITES")]])
     ],
     [sg.Text("", size=(100, 1), key="SUREBET_PARSING", visible=False)],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
@@ -719,6 +721,16 @@ while True:
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS)])
     elif event == "SELECT_NONE_SITE":
         window['SITES'].update(set_to_index=[])
+    elif event == "MY_SITES":
+        try:
+            with open(PATH_SITES) as file:
+                bookmakers = json.load(file)
+            window['SITES'].update(set_to_index=[sb.BOOKMAKERS.index(bookmaker) for bookmaker in bookmakers])
+        except FileNotFoundError:
+            pass
+    elif event == "SAVE_MY_SITES":
+        with open(PATH_SITES, "w") as file:
+            json.dump(values['SITES'], file, indent=2)
     elif event == 'START_PARSING':
         selected_competitions = values["COMPETITIONS"]
         selected_sites = values["SITES"]
