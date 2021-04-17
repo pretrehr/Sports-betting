@@ -18,3 +18,4 @@ pyopenssl>=20.0.1
 requests>=2.22.0
 scipy>=1.4.1
 tabulate>=0.8.9
+pillow>=8.0.1
