@@ -12,13 +12,15 @@ import json
 import math
 import time
 import sqlite3
+import sys
 
 import dateutil.parser
 import tabulate
 
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import win32clipboard
+if sys.platform.startswith("win"):
+    import win32clipboard
 
 import sportsbetting as sb
 from sportsbetting.database_functions import (get_formatted_name, is_in_db_site, is_in_db,
@@ -319,7 +321,8 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
     table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
     text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
     print(text)
-    copy_to_clipboard(text)
+    if sys.platform.startswith("win"):
+        copy_to_clipboard(text)
 
 
 def copy_to_clipboard(text):
@@ -338,17 +341,6 @@ def copy_to_clipboard(text):
     win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
     win32clipboard.CloseClipboard()
 
-
-def send_to_clipboard(image):
-    output = BytesIO()
-    image.convert('RGB').save(output, 'BMP')
-    data = output.getvalue()[14:]
-    output.close()
-
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
 
 
 def find_almost_won_matches(best_matches, repartition_mises, sport, output=False):

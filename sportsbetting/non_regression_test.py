@@ -8,10 +8,10 @@ from sportsbetting.user_functions import best_match_under_conditions
 def are_identical_files(filename1, filename2):
     lines1 = []
     lines2 = []
-    with open(filename1) as f:
+    with open(filename1, encoding="utf-8") as f:
         for line in f:
             lines1.append(line.strip())
-    with open(filename2) as f:
+    with open(filename2, encoding="utf-8") as f:
         for line in f:
             lines2.append(line.strip())
     diffs = list(difflib.unified_diff(lines1, lines2))

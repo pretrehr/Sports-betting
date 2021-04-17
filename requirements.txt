@@ -19,4 +19,4 @@ requests>=2.22.0
 scipy>=1.4.1
 tabulate>=0.8.9
 pillow>=8.0.1
-pywin32>=227
+pywin32>=227; sys_platform == 'win32' or sys_platform == 'win64'

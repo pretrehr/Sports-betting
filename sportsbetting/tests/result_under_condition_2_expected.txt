@@ -19,6 +19,12 @@ plus-value max = -1.0
 mises arrondies = [10.0, 4.43, 4.07]
 
 Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
-Bologne	 {'parionssport': {'mise': 10.0, 'cote': 1.75}, 'total': 17.5}
-Nul    	 {'france_pari': {'mise': 4.43, 'cote': 3.95}, 'total': 17.5}
-Crotone	 {'joa': {'mise': 4.07, 'cote': 4.3}, 'total': 17.5}
+╒═════════╤══════════════╤════════╤════════╤═════════╕
+│ Issue   │ Bookmaker    │   Cote │   Mise │   Total │
+╞═════════╪══════════════╪════════╪════════╪═════════╡
+│ Bologne │ parionssport │   1.75 │  10    │    17.5 │
+├─────────┼──────────────┼────────┼────────┼─────────┤
+│ Nul     │ france_pari  │   3.95 │   4.43 │    17.5 │
+├─────────┼──────────────┼────────┼────────┼─────────┤
+│ Crotone │ joa          │   4.3  │   4.07 │    17.5 │
+╘═════════╧══════════════╧════════╧════════╧═════════╛
