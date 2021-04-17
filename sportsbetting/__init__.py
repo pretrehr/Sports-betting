@@ -83,6 +83,7 @@ ua = UserAgent(verify_ssl=False)
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
 try:
     PATH_DRIVER = chromedriver_autoinstaller.install(True)
+    print("Chrome version :", chromedriver_autoinstaller.get_chrome_version())
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
 #except urllib.error.URLError:
