@@ -6,6 +6,8 @@ from sportsbetting.basic_functions import gain
 def keep_maximum_odds(odds1, odds2, books1, books2):
     out = [[], []]
     for odd1, odd2, book1, book2 in zip(odds1, odds2, books1, books2):
+        if not (odd1 and odd2):
+            continue
         if odd2 > odd1:
             out[0].append(odd2)
             out[1].append(book2)
