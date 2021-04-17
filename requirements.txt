@@ -16,3 +16,4 @@ websockets>=8.1
 wheel>=0.36.2
 pyopenssl>=20.0.1
 requests>=2.22.0
+scipy>=1.4.1
