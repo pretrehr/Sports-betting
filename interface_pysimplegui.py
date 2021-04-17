@@ -38,7 +38,8 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                find_surebets_interface, odds_match_surebets_interface,
                                                find_values_interface, odds_match_values_interface,
                                                open_bookmaker_odds, find_perf_players, display_middle_info, search_perf,
-                                               display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj)
+                                               display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj,
+                                               sort_middle_proba)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 
@@ -56,8 +57,12 @@ try:
 except FileNotFoundError:
     pass
 
+HEIGHT_FIELD_SIMPLE     = 10
+HEIGHT_FIELD_GAGNANT    = 12
+HEIGHT_FIELD_COMBINE    = 18
+LENGTH_FIELD            = 100
+
 sb.DB_MANAGEMENT = "--db" in sys.argv
-sb.BETA = "--beta" in sys.argv
 nb_bookmakers = len(sb.BOOKMAKERS)
 
 
@@ -133,7 +138,7 @@ match_under_condition_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmake
                                      "Répartition des mises (les totaux affichés prennent en "
                                      "compte les éventuels freebets) :",
                                      key="TEXT_UNDER_CONDITION", visible=False)],
-                                     [sg.MLine(size=(100, 12), key="RESULT_UNDER_CONDITION",
+                                     [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_SIMPLE), key="RESULT_UNDER_CONDITION",
                                                font="Consolas 10", visible=False)]])],
                                 ]
 
@@ -163,7 +168,7 @@ stake_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_STAKE", visible=False)],
-         [sg.MLine(size=(100, 12), key="RESULT_STAKE", font="Consolas 10", visible=False)]])]
+         [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_STAKE", font="Consolas 10", visible=False)]])]
 ]
 
 column_freebet = [[sg.Text("Freebet"), sg.InputText(key='BET_FREEBET', size=(6, 1)), sg.Checkbox("Fractionnable", key='SPLIT_FREEBET')],
@@ -189,7 +194,7 @@ freebet_layout = [
      sg.Column(column_results_freebet),
      sg.Column([[sg.Text("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
                          key="TEXT_FREEBET", visible=False)],
-                [sg.MLine(size=(120, 12), key="RESULT_FREEBET", font="Consolas 10", visible=False)]])],
+                [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_SIMPLE), key="RESULT_FREEBET", font="Consolas 10", visible=False)]])],
 ]
 
 column_text_cashback = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -235,7 +240,7 @@ cashback_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_CASHBACK", visible=False)],
-         [sg.MLine(size=(100, 12), key="RESULT_CASHBACK", font="Consolas 10",
+         [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_SIMPLE), key="RESULT_CASHBACK", font="Consolas 10",
                    visible=False)]])]
 ]
 
@@ -277,7 +282,7 @@ combine_layout = [[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITE
                        "Répartition des mises (les totaux affichés prennent en compte les "
                        "éventuels freebets) :",
                        key="TEXT_COMBINE", visible=False)],
-                       [sg.MLine(size=(120, 12), key="RESULT_COMBINE", font="Consolas 10",
+                       [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_COMBINE", font="Consolas 10",
                                  visible=False)]])
                    ]]
 
@@ -366,7 +371,7 @@ freebets_layout = [[sg.Column(column_sites_freebets),
                         "Répartition des mises (les totaux affichés prennent en compte les "
                         "éventuels freebets) :",
                         key="TEXT_FREEBETS", visible=False)],
-                        [sg.MLine(size=(120, 12), key="RESULT_FREEBETS", font="Consolas 10",
+                        [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_FREEBETS", font="Consolas 10",
                                   visible=False)]])
                     ]]
 
@@ -406,7 +411,7 @@ gagnant_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_GAGNANT", visible=False)],
-         [sg.MLine(size=(120, 12), key="RESULT_GAGNANT", font="Consolas 10",
+         [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_GAGNANT), key="RESULT_GAGNANT", font="Consolas 10",
                    visible=False)]])]
 ]
 
@@ -466,7 +471,7 @@ combi_opt_layout = [
      sg.Column([[sg.Text(
          "Répartition des mises (les totaux affichés prennent en compte les éventuels freebets) :",
          key="TEXT_COMBI_OPT", visible=False)],
-         [sg.MLine(size=(120, 12), key="RESULT_COMBI_OPT", font="Consolas 10", visible=False)]])
+         [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_COMBI_OPT", font="Consolas 10", visible=False)]])
      ]]
 
 surebets_layout = [
@@ -518,13 +523,15 @@ perf_players_layout = [
              [sg.Text("Surebets")]]),
      sg.Col([[sg.Listbox([], size=(50, 10), key="MIDDLES_PERF", enable_events=True)],
              [sg.Text("Middle bets")],
-             [sg.Button("Trier par TRJ", key="TRJ_SORT_PERF"), sg.Button("Trier par gap", key="GAP_SORT_PERF")]]),
+             [sg.Button("Trier par TRJ", key="TRJ_SORT_PERF"), sg.Button("Trier par gap", key="GAP_SORT_PERF"), sg.Button("Trier par proba", key="PROBA_SORT_PERF", visible=sb.DB_MANAGEMENT)]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_PERF")],
              [sg.Text("", size=(30, 1), key="PLAYER_PERF")],
              [sg.Text("", size=(30, 1), key="MARKET_PERF")],
              [sg.Text("", size=(30, 1), key="OUTCOME0_PERF")],
              [sg.Text("", size=(30, 1), key="OUTCOME1_PERF")],
-             [sg.Text("", size=(30, 1), key="TRJ_PERF")]])
+             [sg.Text("", size=(30, 1), key="TRJ_PERF")],
+             [sg.Text("", size=(30, 1), key="PROBA_MIDDLE_PERF", visible=sb.DB_MANAGEMENT)],
+             [sg.Text("", size=(30, 1), key="SUM_MIDDLE_PERF", visible=sb.DB_MANAGEMENT)]])
     ]
 ]
 
@@ -566,7 +573,7 @@ miles_layout = [[sg.Column(column_miles),
                                      "Répartition des mises (les totaux affichés prennent en "
                                      "compte les éventuels freebets) :",
                                      key="TEXT_MILES", visible=False)],
-                                     [sg.MLine(size=(100, 12), key="RESULT_MILES",
+                                     [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_MILES",
                                                font="Consolas 10", visible=False)]])],
                                 ]
 
@@ -968,6 +975,8 @@ while True:
         sort_middle_gap(window, values)
     elif event == "TRJ_SORT_PERF":
         sort_middle_trj(window, values)
+    elif event == "PROBA_SORT_PERF":
+        sort_middle_proba(window, values)
     elif event == "SEARCH_PERF":
         search_perf(window, values)
     elif event == "BEST_MATCH_MILES":

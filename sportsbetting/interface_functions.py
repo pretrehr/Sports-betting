@@ -10,6 +10,7 @@ import datetime # à garder jusqu'à JSON
 import sys
 import io
 import numpy as np
+import scipy.stats
 import PySimpleGUI as sg
 import webbrowser
 
@@ -839,6 +840,8 @@ def display_surebet_info(window, values):
     window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(limit, odds[0], bookmakers[0]))
     window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, odds[1], bookmakers[1]))
     window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
+    window["PROBA_MIDDLE_PERF"].update("")
+    window["SUM_MIDDLE_PERF"].update("")
 
 
 def display_middle_info(window, values):
@@ -849,14 +852,22 @@ def display_middle_info(window, values):
     down, up_market = down_up_market.split(" - ")
     up, market = up_market.split(".5 ")
     up += ".5 "
+    mean = (float(up) + float(down))/2
+    proba = 0
+    for i in range(int(float(down)+1), int(float(up)+1)):
+        proba += scipy.stats.poisson.pmf(i, mean)
     odds = sb.MIDDLES[player_down_up_market]["odds"]
     bookmakers = sb.MIDDLES[player_down_up_market]["bookmakers"]
+    trj = round(gain(odds)*100, 3)
+    proba = round(proba*100, 3)
     window["MATCH_PERF"].update(sb.MIDDLES[player_down_up_market]["match"])
     window["PLAYER_PERF"].update(player)
     window["MARKET_PERF"].update(market)
     window["OUTCOME0_PERF"].update("Over {} : {} @ {}".format(down, bookmakers[0], odds[0]))
     window["OUTCOME1_PERF"].update("Under {} : {} @ {}".format(up, bookmakers[1], odds[1]))
-    window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
+    window["TRJ_PERF"].update("TRJ : {} %".format(trj))
+    window["PROBA_MIDDLE_PERF"].update("Probabilité de middle : {} %".format(proba))
+    window["SUM_MIDDLE_PERF"].update("TRJ + proba : {} %".format(trj + proba), text_color="red" if trj+proba>100 else "white")
 
 def sort_middle_gap(window, values):
     if not sb.MIDDLES:
@@ -874,6 +885,21 @@ def sort_middle_trj(window, values):
         return
     middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
     window["MIDDLES_PERF"].update(middles)
+
+def sort_middle_proba(window, values):
+    if not sb.MIDDLES:
+        return
+    def get_gap_proba(key):
+        gap = key.split(" / ")[1]
+        limit1, limit2 = gap.split()[:3:2]
+        mean = (float(limit1) + float(limit2))/2
+        proba = 0
+        for i in range(int(float(limit1)+1), int(float(limit2)+1)):
+            proba += scipy.stats.poisson.pmf(i, mean)
+        return proba + gain(sb.MIDDLES[key]["odds"])
+    middles = sorted(sb.MIDDLES.keys(), key=get_gap_proba, reverse=True)
+    window["MIDDLES_PERF"].update(middles)
+    
 
 def best_match_miles_interface(window, values):
     try:
