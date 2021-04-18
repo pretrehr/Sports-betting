@@ -144,13 +144,17 @@ def get_sub_markets_players_basketball_zebet(id_match):
                         print(player, "zebet")
                     continue
                 last = -1
+                key_player = ref_player + "_" + limit
+                key_market = markets_to_keep[market_name]
+                if key_player not in sub_markets[key_market]:
+                    sub_markets[key_market][key_player] = {"odds":{"zebet":[]}}
                 if plus:
-                    sub_markets[markets_to_keep[market_name]][(ref_player + "_"+ limit)].insert(0, odd)
+                    sub_markets[key_market][key_player]["odds"]["zebet"].insert(0, odd)
                     last = 0
                 else:
-                    sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit].append(odd)
-                if len(sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit]) > 2:
-                    del sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit][last]
+                    sub_markets[key_market][key_player]["odds"]["zebet"].append(odd)
+                if len(sub_markets[key_market][key_player]["odds"]["zebet"]) > 2:
+                    del sub_markets[key_market][key_player]["odds"]["zebet"][last]
     
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

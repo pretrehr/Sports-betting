@@ -112,7 +112,11 @@ def get_sub_markets_players_basketball_unibet(id_match):
                     if sb.DB_MANAGEMENT:
                         print(player, "unibet")
                     continue
-                sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit].insert(0, odd)
+                key_player = ref_player + "_" + limit
+                key_market = markets_to_keep[market_name]
+                if key_player not in sub_markets[key_market]:
+                    sub_markets[key_market][key_player] = {"odds":{"unibet":[]}}
+                sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
     
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

@@ -179,7 +179,7 @@ def get_sub_markets_players_basketball_pmu(id_match):
             if sb.DB_MANAGEMENT:
                 print(player, "pmu")
             continue
-        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = list(reversed(odds))
+        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = {"odds":{"pmu":list(reversed(odds))}}
         market_name = None
         odds = []
 

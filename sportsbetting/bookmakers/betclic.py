@@ -93,7 +93,7 @@ def get_sub_markets_players_basketball_betclic(id_match):
         if market['mtc'] not in markets_to_keep:
             continue
         selections = market['selections']
-        odds_market = defaultdict(list)
+        odds_market = {}
         for selection in selections:
             player = re.split('\\s\\+\\s|\\s\\-\\s', selection['name'].replace(".", " "))[0].split()[1]
             limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
@@ -107,7 +107,10 @@ def get_sub_markets_players_basketball_betclic(id_match):
                 if sb.DB_MANAGEMENT:
                     print(player, "betclic")
                 continue
-            odds_market[ref_player + "_" + limit].append(selection['odds'])
+            key_player = ref_player + "_" + limit
+            if key_player not in odds_market:
+                odds_market[key_player] = {"odds":{"betclic":[]}}
+            odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(selection['odds'])
             
     
         sub_markets[markets_to_keep[market['mtc']]] = dict(odds_market)

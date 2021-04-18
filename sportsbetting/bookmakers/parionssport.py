@@ -208,6 +208,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         player = odd["desc"].split(" - ")[0].split(".")[1]
         limit = odd["desc"].split()[-1].replace(",", ".")
         player = odd["desc"].split(" - ")[0].strip()
+        if player == odd["desc"]:
+            player = odd["desc"].split("- ")[0].strip()
         ref_player = add_close_player_to_db(player, "parionssport")
         if is_player_added_in_db(player, "parionssport"):
             ref_player = is_player_added_in_db(player, "parionssport")
@@ -215,7 +217,11 @@ def get_sub_markets_players_basketball_parionssport(id_match):
             if sb.DB_MANAGEMENT:
                 print(player, "parionssport")
             continue
-        sub_markets[markets_to_keep[market["desc"]]][ref_player + "_" + limit].append(float(odd["price"].replace(",", ".")))
+        key_player = ref_player + "_" + limit
+        key_market = markets_to_keep[market["desc"]]
+        if key_player not in sub_markets[key_market]:
+            sub_markets[key_market][key_player] = {"odds":{"parionssport":[]}}
+        sub_markets[key_market][key_player]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
     return sub_markets

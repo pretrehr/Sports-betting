@@ -1,4 +1,5 @@
 import sportsbetting as sb
+from sportsbetting.auxiliary_functions import merge_dict_odds
 from sportsbetting.bookmakers import betclic, parionssport, pinnacle, pmu, unibet, winamax, zebet
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.basic_functions import gain
@@ -16,30 +17,34 @@ def keep_maximum_odds(odds1, odds2, books1, books2):
             out[1].append(book1)
     return out
 
+def get_middle_odds(odds1, odds2):
+    bookmakers = odds1.keys() | odds2.keys()
+    odds = {bookmaker:[1.01, 1.01] for bookmaker in bookmakers}
+    for bookmaker1 in odds1:
+        odds[bookmaker1][0] = odds1[bookmaker1][0]
+    for bookmaker2 in odds2:
+        odds[bookmaker2][1] = odds2[bookmaker2][1]
+    return odds
 
 def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_unibet, id_winamax, id_zebet):
-    odds = {
-        "betclic": betclic.get_sub_markets_players_basketball_betclic(id_betclic),
-        "parionssport": parionssport.get_sub_markets_players_basketball_parionssport(id_parionssport),
-        "pinnacle": pinnacle.get_sub_markets_players_basketball_pinnacle(id_pinnacle),
-        "pmu": pmu.get_sub_markets_players_basketball_pmu(id_pmu),
-        "unibet": unibet.get_sub_markets_players_basketball_unibet(id_unibet),
-        "winamax": winamax.get_sub_markets_players_basketball_winamax(id_winamax),
-        "zebet" : zebet.get_sub_markets_players_basketball_zebet(id_zebet)
-    }
-    bookmakers = odds.keys()
+    odds = [
+        betclic.get_sub_markets_players_basketball_betclic(id_betclic),
+        parionssport.get_sub_markets_players_basketball_parionssport(id_parionssport),
+        pinnacle.get_sub_markets_players_basketball_pinnacle(id_pinnacle),
+        pmu.get_sub_markets_players_basketball_pmu(id_pmu),
+        unibet.get_sub_markets_players_basketball_unibet(id_unibet),
+        winamax.get_sub_markets_players_basketball_winamax(id_winamax),
+        zebet.get_sub_markets_players_basketball_zebet(id_zebet)
+    ]
+    bookmakers = ["betclic", "pasionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"]
     sub_markets = ['Points + passes + rebonds', 'Passes', 'Rebonds', 'Points + passes', 'Points + rebonds', 'Passes + rebonds']
     best = {}
     best_books = {}
     middles = {}
     surebets = {}
-    for a, sub_market in enumerate(sub_markets):
-        best[sub_market] = {}
-        best_books[sub_market] = {}
-        players_limits = set()
-        for bookmaker in bookmakers:
-            if sub_market in odds[bookmaker]:
-                players_limits |= odds[bookmaker][sub_market].keys()
+    for sub_market in sub_markets:
+        odds_sub_market = merge_dict_odds([x.get(sub_market, {}) for x in odds])
+        players_limits = odds_sub_market.keys()
         previous_player = ""
         previous_limit = 0
         players = []
@@ -47,38 +52,13 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_
             player, limit = player_limit.split("_")
             players.append([player, float(limit)])
         for player, limit in sorted(list(players)):
-#             print(player)
-#             print(player, limit)
             same_player = previous_player == player
             player_dict = player + "_" + str(limit)
             previous_player_dict = previous_player + "_" + str(previous_limit)
-            best[sub_market][player_dict] = [1, 1]
-            best_books[sub_market][player_dict] = ["", ""]
-            i = 0
-            for book in bookmakers:
-                tmp_books = [book, book]
-                if sub_market not in odds[book]:
-                    continue
-                if player_dict not in odds[book][sub_market]:
-                    i += 1
-#                     print(player, "not found", book)
-                    continue
-                best[sub_market][player_dict], best_books[sub_market][player_dict] = keep_maximum_odds(best[sub_market][player_dict],
-                                                                                             odds[book][sub_market][player_dict],
-                                                                                             best_books[sub_market][player_dict], tmp_books)
-            if len(best[sub_market][player_dict])>1:# and gain(best[sub_market][player_dict]) > 0.99:
-#                 print("*** surebet", player, limit, sub_market, gain(best[sub_market][player_dict]), best_books[sub_market][player_dict], best[sub_market][player_dict])
-#                 surebets.append([player, limit, sub_market, best[sub_market][player_dict], gain(best[sub_market][player_dict]), best_books[sub_market][player_dict]])
-                surebets[player + " / " + str(limit) + " " + sub_market] = {"match":match, "odds": best[sub_market][player_dict], "bookmakers" : best_books[sub_market][player_dict]}
-            if same_player and len(best[sub_market][player_dict])>1 and len(best[sub_market][previous_player_dict])>1:
-#                 print(previous_player, player)
-                odds_middle = [best[sub_market][previous_player_dict][0], best[sub_market][player_dict][1]]
-                books_middle = [best_books[sub_market][previous_player_dict][0], best_books[sub_market][player_dict][1]]
-#                 print(odds_middle, gain(odds_middle))
-#                 if gain(odds_middle)>0.80 and limit < 10 or abs(float(limit)-float(previous_limit))>1:
-#                     print("*** middle", previous_player, previous_limit, player, limit, sub_market, odds_middle, gain(odds_middle), books_middle)
-#                     middles.append([player, previous_limit, limit, sub_market, odds_middle, gain(odds_middle), books_middle])
-                middles[player + " / " + str(previous_limit) + " - " + str(limit) + " " + sub_market] = {"odds": odds_middle, "bookmakers" : books_middle, "match":match}
+            surebets[player + " / " + str(limit) + " " + sub_market] = {"match":match, "odds": odds_sub_market[player_dict]["odds"]}
+            if same_player:
+                odds_middle = get_middle_odds(odds_sub_market[previous_player_dict]["odds"], odds_sub_market[player_dict]["odds"])
+                middles[player + " / " + str(previous_limit) + " - " + str(limit) + " " + sub_market] = {"odds": odds_middle, "match":match}
             previous_player, previous_limit = player, limit
     return surebets, middles
 
@@ -93,7 +73,6 @@ def get_surebets_players_nba(bookmakers, reload_matches=False):
     for match in sb.ODDS["basketball"]:
         if "id" not in sb.ODDS["basketball"][match]:
             continue
-#         print(match)
         id_betclic = sb.ODDS["basketball"][match]["id"].get("betclic")
         id_parionssport = sb.ODDS["basketball"][match]["id"].get("parionssport")
         id_pinnacle = sb.ODDS["basketball"][match]["id"].get("pinnacle")

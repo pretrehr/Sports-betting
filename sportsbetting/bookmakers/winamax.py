@@ -112,7 +112,11 @@ def get_sub_markets_players_basketball_winamax(id_match):
                     if sb.DB_MANAGEMENT:
                         print(player, "winamax")
                     continue
-                sub_markets[markets_to_keep[str(bet['marketId'])]][ref_player + "_" + limit].append(odd)
+                key_player = ref_player + "_" + limit
+                key_market = markets_to_keep[str(bet['marketId'])]
+                if key_player not in sub_markets[key_market]:
+                    sub_markets[key_market][key_player] = {"odds":{"winamax":[]}}
+                sub_markets[key_market][key_player]["odds"]["winamax"].append(odd)
     
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

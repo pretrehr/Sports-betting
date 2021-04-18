@@ -532,6 +532,11 @@ perf_players_layout = [
              [sg.Text("", size=(30, 1), key="OUTCOME0_PERF")],
              [sg.Text("", size=(30, 1), key="OUTCOME1_PERF")],
              [sg.Text("", size=(30, 1), key="TRJ_PERF")],
+             [sg.Table([["parionssport", "00000", "00000"]],
+                            headings=["Cotes", "Over", "Under"],
+                            key="ODDS_PERF",
+                            visible=False, hide_vertical_scroll=True,
+                            size=(None, 7))],
              [sg.Text("", size=(30, 1), key="PROBA_MIDDLE_PERF", visible=sb.DB_MANAGEMENT)],
              [sg.Text("", size=(30, 1), key="SUM_MIDDLE_PERF", visible=sb.DB_MANAGEMENT)]])
     ]

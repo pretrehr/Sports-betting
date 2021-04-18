@@ -181,7 +181,8 @@ def get_sub_markets_players_basketball_pinnacle(id_match):
             continue
         odds, limit = get_pinnacle_odds_from_market_id(id_market, all_odds)
         if odds:
-            sub_markets[market_type][ref_player + "_" + str(limit)] = odds
+            key_player = ref_player + "_" + str(limit)
+            sub_markets[market_type][key_player] = {"odds":{"pinnacle":odds}}
 
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

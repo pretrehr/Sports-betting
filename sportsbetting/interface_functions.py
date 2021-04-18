@@ -813,14 +813,14 @@ def find_perf_players(window, values):
     if not values["SITES_PERF"]:
         return
     sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(values["SITES_PERF"], True)
-    middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
-    surebets = sorted(sb.SUREBETS.keys(), key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True)
+    middles = sorted(sb.MIDDLES.keys(), key=lambda x:trj_match(sb.MIDDLES[x])[0], reverse=True)
+    surebets = sorted(sb.SUREBETS.keys(), key=lambda x:trj_match(sb.SUREBETS[x])[0], reverse=True)
     window["MIDDLES_PERF"].update(middles)
     window["SUREBETS_PERF"].update(surebets)
 
 def search_perf(window, values):
     try:
-        perfs = sorted([x for x in sb.SUREBETS.keys() if values["SEARCH_PERF"].lower() in x.lower()], key=lambda x : gain(sb.SUREBETS[x]["odds"]), reverse=True)
+        perfs = sorted([x for x in sb.SUREBETS.keys() if values["SEARCH_PERF"].lower() in x.lower()], key=lambda x:trj_match(sb.SUREBETS[x])[0], reverse=True)
         window['SUREBETS_PERF'].update(values=perfs)
     except KeyError:
         window['SUREBETS_PERF'].update(values=[])
@@ -832,14 +832,19 @@ def display_surebet_info(window, values):
     player, limit_market = player_limit_market.split(" / ")
     limit, market = limit_market.split(".5 ")
     limit += ".5 "
+    trj, bookmakers, best_odds = trj_match(sb.SUREBETS[player_limit_market])
     odds = sb.SUREBETS[player_limit_market]["odds"]
-    bookmakers = sb.SUREBETS[player_limit_market]["bookmakers"]
+    table = []
+    for key, value in odds.items():
+        table.append([key] + list(map(str, value)))
+    table.sort()
+    window["ODDS_PERF"].update(table, visible=True)
     window["MATCH_PERF"].update(sb.SUREBETS[player_limit_market]["match"])
     window["PLAYER_PERF"].update(player)
     window["MARKET_PERF"].update(market)
-    window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(limit, odds[0], bookmakers[0]))
-    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, odds[1], bookmakers[1]))
-    window["TRJ_PERF"].update("TRJ : " + str(round(gain(odds)*100, 3)) + "%")
+    window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(limit, best_odds[0], bookmakers[0]))
+    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, best_odds[1], bookmakers[1]))
+    window["TRJ_PERF"].update("TRJ : {}%".format(round(trj*100, 3)))
     window["PROBA_MIDDLE_PERF"].update("")
     window["SUM_MIDDLE_PERF"].update("")
 
@@ -856,16 +861,21 @@ def display_middle_info(window, values):
     proba = 0
     for i in range(int(float(down)+1), int(float(up)+1)):
         proba += scipy.stats.poisson.pmf(i, mean)
-    odds = sb.MIDDLES[player_down_up_market]["odds"]
-    bookmakers = sb.MIDDLES[player_down_up_market]["bookmakers"]
-    trj = round(gain(odds)*100, 3)
+    trj, bookmakers, best_odds = trj_match(sb.MIDDLES[player_down_up_market])
     proba = round(proba*100, 3)
+    trj = round(trj*100, 3)
+    odds = sb.MIDDLES[player_down_up_market]["odds"]
+    table = []
+    for key, value in odds.items():
+        table.append([key] + list(map(lambda x : str(x).replace("1.01", "-   "), value)))
+    table.sort()
+    window["ODDS_PERF"].update(table, visible=True)
     window["MATCH_PERF"].update(sb.MIDDLES[player_down_up_market]["match"])
     window["PLAYER_PERF"].update(player)
     window["MARKET_PERF"].update(market)
-    window["OUTCOME0_PERF"].update("Over {} : {} @ {}".format(down, bookmakers[0], odds[0]))
-    window["OUTCOME1_PERF"].update("Under {} : {} @ {}".format(up, bookmakers[1], odds[1]))
-    window["TRJ_PERF"].update("TRJ : {} %".format(trj))
+    window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(down, best_odds[0], bookmakers[0]))
+    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(up, best_odds[1], bookmakers[1]))
+    window["TRJ_PERF"].update("TRJ : {}%".format(trj))
     window["PROBA_MIDDLE_PERF"].update("Probabilité de middle : {} %".format(proba))
     window["SUM_MIDDLE_PERF"].update("TRJ + proba : {} %".format(trj + proba), text_color="red" if trj+proba>100 else "white")
 
@@ -875,7 +885,7 @@ def sort_middle_gap(window, values):
     def get_gap_length(key):
         gap = key.split(" / ")[1]
         limit1, limit2 = gap.split()[:3:2]
-        return float(limit2)-float(limit1), gain(sb.MIDDLES[key]["odds"])
+        return float(limit2)-float(limit1), trj_match(sb.MIDDLES[key])[0]
     middles = sorted(sb.MIDDLES.keys(), key=get_gap_length, reverse=True)
     window["MIDDLES_PERF"].update(middles)
 
@@ -883,7 +893,7 @@ def sort_middle_gap(window, values):
 def sort_middle_trj(window, values):
     if not sb.MIDDLES:
         return
-    middles = sorted(sb.MIDDLES.keys(), key=lambda x : gain(sb.MIDDLES[x]["odds"]), reverse=True)
+    middles = sorted(sb.MIDDLES.keys(), key=lambda x:trj_match(sb.MIDDLES[x])[0], reverse=True)
     window["MIDDLES_PERF"].update(middles)
 
 def sort_middle_proba(window, values):
@@ -896,7 +906,7 @@ def sort_middle_proba(window, values):
         proba = 0
         for i in range(int(float(limit1)+1), int(float(limit2)+1)):
             proba += scipy.stats.poisson.pmf(i, mean)
-        return proba + gain(sb.MIDDLES[key]["odds"])
+        return proba + trj_match(sb.MIDDLES[key])[0]
     middles = sorted(sb.MIDDLES.keys(), key=get_gap_proba, reverse=True)
     window["MIDDLES_PERF"].update(middles)
     

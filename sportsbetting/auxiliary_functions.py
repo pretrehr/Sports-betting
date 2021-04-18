@@ -198,8 +198,7 @@ def merge_dict_odds(dict_odds):
                 if list(list(odds.values())[0]["odds"].keys()):
                     site = list(list(odds.values())[0]["odds"].keys())[0]
                     if match in odds.keys() and odds[match]["odds"] and odds[match]["odds"][site]:
-                        if (not date_found and odds[match]["date"] != "undefined"
-                                and odds[match]["date"]):  # Si la date est None
+                        if (not date_found and odds[match].get("date") and odds[match]["date"] != "undefined"):
                             new_dict[match]["date"] = odds[match]["date"]
                             date_found = True
                         if date_found and abs(new_dict[match]["date"] - odds[match]["date"]) > datetime.timedelta(days=1.5):
