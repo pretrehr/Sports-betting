@@ -444,7 +444,7 @@ column_results_combi_opt = [[sg.Text("", size=(8, 1), key="RESULTS_COMBI_OPT" + 
 column_text_combi_opt = [[sg.Text("Mise maximale")], [sg.Text("Cote boostée")], [sg.Text("Site boosté")]]
 column_fields_combi_opt = [[sg.InputText(key='STAKE_COMBI_OPT', size=(6, 1))],
                                  [sg.InputText(key='ODD_COMBI_OPT', size=(6, 1))],
-                                 [sg.Combo(sb.BOOKMAKERS, key="SITE_COMBI_OPT")]]
+                                 [sg.Combo(sb.BOOKMAKERS, key="SITE_COMBI_OPT", default_value="pokerstars")]]
 column_combi_opt = [[sg.Column(column_text_combi_opt),
                            sg.Column(column_fields_combi_opt)]]
 
