@@ -379,7 +379,7 @@ def best_matches_combine_interface(window, values):
         else:
             window["MATCH_COMBINE"].update(match)
             window["DATE_COMBINE"].update(date)
-            window["ODDS_COMBINE"].update(visible=True)
+#             window["ODDS_COMBINE"].update(visible=True)
             window["RESULT_COMBINE"].update(stakes(what_was_printed), visible=True)
             window["TEXT_COMBINE"].update(visible=True)
             for i, elem in enumerate(indicators(what_was_printed)):
@@ -462,7 +462,7 @@ def best_matches_freebet_interface(window, values, visible_freebets):
     if match is None:
         window["MATCH_FREEBETS"].update("Aucun match trouvé")
         window["DATE_FREEBETS"].update("")
-        window["ODDS_FREEBETS"].update(visible=False)
+#         window["ODDS_FREEBETS"].update(visible=False)
         window["RESULT_FREEBETS"].update(visible=False)
         window["TEXT_FREEBETS"].update(visible=False)
         for i in range(5):
@@ -528,7 +528,7 @@ def best_match_pari_gagnant_interface(window, values):
             window["DATE_GAGNANT"].update(date)
             if nb_matches_combine > 1:
                 window["ODDS_GAGNANT"].update(visible=False)
-                window["ODDS_COMBINE_GAGNANT"].update(visible=True)
+#                 window["ODDS_COMBINE_GAGNANT"].update(visible=True)
             else:
                 window["ODDS_GAGNANT"].update(odds_table(what_was_printed), visible=True)
                 window["ODDS_COMBINE_GAGNANT"].update(visible=False)
@@ -649,7 +649,7 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
     match, date = infos(what_was_printed)
     window["MATCH_COMBI_OPT"].update(match)
     window["DATE_COMBI_OPT"].update(date)
-    window["ODDS_COMBI_OPT"].update(visible=True)
+#     window["ODDS_COMBI_OPT"].update(visible=True)
     window["RESULT_COMBI_OPT"].update(stakes(what_was_printed), visible=True)
     window["TEXT_COMBI_OPT"].update(visible=True)
     for i, elem in enumerate(indicators(what_was_printed)):
