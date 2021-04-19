@@ -1,5 +1,5 @@
 import sportsbetting as sb
-from sportsbetting.auxiliary_functions import merge_dict_odds
+from sportsbetting.auxiliary_functions import merge_dict_odds, valid_odds
 from sportsbetting.bookmakers import betclic, parionssport, pinnacle, pmu, unibet, winamax, zebet
 from sportsbetting.user_functions import parse_competitions
 from sportsbetting.basic_functions import gain
@@ -43,7 +43,7 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_
     middles = {}
     surebets = {}
     for sub_market in sub_markets:
-        odds_sub_market = merge_dict_odds([x.get(sub_market, {}) for x in odds])
+        odds_sub_market = valid_odds(merge_dict_odds([x.get(sub_market, {}) for x in odds]), "basketball")
         players_limits = odds_sub_market.keys()
         previous_player = ""
         previous_limit = 0
