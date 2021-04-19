@@ -178,7 +178,7 @@ def format_team_names(dict_odds, sport, competition):
     return list_odds
 
 
-def merge_dict_odds(dict_odds):
+def merge_dict_odds(dict_odds, needs_date=True):
     """
     Fusion des cotes entre les différents sites
     """
@@ -207,7 +207,7 @@ def merge_dict_odds(dict_odds):
                             new_dict[match]["odds"][site] = odds[match]["odds"][site]
                         if "id" in odds[match] and odds[match]["id"] and site in odds[match]["id"]:
                             new_dict[match]["id"][site] = odds[match]["id"][site]
-        if not date_found:
+        if not date_found and needs_date:
             new_dict[match]["date"] = datetime.datetime.today()
     return new_dict
 
