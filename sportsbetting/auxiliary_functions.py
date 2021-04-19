@@ -570,7 +570,8 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
     table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
     text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
     print(text)
-    copy_to_clipboard(text)
+    if sys.platform.startswith("win"):
+        copy_to_clipboard(text)
 
 def convert_decimal_to_base(num, base):
     assert 2 <= base <= 9
