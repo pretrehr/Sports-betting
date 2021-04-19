@@ -107,7 +107,8 @@ def get_odds_from_back_lay_market_ids(back_lay_markets):
                 exchange = runner.get("exchange", {})
                 lay = i%2
                 if back_eq_lay or not lay:
-                    odd = float(exchange.get("availableToBack", [{"price":1.01}])[0]["price"])
+                    odd_back = float(exchange.get("availableToBack", [{"price":1.01}])[0]["price"])
+                    odd = round(1 + (1 – 0.03) * (odd_back – 1), 3)
                     if runner["description"]["runnerName"] in ["Match Nul"]:
                         odds[0].insert(1, odd)
                     else:
