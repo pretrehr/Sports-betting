@@ -69,9 +69,8 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_
     return surebets, middles
 
 
-def get_surebets_players_nba(bookmakers, reload_matches=False):
-    if reload_matches:
-        parse_competitions(["Etats-Unis - NBA"], "basketball", *bookmakers)
+def get_surebets_players_nba(bookmakers, competition):
+    parse_competitions([competition], "basketball", *bookmakers)
     surebets = {}
     middles = {}
     sb.PROGRESS = 0

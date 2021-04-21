@@ -518,6 +518,7 @@ values_layout = [
 perf_players_layout = [
     [sg.Listbox(["betclic", "parionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"], size=(20, 7), key="SITES_PERF", select_mode='multiple', 
                 default_values=["betclic", "parionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"])],
+    [sg.Combo(["Etats-Unis - NBA", "Euroligue"], default_value="Etats-Unis - NBA", key="COMPETITION_PERF")],
     [sg.Button("Chercher middle bets et surebets", key="FIND_PERF"),
      sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS_PERF', visible=False)],
     [sg.Col([[sg.InputText(key='SEARCH_PERF', size=(50, 1), enable_events=True)],
