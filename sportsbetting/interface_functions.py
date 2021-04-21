@@ -11,11 +11,12 @@ import sys
 import io
 import numpy as np
 import scipy.stats
+import tabulate
 import PySimpleGUI as sg
 import webbrowser
 
 import sportsbetting as sb
-from sportsbetting.auxiliary_functions import get_nb_outcomes
+from sportsbetting.auxiliary_functions import get_nb_outcomes, copy_to_clipboard
 from sportsbetting.database_functions import get_all_current_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
@@ -25,7 +26,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
                                           best_matches_freebet2, best_match_defi_rembourse_ou_gagnant)
 from sportsbetting.performances import get_surebets_players_nba
-from sportsbetting.basic_functions import gain
+from sportsbetting.basic_functions import gain, mises, mises2
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -613,6 +614,48 @@ def delete_odds_interface(window, values):
         window["DELETE_MATCH_ODDS"].update(visible=False)
     except IndexError:
         pass
+
+def compute_odds(window, values):
+    try:
+        sport = values["SPORT_ODDS"][0]
+        stake = float(values["STAKE_ODDS"])
+        match = values["MATCHES_ODDS"][0]
+        _, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
+    except (ValueError, IndexError) as _:
+        return
+    if values["OUTCOME_ODDS_SPLIT_STAKE"]:
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = buffer = io.StringIO()
+        mises(best_odds, stake, True)
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()
+        profit = float(what_was_printed.split("\n")[4].split(' = ')[1])
+        stakes = eval(what_was_printed.split("\n")[5].split(' = ')[1])
+    else:
+        outcomes = ["1", "2"]
+        if get_nb_outcomes(sport) == 3:
+            outcomes.insert(1, "N")
+        outcome = 0
+        for i, outcome_i in enumerate(outcomes):
+            if values["OUTCOME_ODDS_"+outcome_i]:
+                outcome = i
+                break
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = buffer = io.StringIO()
+        mises2(best_odds, stake, outcome, True)
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()
+        profit = float(what_was_printed.split("\n")[5].split(' = ')[1])
+        stakes = eval(what_was_printed.split("\n")[6].split(' = ')[1])
+    teams = match.split(" - ")
+    if get_nb_outcomes(sport) == 3:
+        teams.insert(1, "Nul")
+    totals = [round(stake_i * odd_i, 2) for stake_i, odd_i in zip(stakes, best_odds)]
+    table = {"Issue": teams, "Bookmaker": bookmakers, "Cote": best_odds, "Mise": stakes, "Total": totals}
+    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    window["RESULT_ODDS"].update(text, visible=True)
+    if sys.platform.startswith("win"):
+        copy_to_clipboard(text)
 
 
 def get_current_competitions_interface(window, values):

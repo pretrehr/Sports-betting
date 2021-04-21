@@ -62,7 +62,7 @@ except FileNotFoundError:
 HEIGHT_FIELD_SIMPLE     = 10
 HEIGHT_FIELD_GAGNANT    = 12
 HEIGHT_FIELD_COMBINE    = 18
-LENGTH_FIELD            = 100
+LENGTH_FIELD            = 120
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
 nb_bookmakers = len(sb.BOOKMAKERS)
@@ -432,15 +432,20 @@ odds_layout = [
               sg.Button("Trier par nom", key="NAME_SORT_ODDS")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_ODDS", visible=False)],
              [sg.Text("", size=(30, 1), key="TRJ_ODDS")],
-             [sg.Text("", size=(50, 1), key="INFOS_ODDS")],
+             [sg.Text("", size=(30, 1), key="INFOS_ODDS")],
              [sg.Text("", size=(30, 1), key="DATE_ODDS", visible=False)],
              [sg.Table([["parionssport", "00000", "00000", "00000"]],
                        headings=["Cotes", "1", "N", "2"], key="ODDS_ODDS", visible=False,
                        hide_vertical_scroll=True, size=(None, nb_bookmakers))],
              [sg.Button("Aller sur la page du match", key="GOTO_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
-             [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]])
-     ]
+             [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]]),
+     sg.Col([[sg.Text("Mise"), sg.InputText("100", size=(6, 1), key='STAKE_ODDS', enable_events=True)],
+             [sg.Text("Issue : ")] + [sg.Radio("Mise répartie", "OUTCOME_ODDS", key="OUTCOME_ODDS_SPLIT_STAKE", enable_events=True)] 
+              + [sg.Col([[sg.Radio(x, "OUTCOME_ODDS", key='OUTCOME_ODDS_'+x, enable_events=True)]]) for x in ["1", "N", "2"]]])
+     ],
+     [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_SIMPLE), key="RESULT_ODDS", font="Consolas 10",
+                   visible=False)]
 ]
 
 visible_combi_opt = 1
@@ -920,6 +925,7 @@ while True:
         odds_match_interface(window, values)
     elif event == "SPORT_ODDS" or event == "TRJ_SORT_ODDS":
         try:
+            window["OUTCOME_ODDS_N"].update(visible=get_nb_outcomes(values["SPORT_ODDS"][0])==3)
             matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]), key=lambda x:trj_match(sb.ODDS[values["SPORT_ODDS"][0]][x])[0], reverse=True)
             window['MATCHES_ODDS'].update(values=matches)
         except KeyError:
@@ -932,6 +938,8 @@ while True:
         save_odds(sb.ODDS, PATH_DATA)
     elif event == "GOTO_SITE_ODDS":
         open_bookmaker_odds(window, values)
+    elif event == "STAKE_ODDS" or event.startswith("OUTCOME_ODDS"):
+        compute_odds(window, values)
     elif event == "ADD_COMBI_OPT":
         sport = ""
         if values["SPORT_COMBI_OPT"]:
