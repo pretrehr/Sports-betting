@@ -961,3 +961,32 @@ def best_match_miles_interface(window, values):
         pass
     except ValueError:
         pass
+
+def get_best_conversion_rates_freebet(window):
+    conversion_rates = {}
+    high_conversion_rates = []
+    for sport in sb.ODDS:
+        if sb.SEEN_SUREBET[sport]:
+            continue
+        for site in sb.BOOKMAKERS:
+            old_stdout = sys.stdout  # Memorize the default stdout stream
+            sys.stdout = buffer = io.StringIO()
+            best_match_freebet(site, 100, sport)
+            sys.stdout = old_stdout  # Put the old stream back in place
+            what_was_printed = buffer.getvalue()
+            match, _ = infos(what_was_printed)
+            if match is None:
+                continue
+            conversion_rate = float(list(indicators(what_was_printed))[1][1].strip(" %"))
+            if conversion_rates.get(site, [0])[0] < conversion_rate:
+                conversion_rates[site] = [conversion_rate, sport]
+    table = []
+    for site, details in conversion_rates.items():
+        if details[0] >= 80:
+            high_conversion_rates.append(site)
+        table.append([site]+details)
+    window["CONVERT_RATES_FREEBET"].update(table)
+    visible = len(high_conversion_rates) > 0
+    window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet > 80% ({})".format(", ".join(high_conversion_rates)), visible=visible)
+    
+    

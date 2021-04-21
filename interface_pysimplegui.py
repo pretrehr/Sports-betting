@@ -40,7 +40,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                find_values_interface, odds_match_values_interface,
                                                open_bookmaker_odds, find_perf_players, display_middle_info, search_perf,
                                                display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj,
-                                               sort_middle_proba)
+                                               sort_middle_proba, get_best_conversion_rates_freebet, compute_odds)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 PATH_SITES = os.path.dirname(sb.__file__) + "/resources/sites.json"
@@ -82,6 +82,7 @@ parsing_layout = [
                    [sg.Button("Sélectionner mes sites", key="MY_SITES"), sg.Button("Sauvegarder mes sites", key="SAVE_MY_SITES")]])
     ],
     [sg.Text("", size=(100, 1), key="SUREBET_PARSING", visible=False)],
+    [sg.Text("", size=(100, 1), key="HIGH_FREEBET_PARSING", visible=False)],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
      sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING", visible=sb.BETA)]]),
      sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
@@ -188,7 +189,13 @@ freebet_layout = [
                 [sg.Text("", size=(30, 1), key="DATE_FREEBET")],
                 [sg.Table([["parionssport", "00000", "00000", "00000"]],
                         headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
-                        hide_vertical_scroll=True, size=(None, nb_bookmakers))]])],
+                        hide_vertical_scroll=True, size=(None, nb_bookmakers))]]),
+     sg.Column([[sg.Text("Meilleurs taux de conversion")],
+                [sg.Table([["parionssport", "00000", "basketball"]],
+                            headings=["Site", "Taux", "sport"],
+                            key="CONVERT_RATES_FREEBET",
+                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
+    ],
     [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
     [sg.Button("Ignorer ce match", key="DELETE_MATCH_FREEBET", visible=False)],
     [sg.Button("Réinitialiser les matches", key="RELOAD_ODDS_FREEBET", visible=False)],
@@ -645,6 +652,7 @@ while True:
                     window['SUREBET_PARSING'].update("Surebet disponible ({})".format(", ".join(sports_with_surebet)), text_color="red")
                 else:
                     window['SUREBET_PARSING'].update("Aucun surebet")
+                get_best_conversion_rates_freebet(window)
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
