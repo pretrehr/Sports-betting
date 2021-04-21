@@ -87,7 +87,12 @@ def get_sub_markets_players_basketball_unibet(id_match):
     'Nombre de rebonds du joueur':'Rebonds', 
     'Performance du Joueur (Points + Passes)':'Points + passes', 
     'Performance du Joueur (Points + Rebonds)':'Points + rebonds',
-    'Performance du Joueur (Passes + Rebonds)':'Passes + rebonds'}
+    'Performance du Joueur (Passes + Rebonds)':'Passes + rebonds',
+    "Joueur marquant 20 points ou plus":"Points",
+    "Joueur marquant 25 points ou plus":"Points",
+    "Joueur marquant 30 points ou plus":"Points",
+    "Joueur marquant 35 points ou plus":"Points",
+    "Joueur marquant 40 points ou plus":"Points"}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market_class_list in markets_class_list:
         market_name = market_class_list['marketName']
@@ -112,11 +117,15 @@ def get_sub_markets_players_basketball_unibet(id_match):
                     if sb.DB_MANAGEMENT:
                         print(player, "unibet")
                     continue
-                key_player = ref_player + "_" + limit
                 key_market = markets_to_keep[market_name]
+                if key_market == "Points":
+                    limit = str(float(market_name.split()[2])-0.5)
+                key_player = ref_player + "_" + limit
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"unibet":[]}}
                 sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
+                if key_market == "Points":
+                    sub_markets[key_market][key_player]["odds"]["unibet"].append(1.01)
     
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

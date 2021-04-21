@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db
 
 def parse_winamax(url):
     """
@@ -83,7 +83,8 @@ def get_sub_markets_players_basketball_winamax(id_match):
     '9015':'Rebonds', 
     '9007':'Points + passes + rebonds', 
     '9006':'Passes', 
-    '9005':'Rebonds'}
+    '9005':'Rebonds', '9011':'Points',
+    '9001':'Points'}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for line in soup.find_all(['script']):
         if 'PRELOADED_STATE' not in str(line.string):
@@ -111,12 +112,15 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 else:
                     if sb.DB_MANAGEMENT:
                         print(player, "winamax")
+#                         add_new_player_to_db(player)
                     continue
                 key_player = ref_player + "_" + limit
                 key_market = markets_to_keep[str(bet['marketId'])]
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"winamax":[]}}
                 sub_markets[key_market][key_player]["odds"]["winamax"].append(odd)
+                if key_market == "Points":
+                    sub_markets[key_market][key_player]["odds"]["winamax"].append(1.01)
     
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

@@ -189,7 +189,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
                         'Performance du Joueur - Total Rebonds':'Rebonds', 
                         'Performance du Joueur - Total Points + Passes':'Points + passes', 
                         'Performance du Joueur - Total Points + Rebonds':'Points + rebonds',
-                        'Performance du Joueur - Total Rebonds + Passes':'Passes + rebonds'}
+                        'Performance du Joueur - Total Rebonds + Passes':'Passes + rebonds',
+                        'Performance du joueur - Total Points (Supérieur à la valeur affichée)':'Points'}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for item in items:
         if not item.startswith("o"):
@@ -205,9 +206,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         if "flags" in odd and "hidden" in odd["flags"]:
             continue
         event = items[market["parent"]]
-        player = odd["desc"].split(" - ")[0].split(".")[1]
         limit = odd["desc"].split()[-1].replace(",", ".")
-        player = odd["desc"].split(" - ")[0].strip()
+        player = odd["desc"].split(" - ")[0].split("(")[0].strip()
         if player == odd["desc"]:
             player = odd["desc"].split("- ")[0].strip()
         ref_player = add_close_player_to_db(player, "parionssport")
@@ -217,11 +217,13 @@ def get_sub_markets_players_basketball_parionssport(id_match):
             if sb.DB_MANAGEMENT:
                 print(player, "parionssport")
             continue
-        key_player = ref_player + "_" + limit
+        key_player = (ref_player + "_" + limit).split(".5")[0] + ".5"
         key_market = markets_to_keep[market["desc"]]
         if key_player not in sub_markets[key_market]:
             sub_markets[key_market][key_player] = {"odds":{"parionssport":[]}}
         sub_markets[key_market][key_player]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))
+        if key_market == "Points":
+            sub_markets[key_market][key_player]["odds"]["parionssport"].append(1.01)
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
     return sub_markets

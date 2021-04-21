@@ -13,7 +13,7 @@ from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_close_player_to_db
 
 def parse_betclic_api(id_league):
     """
@@ -83,26 +83,33 @@ def get_sub_markets_players_basketball_betclic(id_match):
     if not parsed:
         return {}
     markets = parsed['markets']
-    sub_markets = {}
     markets_to_keep = {'Bkb_Ppf2':'Points + passes + rebonds',  'Bkb_Pta2':'Passes', 
     'Bkb_Ptr2':'Rebonds', 
     'Bkb_PnA':'Points + passes', 
     'Bkb_PnR':'Points + rebonds', 
-    'Bkb_AeR':'Passes + rebonds'}
+    'Bkb_AeR':'Passes + rebonds',
+    'Bkb_20p':'Points', 'Bkb_25p':'Points', 'Bkb_30p':'Points', 'Bkb_35p':'Points', 'Bkb_40p':'Points'}
+    sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market in markets:
         if market['mtc'] not in markets_to_keep:
             continue
+        is_points_market = market['mtc'][-1] == 'p'
         selections = market['selections']
         odds_market = {}
         for selection in selections:
-            player = re.split('\\s\\+\\s|\\s\\-\\s', selection['name'].replace(".", " "))[0].split()[1]
-            limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
+            limit = ""
+            if is_points_market:
+                limit = str(int(market['mtc'].strip("Bkb_").strip('p'))-0.5)
+            else:
+                limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
             player = re.split('\\s\\+\\s|\\s\\-\\s', selection['name'].replace(".", " "))[0].strip()
             ref_player = player
             if is_player_added_in_db(player, "betclic"):
                 ref_player = is_player_added_in_db(player, "betclic")
             elif is_player_in_db(player):
                 add_player_to_db(player, "betclic")
+            elif add_close_player_to_db(player, "betclic"):
+                ref_player = is_player_added_in_db(player, "betclic")
             else:
                 if sb.DB_MANAGEMENT:
                     print(player, "betclic")
@@ -111,8 +118,10 @@ def get_sub_markets_players_basketball_betclic(id_match):
             if key_player not in odds_market:
                 odds_market[key_player] = {"odds":{"betclic":[]}}
             odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(selection['odds'])
+            if is_points_market:
+                odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(1.01)
             
     
-        sub_markets[markets_to_keep[market['mtc']]] = dict(odds_market)
+        sub_markets[markets_to_keep[market['mtc']]] = {**dict(odds_market), **sub_markets[markets_to_keep[market['mtc']]]}
     
     return sub_markets

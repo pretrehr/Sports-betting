@@ -656,9 +656,14 @@ def trj_match(match_odds):
             bookmakers = copy.deepcopy(tmp_bookmakers)
             continue
         for i, tmp_odd in enumerate(tmp_odds):
-            if tmp_odd > odds[i]:
-                odds[i] = tmp_odd
-                bookmakers[i] = bookmaker
+            try:
+                if tmp_odd > odds[i]:
+                    odds[i] = tmp_odd
+                    bookmakers[i] = bookmaker
+            except TypeError:
+                print(match_odds, tmp_odd, odds[i])
+    if 1.01 in odds:
+        return 0, bookmakers, odds
     return gain(odds), bookmakers, odds
 
 def get_values(match_odds, rate):

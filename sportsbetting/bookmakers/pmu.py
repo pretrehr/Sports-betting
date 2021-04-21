@@ -146,7 +146,10 @@ def get_sub_markets_players_basketball_pmu(id_match):
     if not id_match:
         return {}
     url = 'https://mobile.parier.pmu.fr/PMU-Webkit/page/sportif/match?matchId=' + id_match
-    markets_to_keep = {'Passes décisives':'Passes',  'Rebonds':'Rebonds'}
+    markets_to_keep = {'Passes décisives':'Passes',  'Rebonds':'Rebonds', 'Joueur(s) qui marque(nt) 20 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 25 points ou plus':'Points', 'Joueur(s) qui marque(nt) 30 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 35 points ou plus':'Points', 'Joueur(s) qui marque(nt) 40 points ou plus':'Points'
+    }
     soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     market_name = None
@@ -155,33 +158,62 @@ def get_sub_markets_players_basketball_pmu(id_match):
     for parent in soup.find_all():
         if 'class' in parent.attrs and 'market' in parent["class"]:
             market_title = parent.text.strip()
-            is_perf = 'Rebonds' in market_title or 'Passes décisives' in market_title
+            is_perf = any([x in market_title for x in ['Rebonds', 'Passes décisives', "Joueur(s) qui marque"]])
+            is_points_market = "Joueur(s) qui marque" in market_title
+            if is_points_market:
+                limit = str(int(market_title.split("marque(nt) ")[1].split(" points")[0])-0.5)
             continue
         if not is_perf or 'class' not in parent.attrs or 'market-betting-options' not in parent["class"]:
             continue
-        for line in parent.findChildren():
-            player, market_limit = market_title.split(' - ')
-            try:
-                market_name, limit = market_limit.split(" (")
-            except ValueError:
+        if not is_points_market:
+            for line in parent.findChildren():
+                player, market_limit = market_title.split(' - ')
+                try:
+                    market_name, limit = market_limit.split(" (")
+                except ValueError:
+                    continue
+                limit = limit.strip(")")
+                if market_name and 'class' in line.attrs and 'odd' in line['class']:
+                    odds.append(float(line.text.strip().replace(",", ".")))
+            if not market_name:
                 continue
-            limit = limit.strip(")")
-            if market_name and 'class' in line.attrs and 'odd' in line['class']:
-                odds.append(float(line.text.strip().replace(",", ".")))
-        if not market_name:
-            continue
-        ref_player = player
-        if is_player_added_in_db(player, "pmu"):
-            ref_player = is_player_added_in_db(player, "pmu")
-        elif is_player_in_db(player):
-            add_player_to_db(player, "pmu")
+            ref_player = player
+            if is_player_added_in_db(player, "pmu"):
+                ref_player = is_player_added_in_db(player, "pmu")
+            elif is_player_in_db(player):
+                add_player_to_db(player, "pmu")
+            else:
+                if sb.DB_MANAGEMENT:
+                    print(player, "pmu")
+                continue
+            sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = {"odds":{"pmu":list(reversed(odds))}}
+            market_name = None
+            odds = []
         else:
-            if sb.DB_MANAGEMENT:
-                print(player, "pmu")
-            continue
-        sub_markets[markets_to_keep[market_name]][ref_player + "_" + limit] = {"odds":{"pmu":list(reversed(odds))}}
-        market_name = None
-        odds = []
+            for line in parent.findChildren():
+                players = list(line.stripped_strings)[::2]
+                odds = list(line.stripped_strings)[1::2]
+                for player, odd in zip(players, odds):
+                    ref_player = player
+                    if is_player_added_in_db(player, "pmu"):
+                        ref_player = is_player_added_in_db(player, "pmu")
+                    elif is_player_in_db(player):
+                        add_player_to_db(player, "pmu")
+                    else:
+                        if sb.DB_MANAGEMENT:
+                            print(player, "pmu")
+                        continue
+                    sub_markets['Points'][ref_player + "_" + limit] = {"odds":{"pmu":[float(odd.replace(",", ".")), 1.01]}}
+                market_name = None
+                odds = []
+                break
+#                 try:
+#                     market_name, limit = market_limit.split(" (")
+#                 except ValueError:
+#                     continue
+#                 limit = limit.strip(")")
+#                 if market_name and 'class' in line.attrs and 'odd' in line['class']:
+#                     odds.append(float(line.text.strip().replace(",", ".")))
 
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])

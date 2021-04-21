@@ -160,7 +160,8 @@ def get_sub_markets_players_basketball_pinnacle(id_match):
     markets = json.loads(content_related)
     markets_to_keep = {'PointsReboundsAssist':'Points + passes + rebonds',
                        'Assists':'Passes', 
-                       'Rebounds':'Rebonds'}
+                       'Rebounds':'Rebonds',
+                       'Points':'Points'}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market in markets:
         if market.get("type") != "special":
@@ -178,6 +179,7 @@ def get_sub_markets_players_basketball_pinnacle(id_match):
         else:
             if sb.DB_MANAGEMENT:
                 print(player, "pinnacle")
+#                 add_new_player_to_db(player)
             continue
         odds, limit = get_pinnacle_odds_from_market_id(id_market, all_odds)
         if odds:

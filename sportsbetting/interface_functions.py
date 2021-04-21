@@ -836,15 +836,15 @@ def display_surebet_info(window, values):
     odds = sb.SUREBETS[player_limit_market]["odds"]
     table = []
     for key, value in odds.items():
-        table.append([key] + list(map(str, value)))
+        table.append([key] + list(map(lambda x : str(x).replace("1.01", "-   "), value)))
     table.sort()
     window["ODDS_PERF"].update(table, visible=True)
     window["MATCH_PERF"].update(sb.SUREBETS[player_limit_market]["match"])
     window["PLAYER_PERF"].update(player)
     window["MARKET_PERF"].update(market)
     window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(limit, best_odds[0], bookmakers[0]))
-    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, best_odds[1], bookmakers[1]))
-    window["TRJ_PERF"].update("TRJ : {}%".format(round(trj*100, 3)))
+    window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(limit, best_odds[1], bookmakers[1]), visible=best_odds[1]>1.01)
+    window["TRJ_PERF"].update("TRJ : {}%".format(round(trj*100, 3)), visible=best_odds[1]>1.01)
     window["PROBA_MIDDLE_PERF"].update("")
     window["SUM_MIDDLE_PERF"].update("")
 

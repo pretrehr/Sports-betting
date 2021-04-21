@@ -115,7 +115,8 @@ def get_sub_markets_players_basketball_zebet(id_match):
     if not id_match:
         return {}
     url = 'https://www.zebet.fr/fr/event/' + id_match + '-'
-    markets_to_keep = {'Nombre de passes décisives pour le joueur (prolongations incluses) ?':'Passes',  'Nombre de rebonds pour le joueur (prolongations incluses) ?':'Rebonds'}
+    markets_to_keep = {'Nombre de passes décisives pour le joueur (prolongations incluses) ?':'Passes',  'Nombre de rebonds pour le joueur (prolongations incluses) ?':'Rebonds',
+        'Nombre de points marqués par le joueur (prolongations incluses) ?':'Points'}
     soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     market_name = None
@@ -131,9 +132,8 @@ def get_sub_markets_players_basketball_zebet(id_match):
                     odd = float(line.text.strip().replace(',', '.'))
             if 'class' in line.attrs and 'pmq-cote-acteur' in line['class']:
                 plus = "+" in line.text
-                player = re.split('\s[\-|\+]', line.text.strip())[0].split()[1].strip()
                 limit = re.split('\s[\-|\+]', line.text.strip())[(-1)].strip().replace(",", ".")
-                player = re.split('\s[\-|\+]', line.text.strip())[0].strip()
+                player = re.split('\s[\-|\+]', line.text.strip())[0].split("(")[0].strip()
                 ref_player = player
                 if is_player_added_in_db(player, "zebet"):
                     ref_player = is_player_added_in_db(player, "zebet")
@@ -151,6 +151,8 @@ def get_sub_markets_players_basketball_zebet(id_match):
                 if plus:
                     sub_markets[key_market][key_player]["odds"]["zebet"].insert(0, odd)
                     last = 0
+                    if key_market == "Points":
+                        sub_markets[key_market][key_player]["odds"]["zebet"].append(1.01)
                 else:
                     sub_markets[key_market][key_player]["odds"]["zebet"].append(odd)
                 if len(sub_markets[key_market][key_player]["odds"]["zebet"]) > 2:
