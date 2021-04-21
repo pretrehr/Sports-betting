@@ -673,13 +673,15 @@ def get_double_team_tennis(team, sport, site, only_null=False):
                 players = list(map(lambda x: x.split(", ")[0], complete_names))
             else:
                 players = list(map(lambda x: x.split(" ")[0], complete_names))
-        elif site in ["betclic", "pinnacle"]:
+        elif site in ["betclic"]:
             players = list(map(lambda x: x.split(" ")[0], complete_names))
         elif site in ["zebet", "joa"]:
             if "." in team:
                 players = list(map(lambda x: x.split(".")[-1].split("(")[0].strip(), complete_names))
             else:
                 players = list(map(lambda x: x.split(" ")[0].strip(), complete_names))
+        elif site in ["pinnacle"]:
+            players = list(map(lambda x: x.split(" ")[0] if len(x.split(" ")[0]) > 1 else x.split(" ")[1], complete_names))
         players = list(map(lambda x: x.strip(), players))
         conn = sqlite3.connect(sb.PATH_DB)
         c = conn.cursor()
@@ -921,18 +923,22 @@ def get_close_player_name(name, site):
     results = []
     if "." in name:
         split_name = name.split("(")[0].split(".")
-        if len(split_name) == 2 and len(split_name[0]) == 1:
-            init_first_name = split_name[0]
-            last_name = split_name[1].strip()
-            reg_exp = r'{}[a-zA-Z\-\']+\s{}'.format(init_first_name, last_name)
-            conn = sqlite3.connect(sb.PATH_DB)
-            c = conn.cursor()
-            c.execute("""
-            SELECT name FROM players WHERE name_{} IS NULL
-            """.format(site))
-            for line in c.fetchall():
-                if re.match(reg_exp, line[0]):
-                    results.append(line[0])
+    elif "  " in name:
+        split_name = name.split("(")[0].split("  ")
+    if not split_name:
+        return results
+    if len(split_name) == 2 and len(split_name[0]) == 1:
+        init_first_name = split_name[0]
+        last_name = split_name[1].strip()
+        reg_exp = r'{}[a-zA-Z\-\']+\s{}'.format(init_first_name, last_name)
+        conn = sqlite3.connect(sb.PATH_DB)
+        c = conn.cursor()
+        c.execute("""
+        SELECT name FROM players WHERE name_{} IS NULL
+        """.format(site))
+        for line in c.fetchall():
+            if re.match(reg_exp, line[0]):
+                results.append(line[0])
     return results
 
 def add_close_player_to_db(player, site):
@@ -956,4 +962,14 @@ def add_close_player_to_db(player, site):
     c.close()
     conn.commit()
     return player_ref
+
+def add_new_player_to_db(player):
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    INSERT INTO players (name)
+    VALUES ("{}")
+    """.format(player))
+    conn.commit()
+    c.close()
     
