@@ -812,7 +812,9 @@ def open_bookmaker_odds(window, values):
 def find_perf_players(window, values):
     if not values["SITES_PERF"]:
         return
-    sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(values["SITES_PERF"], True)
+    if not values["COMPETITION_PERF"]:
+        return
+    sb.SUREBETS, sb.MIDDLES = get_surebets_players_nba(values["SITES_PERF"], values["COMPETITION_PERF"])
     middles = sorted(sb.MIDDLES.keys(), key=lambda x:trj_match(sb.MIDDLES[x])[0], reverse=True)
     surebets = sorted(sb.SUREBETS.keys(), key=lambda x:trj_match(sb.SUREBETS[x])[0], reverse=True)
     window["MIDDLES_PERF"].update(middles)
@@ -829,6 +831,8 @@ def display_surebet_info(window, values):
     if not values["SUREBETS_PERF"]:
         return
     player_limit_market = values["SUREBETS_PERF"][0]
+    if player_limit_market not in sb.SUREBETS:
+        return
     player, limit_market = player_limit_market.split(" / ")
     limit, market = limit_market.split(".5 ")
     limit += ".5 "
@@ -853,6 +857,8 @@ def display_middle_info(window, values):
     if not values["MIDDLES_PERF"]:
         return
     player_down_up_market = values["MIDDLES_PERF"][0]
+    if player_down_up_market not in sb.MIDDLES:
+        return
     player, down_up_market = player_down_up_market.split(" / ")
     down, up_market = down_up_market.split(" - ")
     up, market = up_market.split(".5 ")

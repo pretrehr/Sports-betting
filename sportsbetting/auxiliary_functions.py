@@ -88,6 +88,8 @@ def add_matches_to_db(odds, sport, site, id_competition):
             i += 1
             teams_sets.append(set())
             for team in teams_sets[i - 1]:
+                if sb.ABORT:
+                    return
                 success = False
                 lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
                 for line in lines:
