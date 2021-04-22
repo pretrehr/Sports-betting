@@ -10,6 +10,7 @@ import copy
 import itertools
 import json
 import math
+import pywintypes
 import time
 import sqlite3
 import sys
@@ -336,11 +337,16 @@ def copy_to_clipboard(text):
     image.convert('RGB').save(output, 'BMP')
     data = output.getvalue()[14:]
     output.close()
-
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
+    
+    for _ in range(3):
+        try:
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+            win32clipboard.CloseClipboard()
+            break
+        except pywintypes.error:
+            pass
 
 
 
