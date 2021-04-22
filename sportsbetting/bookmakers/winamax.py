@@ -112,8 +112,9 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 else:
                     if sb.DB_MANAGEMENT:
                         print(player, "winamax")
-#                         add_new_player_to_db(player)
-                    continue
+                        add_new_player_to_db(player)
+                    else:
+                        continue
                 key_player = ref_player + "_" + limit
                 key_market = markets_to_keep[str(bet['marketId'])]
                 if key_player not in sub_markets[key_market]:

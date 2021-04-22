@@ -9,7 +9,7 @@ import requests
 from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db
 
 def get_id_league(url):
     """
@@ -116,7 +116,9 @@ def get_sub_markets_players_basketball_unibet(id_match):
                 else:
                     if sb.DB_MANAGEMENT:
                         print(player, "unibet")
-                    continue
+                        add_new_player_to_db(player)
+                    else:
+                        continue
                 key_market = markets_to_keep[market_name]
                 if key_market == "Points":
                     limit = str(float(market_name.split()[2])-0.5)

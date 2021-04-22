@@ -171,6 +171,8 @@ def get_sub_markets_players_basketball_pinnacle(id_match):
             continue
         id_market = market["id"]
         player = market["special"]["description"].split("(")[0].strip()
+        if "Total Points by" in player:
+            player = player.split("Total Points by")[1].strip()
         ref_player = player
         if is_player_added_in_db(player, "pinnacle"):
             ref_player = is_player_added_in_db(player, "pinnacle")
