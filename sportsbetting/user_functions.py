@@ -101,7 +101,7 @@ def parse_competitions_site(competitions, sport, site):
 
 def parse_competitions(competitions, sport, *sites):
     sites_order = ['betfair', 'joa', 'pmu', 'barrierebet', 'pasinobet', 'france_pari', 'netbet', 'zebet',
-                   'winamax', 'pinnacle', 'betclic', 'pokerstars', 'unibet', 'bwin', 'parionssport']
+                   'winamax', 'pinnacle', 'betclic', 'pokerstars', 'unibet', 'unibet_boost', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order
     sb.EXPECTED_TIME = 28 + len(competitions) * 12.5
@@ -167,6 +167,8 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
     bets = None
     sites = None
     for odds in all_odds['odds'].items():
+        if odds[0] == "unibet_boost":
+            continue
         for i in range(n):
             if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
                 best_odds[i] = odds[1][i]
@@ -229,6 +231,8 @@ def best_match_under_conditions2(site, minimum_odd, stake, sport="football", dat
             best_odds = copy.deepcopy(odds_site)
             best_sites = [site for _ in range(n)]
             for odds in all_odds[match]['odds'].items():
+                if odds[0] == "unibet_boost":
+                    continue
                 for i in range(n):
                     if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
                         best_odds[i] = odds[1][i]
@@ -649,6 +653,8 @@ def trj_match(match_odds):
     odds = []
     bookmakers = []
     for bookmaker in match_odds["odds"]:
+        if bookmaker == "unibet_boost":
+            continue
         tmp_odds = match_odds["odds"][bookmaker]
         tmp_bookmakers = [bookmaker for _ in tmp_odds]
         if not odds:
@@ -662,7 +668,7 @@ def trj_match(match_odds):
                     bookmakers[i] = bookmaker
             except TypeError:
                 print(match_odds, tmp_odd, odds[i])
-    if 1.01 in odds:
+    if not odds or 1.01 in odds:
         return 0, bookmakers, odds
     return gain(odds), bookmakers, odds
 
@@ -671,6 +677,8 @@ def get_values(match_odds, rate):
     bookmakers = []
     sums = []
     for bookmaker in match_odds["odds"]:
+        if bookmaker == "unibet_boost":
+            continue
         tmp_odds = match_odds["odds"][bookmaker]
         tmp_bookmakers = [bookmaker for _ in tmp_odds]
         if not odds:
@@ -765,7 +773,7 @@ def convert_indices_to_opponents(combination_indices, matches, sport):
     return combination_opponents
 
 def best_match_stakes_to_bet2(stakes, nb_matches=2, sport="football", date_max=None, time_max=None, identical_stakes=False):
-    second_sites = {stake[1] for stake in stakes}
+    second_sites = {stake[1] for stake in stakes if stake[1] != "unibet_boost"}
     main_sites = sb.BOOKMAKERS
     all_odds = get_matches_with_best_trj(sport, 20)
     all_odds = filter_dict_dates(all_odds, date_max, time_max)

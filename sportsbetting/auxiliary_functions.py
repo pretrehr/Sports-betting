@@ -177,7 +177,7 @@ def format_team_names(dict_odds, sport, competition):
     """
     list_odds = []
     for site in dict_odds:
-        list_odds.append(adapt_names(dict_odds[site], site, sport, competition))
+        list_odds.append(adapt_names(dict_odds[site], site.split("_")[0], sport, competition))
     return list_odds
 
 
@@ -475,13 +475,15 @@ def get_future_opponents(name, matches):
 def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee=0, taux_cashback=0,
                         cashback_freebet=True, freebet=False, output=True):
     def get_odd(combinaison, matches, site_combinaison=None):
-        sites = sb.BOOKMAKERS
+        sites = sb.BOOKMAKERS_BOOST
         if site_combinaison:
             sites = [site_combinaison]
         best_odd = 1
         best_site = ""
         for site in sites:
             odd = 1
+            if len([x for x in combinaison if x != float("inf")]) < 3 and site == "unibet_boost":
+                continue
             for i, match in zip(combinaison, matches):
                 if i != float("inf"):
                     if site in sb.ODDS[sport][match]["odds"].keys():
@@ -541,7 +543,7 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
             opponents_match.insert(1, "Nul")
         opponents.append(opponents_match)
     nb_chars = max(map(lambda x: len(" / ".join(x)), product(*opponents)))
-    sites = sb.BOOKMAKERS
+    sites = sb.BOOKMAKERS_BOOST
     odds = {site: [get_odd(combine, matches, site)[0] for combine in best_combinaison] for site in sites}
     if not output:
         return best_gain
@@ -630,6 +632,8 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
             best_sites = [site for _ in range(n)]
             if not one_site:
                 for odds in all_odds[match]['odds'].items():
+                    if odds[0] == "unibet_boost":
+                        continue
                     for i in range(n):
                         if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
                             best_odds[i] = odds[1][i]

@@ -34,6 +34,7 @@ def parse(site, url=""):
         "pinnacle" : pinnacle.parse_pinnacle,
         "pmu" : pmu.parse_pmu,
         "unibet" : unibet.parse_unibet,
+        "unibet_boost" :lambda x: unibet.parse_unibet(x, True),
         "winamax" : winamax.parse_winamax,
         "zebet" : zebet.parse_zebet
     }

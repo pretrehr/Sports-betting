@@ -24,19 +24,21 @@ def get_id_league(url):
         raise sb.UnavailableSiteException
     parsed = json.loads(content)
     sport = public_url.split("/")[2]
+    if sport == "cotes-boostees":
+        sport = public_url.split("/")[-1].split("-")[0]
     if parsed["requestData"]:
         return parsed["requestData"].get("nodeId"), sport
     return None, None
 
 
-def parse_unibet_api(id_league, sport):
+def parse_unibet_api(id_league, sport, boost):
     """
     Get Unibet odds from league id and sport
     """
     parameter = ""
     if sport == "tennis":
         parameter = "Vainqueur%2520du%2520match"
-    elif sport == "basketball":
+    elif "basket" in sport:
         parameter = "Vainqueur%2520du%2520match%2520%2528prolong.%2520incluses%2529"
     else:
         parameter = "R%25C3%25A9sultat%2520du%2520match"
@@ -46,6 +48,7 @@ def parse_unibet_api(id_league, sport):
     parsed = json.loads(content)
     markets_by_type = parsed.get("marketsByType", [])
     odds_match = {}
+    site_name = "unibet" + ("_boost" if boost else "")
     for market_by_type in markets_by_type:
         days = market_by_type["days"]
         for day in days:
@@ -62,16 +65,16 @@ def parse_unibet_api(id_league, sport):
                         price_up = int(selection["currentPriceUp"])
                         price_down = int(selection["currentPriceDown"])
                         odds.append(round(price_up / price_down + 1, 2))
-                    odds_match[name] = {"date":date, "odds":{"unibet":odds}, "id":{"unibet":event["eventId"]}}
+                    odds_match[name] = {"date":date, "odds":{site_name:odds}, "id":{"unibet":event["eventId"]}}
     return odds_match
 
-def parse_unibet(url):
+def parse_unibet(url, boost=False):
     """
     Get Unibet odds from url
     """
     id_league, sport = get_id_league(url)
     if id_league:
-        return parse_unibet_api(id_league, sport)
+        return parse_unibet_api(id_league, sport, boost)
     print("Wrong unibet url")
     return {}
 

@@ -30,6 +30,7 @@ PATH_DRIVER = ""
 SELENIUM_SITES = {"joa"}
 BOOKMAKERS = ["barrierebet", "betclic", "betfair", "bwin", "france_pari", "joa", "netbet", "parionssport",
               "pasinobet", "pinnacle", "pmu", "pokerstars", "unibet", "winamax", "zebet"]
+BOOKMAKERS_BOOST = sorted(BOOKMAKERS + ["unibet_boost"])
 TEST = False
 DB_MANAGEMENT = False
 TOKENS = {}

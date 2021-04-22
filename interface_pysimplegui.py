@@ -77,7 +77,7 @@ parsing_layout = [
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS", visible=sb.DB_MANAGEMENT)],
                    [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
-        sg.Column([[sg.Listbox(sb.BOOKMAKERS, size=(20, nb_bookmakers), key="SITES", select_mode='multiple')],
+        sg.Column([[sg.Listbox(sb.BOOKMAKERS_BOOST, size=(20, nb_bookmakers+1), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL"), sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")],
                    [sg.Button("Sélectionner mes sites", key="MY_SITES"), sg.Button("Sauvegarder mes sites", key="SAVE_MY_SITES")]])
     ],
@@ -93,7 +93,7 @@ parsing_layout = [
     [sg.Col([[sg.ProgressBar(max_value=100, orientation='v', size=(10, 20),
                              key="PROGRESS_{}_PARSING".format(site), visible=False)],
              [sg.Text(site, key="TEXT_{}_PARSING".format(site), visible=False)]],
-            element_justification="center") for site in sb.BOOKMAKERS]
+            element_justification="center") for site in sb.BOOKMAKERS_BOOST]
 ]
 
 column_text_under_condition = [[sg.Text("Mise")], [sg.Text("Cote minimale")]]
@@ -191,7 +191,7 @@ freebet_layout = [
                         headings=["Cotes", "1", "N", "2"], key="ODDS_FREEBET", visible=False,
                         hide_vertical_scroll=True, size=(None, nb_bookmakers))]]),
      sg.Column([[sg.Text("Meilleurs taux de conversion")],
-                [sg.Table([["parionssport", "00000", "basketball"]],
+                [sg.Table([[" "*10, " "*5, " "*10]],
                             headings=["Site", "Taux", "sport"],
                             key="CONVERT_RATES_FREEBET",
                             hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
@@ -645,7 +645,7 @@ while True:
             window["TEXT_PARSING"].update(visible=sb.ABORT)
             window["REMAINING_TIME_PARSING"].update(visible=False)
             window["STOP_PARSING"].update(visible=False)
-            for site in sb.BOOKMAKERS:
+            for site in sb.BOOKMAKERS_BOOST:
                 window["TEXT_{}_PARSING".format(site)].update(visible=False)
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sb.ABORT:
@@ -664,7 +664,7 @@ while True:
                 print("Elapsed time : {} s\n".format(round(elapsed_time)))
         else:
             window['PROGRESS_PARSING'].update(ceil(sb.PROGRESS), 100)
-            for site in sb.BOOKMAKERS:
+            for site in sb.BOOKMAKERS_BOOST:
                 (window["PROGRESS_{}_PARSING".format(site)]
                  .update(ceil(sb.SITE_PROGRESS[site]), 100))
             now = time.time()
@@ -737,14 +737,14 @@ while True:
         big_five = ["France - Ligue 1", "Angleterre - Premier League", "Allemagne - Bundesliga", "Italie - Serie A", "Espagne - LaLiga"]
         window['COMPETITIONS'].update(set_to_index=[i for i, competition in enumerate(competitions) if competition in big_five])
     elif event == "SELECT_ALL":
-        window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS)])
+        window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS_BOOST)])
     elif event == "SELECT_NONE_SITE":
         window['SITES'].update(set_to_index=[])
     elif event == "MY_SITES":
         try:
             with open(PATH_SITES) as file:
                 bookmakers = json.load(file)
-            window['SITES'].update(set_to_index=[sb.BOOKMAKERS.index(bookmaker) for bookmaker in bookmakers])
+            window['SITES'].update(set_to_index=[sb.BOOKMAKERS_BOOST.index(bookmaker) for bookmaker in bookmakers])
         except FileNotFoundError:
             pass
     elif event == "SAVE_MY_SITES":
