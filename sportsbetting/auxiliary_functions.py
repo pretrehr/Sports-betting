@@ -10,7 +10,6 @@ import copy
 import itertools
 import json
 import math
-import pywintypes
 import time
 import sqlite3
 import sys
@@ -21,6 +20,7 @@ import tabulate
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 if sys.platform.startswith("win"):
+    import pywintypes
     import win32clipboard
 
 import sportsbetting as sb
