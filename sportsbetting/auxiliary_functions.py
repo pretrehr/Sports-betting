@@ -177,7 +177,7 @@ def format_team_names(dict_odds, sport, competition):
     """
     list_odds = []
     for site in dict_odds:
-        list_odds.append(adapt_names(dict_odds[site], site.split("_")[0], sport, competition))
+        list_odds.append(adapt_names(dict_odds[site], site.split("_boost")[0], sport, competition))
     return list_odds
 
 
