@@ -7,6 +7,7 @@ import json
 import re
 import requests
 
+import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts
 
 def parse_pokerstars_api(id_league):
@@ -17,6 +18,8 @@ def parse_pokerstars_api(id_league):
            "&marketTypes=SOCCER%3AFT%3AAXB%2CMRES,BASKETBALL%3AFTOT%3AML,AB,RUGBYUNION%3AFT%3AMRES,HANDBALL%3AFT%3AMRES,"
            "ICEHOCKEY%3AFT%3AAXB&includeOutrights=false&channelId=11&locale=fr-fr&siteId=32".format(id_league))
     req = requests.get(url)
+    if req.status_code == 503:
+        raise sb.UnavailableSiteException
     parsed = req.json()
     matches = parsed["event"]
     odds_match = {}
@@ -71,6 +74,8 @@ def parse_sport_pokerstars(sport):
     url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getSportTree?sport={}&includeOutrights=false"
            "&includeEvents=false&includeCoupons=true&channelId=11&locale=fr-fr&siteId=32".format(sport.upper()))
     req = requests.get(url)
+    if req.status_code == 503:
+        raise sb.UnavailableSiteException
     parsed = req.json()
     list_odds = []
     competitions = parsed["categories"]
