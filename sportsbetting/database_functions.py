@@ -622,9 +622,7 @@ def is_matching_next_match(id_competition, id_team, name_team, matches):
         date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")],
                                  key=lambda x: x["date"])[0]["date"]
         sport = get_sport_by_id(id_team)
-        time_margin = 0
-        if sport == "tennis":
-            time_margin = 1
+        time_margin = 1
         if id_team < 0:
             return date_next_match == get_time_next_match_thesportsdb(id_competition, id_team)
         return abs(date_next_match-get_time_next_match(id_competition, id_team)) <= datetime.timedelta(hours=time_margin)
