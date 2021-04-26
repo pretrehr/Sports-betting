@@ -923,7 +923,9 @@ def get_close_player_name(name, site):
         split_name = name.split("(")[0].split(".")
     elif "  " in name:
         split_name = name.split("(")[0].split("  ")
-    if not split_name:
+    else:
+        if sb.DB_MANAGEMENT:
+            print(name)
         return results
     if len(split_name) == 2 and len(split_name[0]) == 1:
         init_first_name = split_name[0]
