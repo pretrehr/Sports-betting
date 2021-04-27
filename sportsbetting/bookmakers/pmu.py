@@ -194,6 +194,8 @@ def get_sub_markets_players_basketball_pmu(id_match):
                 players = list(line.stripped_strings)[::2]
                 odds = list(line.stripped_strings)[1::2]
                 for player, odd in zip(players, odds):
+                    if odd == "SUSP":
+                        continue
                     ref_player = player
                     if is_player_added_in_db(player, "pmu"):
                         ref_player = is_player_added_in_db(player, "pmu")
