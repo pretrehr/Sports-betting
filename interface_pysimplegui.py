@@ -463,6 +463,7 @@ column_combi_opt = [[sg.Column(column_text_combi_opt),
 
 combi_opt_layout = [
     [sg.Column(column_combi_opt), sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_COMBI_OPT", enable_events=True)],
+    [sg.Checkbox("Méthode progressive", key="PROGRESSIVE_COMBI_OPT")],
     [sg.Text("Match"),
      sg.Button("Retirer match", key="REMOVE_COMBI_OPT"),
      sg.Button("Ajouter match", key="ADD_COMBI_OPT"),  sg.Text("\t\t\t\tIssue boostée")],

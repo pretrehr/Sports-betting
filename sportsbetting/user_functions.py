@@ -4,6 +4,7 @@ Fonctions principales d'assistant de paris
 """
 
 import copy
+import datetime
 import socket
 import sys
 import traceback
@@ -18,6 +19,7 @@ from pprint import pprint
 import numpy as np
 import selenium
 import selenium.common
+import tabulate
 
 import sportsbetting as sb
 from sportsbetting import selenium_init
@@ -27,7 +29,7 @@ from sportsbetting.parser_functions import parse
 from sportsbetting.auxiliary_functions import (valid_odds, format_team_names, merge_dict_odds, afficher_mises_combine,
                                                cotes_combine_all_sites, defined_bets, binomial, best_match_base,
                                                filter_dict_dates, get_nb_outcomes, best_combine_reduit,
-                                               filter_dict_minimum_odd, cotes_combine_reduit_all_sites)
+                                               filter_dict_minimum_odd, cotes_combine_reduit_all_sites, copy_to_clipboard)
 from sportsbetting.basic_functions import (gain2, mises2, gain, mises, mises_freebet, cotes_freebet,
                                            gain_pari_rembourse_si_perdant, gain_freebet2, mises_freebet2,
                                            mises_pari_rembourse_si_perdant, gain_promo_gain_cote, mises_promo_gain_cote,
@@ -647,6 +649,55 @@ def best_match_cotes_boostees(site, gain_max, sport="football", date_max=None, t
 
 def best_combine_booste(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee):
     best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee)
+
+
+def best_combine_booste_progressif(matches, combinaison_boostee, site_combinaison, mise, sport, cote_boostee):
+    outcomes = []
+    odds = []
+    bookmakers = []
+    stakes = []
+    simulated_odds = []
+    outcome_boost = []
+    matches.sort(key=lambda x: sb.ODDS[sport][x]["date"], reverse=True)
+    time_intervals = [sb.ODDS[sport][x]["date"] - sb.ODDS[sport][y]["date"] for x, y in zip(matches[:-1], matches[1:])]
+    print("Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):")
+    if time_intervals and min(time_intervals) < datetime.timedelta(hours=2):
+        print("Methode impossible (pas assez de temps entre 2 matches)")
+        return
+    reference_gain = round(mise * cote_boostee, 2)
+    sum_stakes = 0
+    for j, match in enumerate(matches):
+        sum_stakes_match = 0
+        teams = match.split(" - ")
+        if get_nb_outcomes(sport) == 3:
+            teams.insert(1, "Nul ({} - {})".format(*teams))
+        _, bookmakers_match, odds_match = trj_match(sb.ODDS[sport][match])
+        for i, team in enumerate(teams):
+            if combinaison_boostee[j] == i:
+                outcome_boost.append(team)
+                continue
+            outcomes.append(team)
+            odds.append(odds_match[i])
+            bookmakers.append(bookmakers_match[i])
+            stake = round((reference_gain - sum_stakes) / odds_match[i], 2)
+            stakes.append(stake)
+            sum_stakes_match += stake
+            simulated_odds.append(reference_gain / stake)
+        sum_stakes += sum_stakes_match
+    outcomes.append(" / ".join(outcome_boost))
+    odds.append(cote_boostee)
+    bookmakers.append(site_combinaison)
+    stakes.append(mise)
+    simulated_odds.append(cote_boostee)
+    totals = [round(stake * odd, 2) for (stake, odd) in zip(stakes, odds)]
+    table = {"Issue": reversed(outcomes), "Bookmaker": reversed(bookmakers), "Cote": reversed(odds), "Mise": reversed(stakes), "Total": reversed(totals), "TRJ":[round(100*gain(simulated_odds), 3), "Bénéfice", round(reference_gain-sum(stakes), 2)]}
+    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    print(text)
+    print("Ne couvrir un match qu'une fois le résultat du match précédent connu")
+    if sys.platform.startswith("win"):
+        copy_to_clipboard(text)
+    
+    
 
 
 def trj_match(match_odds):

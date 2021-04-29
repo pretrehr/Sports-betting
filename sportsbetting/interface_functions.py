@@ -24,7 +24,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_match_cashback, best_match_stakes_to_bet,
                                           best_match_pari_gagnant, odds_match, best_matches_combine_cashback,
                                           best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
-                                          best_matches_freebet2, best_match_defi_rembourse_ou_gagnant)
+                                          best_matches_freebet2, best_match_defi_rembourse_ou_gagnant, best_combine_booste_progressif)
 from sportsbetting.performances import get_surebets_players_nba
 from sportsbetting.basic_functions import gain, mises, mises2
 
@@ -688,18 +688,30 @@ def best_combine_reduit_interface(window, values, visible_combi_opt):
     cote_boostee = float(values["ODD_COMBI_OPT"])
     old_stdout = sys.stdout  # Memorize the default stdout stream
     sys.stdout = buffer = io.StringIO()
-    best_combine_booste(match_list, combi_boostee, site_booste, mise_max, sport, cote_boostee)
+    if values["PROGRESSIVE_COMBI_OPT"]:
+        best_combine_booste_progressif(match_list, combi_boostee, site_booste, mise_max, sport, cote_boostee)
+    else:
+        best_combine_booste(match_list, combi_boostee, site_booste, mise_max, sport, cote_boostee)
     sys.stdout = old_stdout  # Put the old stream back in place
     what_was_printed = buffer.getvalue()
-    match, date = infos(what_was_printed)
-    window["MATCH_COMBI_OPT"].update(match)
-    window["DATE_COMBI_OPT"].update(date)
-    window["ODDS_COMBI_OPT"].update(visible=True)
     window["RESULT_COMBI_OPT"].update(stakes(what_was_printed), visible=True)
-    window["TEXT_COMBI_OPT"].update(visible=True)
-    for i, elem in enumerate(indicators(what_was_printed)):
-        window["INDICATORS_COMBI_OPT" + str(i)].update(elem[0].capitalize(), visible=True)
-        window["RESULTS_COMBI_OPT" + str(i)].update(elem[1], visible=True)
+    if values["PROGRESSIVE_COMBI_OPT"]:
+        window["MATCH_COMBI_OPT"].update(visible=False)
+        window["DATE_COMBI_OPT"].update(visible=False)
+        window["ODDS_COMBI_OPT"].update(visible=False)
+        window["TEXT_COMBI_OPT"].update(visible=False)
+        for i in range(5):
+            window["INDICATORS_COMBI_OPT" + str(i)].update(visible=False)
+            window["RESULTS_COMBI_OPT" + str(i)].update(visible=False)
+    else:
+        match, date = infos(what_was_printed)
+        window["MATCH_COMBI_OPT"].update(match)
+        window["DATE_COMBI_OPT"].update(date)
+        window["ODDS_COMBI_OPT"].update(visible=True)
+        window["TEXT_COMBI_OPT"].update(visible=True)
+        for i, elem in enumerate(indicators(what_was_printed)):
+            window["INDICATORS_COMBI_OPT" + str(i)].update(elem[0].capitalize(), visible=True)
+            window["RESULTS_COMBI_OPT" + str(i)].update(elem[1], visible=True)
     buffer.close()
     sb.ODDS_INTERFACE = what_was_printed
 
