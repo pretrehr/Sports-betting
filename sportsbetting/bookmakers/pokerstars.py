@@ -30,6 +30,7 @@ def parse_pokerstars_api(id_league):
         if match.get("state") == "SUSPENDED":
             continue
         participants = match["participants"]
+        competition = match["compNames"]["longName"]
         if not participants:
             continue
         name_home = ""
@@ -66,6 +67,7 @@ def parse_pokerstars_api(id_league):
         odds_match[name]["date"] = date
         odds_match[name]["odds"] = {"pokerstars":odds}
         odds_match[name]["id"] = {"pokerstars":str(match["id"])}
+        odds_match[name]["competition"] = competition
     return odds_match
 
 def parse_sport_pokerstars(sport):
