@@ -27,6 +27,7 @@ def parse_betclic_api(id_league):
     if (not parsed) or "unifiedEvents" not in parsed:
         return odds_match
     matches = parsed["unifiedEvents"]
+    competition = parsed["name"]
     for match in matches:
         if match["isLive"]:
             continue
@@ -47,6 +48,7 @@ def parse_betclic_api(id_league):
         odds_match[name]["date"] = truncate_datetime(date)
         odds_match[name]["odds"] = {"betclic":odds}
         odds_match[name]["id"] = {"betclic":match["id"]}
+        odds_match[name]["competition"] = competition
     return odds_match
 
 

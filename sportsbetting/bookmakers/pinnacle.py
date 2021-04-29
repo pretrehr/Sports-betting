@@ -114,6 +114,7 @@ def parse_pinnacle(id_league):
         if "id" not in match:
             continue
         sport = sports[match["league"]["sport"]["name"]]
+        competition = match["league"]["name"]
         id_match = match["id"]
         match_name = " - ".join(sb.TRANSLATION[sport].get(match["participants"][x]["name"], match["participants"][x]["name"]) for x in [0,1])
         if "5 Sets" in match_name:
@@ -121,7 +122,7 @@ def parse_pinnacle(id_league):
         date_time = truncate_datetime(dateutil.parser.isoparse(match["startTime"])+datetime.timedelta(hours=2))
         odds = get_pinnacle_odds_from_match_id(id_match, all_odds)
         if odds:
-            odds_match[match_name] = {"odds":{"pinnacle":odds}, "date":date_time, "id":{"pinnacle" :str(id_match)}}
+            odds_match[match_name] = {"odds":{"pinnacle":odds}, "date":date_time, "id":{"pinnacle" :str(id_match)}, "competition":competition}
     return odds_match
 
 

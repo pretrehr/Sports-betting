@@ -59,6 +59,7 @@ def parse_winamax(url):
                             match_odds_hash[match_name]['date'] = date_time
                             match_odds_hash[match_name]['id'] = {
                                 "winamax": str(match["matchId"])}
+                            match_odds_hash[match_name]['competition'] = dict_matches["tournaments"][str(match['tournamentId'])]["tournamentName"]
                         except KeyError:
                             pass
             if not match_odds_hash:

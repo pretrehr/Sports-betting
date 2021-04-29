@@ -195,6 +195,7 @@ def merge_dict_odds(dict_odds, needs_date=True):
         new_dict[match]["odds"] = {}
         new_dict[match]["id"] = {}
         new_dict[match]["date"] = None
+        new_dict[match]["competition"] = None
         date_found = False
         for odds in dict_odds:
             if odds:
@@ -210,6 +211,8 @@ def merge_dict_odds(dict_odds, needs_date=True):
                             new_dict[match]["odds"][site] = odds[match]["odds"][site]
                         if "id" in odds[match] and odds[match]["id"] and site in odds[match]["id"]:
                             new_dict[match]["id"][site] = odds[match]["id"][site]
+                        if odds[match].get("competition"):
+                            new_dict[match]["competition"] = odds[match]["competition"]
         if not date_found and needs_date:
             new_dict[match]["date"] = datetime.datetime.today()
     return new_dict
@@ -232,6 +235,10 @@ def merge_dicts(dict_args):
             def_dict[key]["id"].update(val.get("id"))
         except (AttributeError, KeyError) as _:
             def_dict[key]["id"] = val.get("id")
+        try:
+            def_dict[key]["competition"].update(val.get("competition"))
+        except (AttributeError, KeyError) as _:
+            def_dict[key]["competition"] = val.get("competition")
     return dict(def_dict)
 
 

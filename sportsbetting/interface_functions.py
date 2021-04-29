@@ -563,6 +563,7 @@ def odds_match_interface(window, values):
         sys.stdout = old_stdout  # Put the old stream back in place
         odds = odds_dict["odds"]
         date = odds_dict["date"]
+        competition = odds_dict.get("competition", "Compétition inconnue")
         if len(list(odds.values())[0]) == 2:
             for key in odds.keys():
                 odds[key].insert(1, "-   ")
@@ -576,6 +577,7 @@ def odds_match_interface(window, values):
         else:
             window["DATE_ODDS"].update(visible=False)
         window["MATCH_ODDS"].update(match, visible=True)
+        window["COMPETITION_ODDS"].update(competition, visible=True)
         trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
         window["TRJ_ODDS"].update("TRJ : {}%".format(round(trj*100, 3)))
         window["INFOS_ODDS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))

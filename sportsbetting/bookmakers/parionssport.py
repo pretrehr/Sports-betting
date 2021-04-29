@@ -111,6 +111,7 @@ def parse_parionssport_api(id_league):
             continue
         event = items[market["parent"]]
         name = event["a"] + " - " + event["b"]
+        competition = event["path"]["Category"] + " - " + event["path"]["League"]
         if event["code"] == "BASK":
             if name not in odds_match:
                 odds = parse_parionssport_match_basketball(market["parent"])
@@ -124,6 +125,7 @@ def parse_parionssport_api(id_league):
                 odds_match[name]["odds"] = {"parionssport":[]}
             odds_match[name]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))
             odds_match[name]["id"] = {"parionssport":market["parent"]}
+            odds_match[name]["competition"] = competition
     return odds_match
 
 def parse_sport_parionssport(sport):

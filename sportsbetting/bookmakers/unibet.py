@@ -65,7 +65,7 @@ def parse_unibet_api(id_league, sport, boost):
                         price_up = int(selection["currentPriceUp"])
                         price_down = int(selection["currentPriceDown"])
                         odds.append(round(price_up / price_down + 1, 2))
-                    odds_match[name] = {"date":date, "odds":{site_name:odds}, "id":{"unibet":event["eventId"]}}
+                    odds_match[name] = {"date":date, "odds":{site_name:odds}, "id":{"unibet":event["eventId"]}, "competition":event["competitionName"]}
     return odds_match
 
 def parse_unibet(url, boost=False):
