@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
 
 def parse_winamax(url):
     """
@@ -85,7 +85,9 @@ def get_sub_markets_players_basketball_winamax(id_match):
     '9007':'Points + passes + rebonds', 
     '9006':'Passes', 
     '9005':'Rebonds', '9011':'Points',
-    '9001':'Points'}
+    '9001':'Points',
+    '9021':'3 Points',
+    '9022':'3 Points'}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for line in soup.find_all(['script']):
         if 'PRELOADED_STATE' not in str(line.string):
@@ -97,25 +99,31 @@ def get_sub_markets_players_basketball_winamax(id_match):
         for bet in dict_matches['bets'].values():
             if str(bet['marketId']) not in markets_to_keep:
                 continue
+            id_team = is_in_db_site(bet['betTitle'].split(" par ")[-1], "basketball", "winamax")
+            if id_team:
+                ref_player = get_formatted_name_by_id(id_team[0])
+            limit = bet['specialBetValue'].split("sbv=")[-1]
+            is_3_pts = bet['marketId'] in [9021, 9022]
             id_outcomes = bet['outcomes']
             for id_outcome in id_outcomes:
-                label = dict_matches['outcomes'][str(id_outcome)]['label']
-                code = dict_matches['outcomes'][str(id_outcome)]['code']
-                player = label.split(' - ')[0].split()[1]
-                limit = code.split('_')[(-1)].replace(",", ".")
                 odd = dict_matches['odds'][str(id_outcome)]
-                player = label.split(' - ')[0].split('- Plus de ')[0].strip()
-                ref_player = player
-                if is_player_added_in_db(player, "winamax"):
-                    ref_player = is_player_added_in_db(player, "winamax")
-                elif is_player_in_db(player):
-                    add_player_to_db(player, "winamax")
-                else:
-                    if sb.DB_MANAGEMENT:
-                        print(player, "winamax")
-                        add_new_player_to_db(player)
+                if not is_3_pts:
+                    label = dict_matches['outcomes'][str(id_outcome)]['label']
+                    code = dict_matches['outcomes'][str(id_outcome)]['code']
+                    player = label.split(' - ')[0].split()[1]
+                    limit = code.split('_')[(-1)].replace(",", ".")
+                    player = label.split(' - ')[0].split('- Plus de ')[0].strip()
+                    ref_player = player
+                    if is_player_added_in_db(player, "winamax"):
+                        ref_player = is_player_added_in_db(player, "winamax")
+                    elif is_player_in_db(player):
+                        add_player_to_db(player, "winamax")
                     else:
-                        continue
+                        if sb.DB_MANAGEMENT:
+                            print(player, "winamax")
+                            add_new_player_to_db(player)
+                        else:
+                            continue
                 key_player = ref_player + "_" + limit
                 key_market = markets_to_keep[str(bet['marketId'])]
                 if key_player not in sub_markets[key_market]:

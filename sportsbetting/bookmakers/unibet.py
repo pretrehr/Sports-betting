@@ -9,7 +9,7 @@ import requests
 from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
 
 def get_id_league(url):
     """
@@ -95,7 +95,9 @@ def get_sub_markets_players_basketball_unibet(id_match):
     "Joueur marquant 25 points ou plus":"Points",
     "Joueur marquant 30 points ou plus":"Points",
     "Joueur marquant 35 points ou plus":"Points",
-    "Joueur marquant 40 points ou plus":"Points"}
+    "Joueur marquant 40 points ou plus":"Points",
+    "Equipe à domicile - Nombre de 3 points marqués":"3 Points",
+    "Equipe à l'exterieur - Nombre de 3 points marqués":"3 Points"}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market_class_list in markets_class_list:
         market_name = market_class_list['marketName']
@@ -103,25 +105,29 @@ def get_sub_markets_players_basketball_unibet(id_match):
             continue
         markets = market_class_list['marketList']
         for market in markets:
+            id_team = is_in_db_site(market.get("event{}Name".format(market["marketType"].split(" - ")[0].replace(" ", ""))), "basketball", "unibet")
+            if id_team:
+                ref_player = get_formatted_name_by_id(id_team[0])
+            is_3_pts = "Nombre de 3 points marqués" in market["marketName"]
             selections = market['selections']
             for selection in selections:
-                player = selection['name'].split(' - ')[0].split()[1]
-                limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
                 price_up = int(selection['currentPriceUp'])
                 price_down = int(selection['currentPriceDown'])
                 odd = round(price_up / price_down + 1, 2)
-                player = selection['name'].split(' - ')[0]
-                ref_player = player
-                if is_player_added_in_db(player, "unibet"):
-                    ref_player = is_player_added_in_db(player, "unibet")
-                elif is_player_in_db(player):
-                    add_player_to_db(player, "unibet")
-                else:
-                    if sb.DB_MANAGEMENT:
-                        print(player, "unibet")
-                        add_new_player_to_db(player)
+                limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
+                if not is_3_pts:
+                    player = selection['name'].split(' - ')[0]
+                    ref_player = player
+                    if is_player_added_in_db(player, "unibet"):
+                        ref_player = is_player_added_in_db(player, "unibet")
+                    elif is_player_in_db(player):
+                        add_player_to_db(player, "unibet")
                     else:
-                        continue
+                        if sb.DB_MANAGEMENT:
+                            print(player, "unibet")
+                            add_new_player_to_db(player)
+                        else:
+                            continue
                 key_market = markets_to_keep[market_name]
                 if key_market == "Points":
                     limit = str(float(market_name.split()[2])-0.5)
@@ -129,6 +135,8 @@ def get_sub_markets_players_basketball_unibet(id_match):
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"unibet":[]}}
                 sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
+                if key_market == "3 Points":
+                    sub_markets[key_market][key_player]["odds"]["unibet"].reverse()
                 if key_market == "Points":
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(1.01)
     

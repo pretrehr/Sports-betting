@@ -15,7 +15,7 @@ from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts
-from sportsbetting.database_functions import is_player_in_db, add_close_player_to_db, is_player_added_in_db
+from sportsbetting.database_functions import is_player_in_db, add_close_player_to_db, is_player_added_in_db, is_in_db_site, get_formatted_name_by_id
 
 def get_parionssport_token():
     """
@@ -192,7 +192,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
                         'Performance du Joueur - Total Points + Passes':'Points + passes', 
                         'Performance du Joueur - Total Points + Rebonds':'Points + rebonds',
                         'Performance du Joueur - Total Rebonds + Passes':'Passes + rebonds',
-                        'Performance du joueur - Total Points (Supérieur à la valeur affichée)':'Points'}
+                        'Performance du joueur - Total Points (Supérieur à la valeur affichée)':'Points',
+                        'foo':'3 Points'}
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for item in items:
         if not item.startswith("o"):
@@ -201,26 +202,33 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         market = items[odd["parent"]]
         if not "desc" in market:
             continue
-        if not market["desc"] in markets_to_keep:
+        is_3_pts = "(paniers à 3pts)" in market["desc"]
+        if not market["desc"] in markets_to_keep and not is_3_pts:
             continue
+        id_team = is_in_db_site(market["desc"].split(" - ")[-1], "basketball", "parionssport")
+        if id_team:
+            ref_player = get_formatted_name_by_id(id_team[0])
         if not odd.get("price"):
             continue
         if "flags" in odd and "hidden" in odd["flags"]:
             continue
         event = items[market["parent"]]
-        limit = odd["desc"].split()[-1].replace(",", ".")
-        player = odd["desc"].split(" - ")[0].split("(")[0].strip()
-        if player == odd["desc"]:
-            player = odd["desc"].split("- ")[0].strip()
-        ref_player = add_close_player_to_db(player, "parionssport")
-        if is_player_added_in_db(player, "parionssport"):
-            ref_player = is_player_added_in_db(player, "parionssport")
-        elif not ref_player:
-            if sb.DB_MANAGEMENT:
-                print(player, "parionssport")
-            continue
+        if is_3_pts:
+            limit = str(odd["spread"])
+        else:
+            limit = odd["desc"].split()[-1].replace(",", ".")
+            player = odd["desc"].split(" - ")[0].split("(")[0].strip()
+            if player == odd["desc"]:
+                player = odd["desc"].split("- ")[0].strip()
+            ref_player = add_close_player_to_db(player, "parionssport")
+            if is_player_added_in_db(player, "parionssport"):
+                ref_player = is_player_added_in_db(player, "parionssport")
+            elif not ref_player:
+                if sb.DB_MANAGEMENT:
+                    print(player, "parionssport")
+                continue
         key_player = (ref_player + "_" + limit).split(".5")[0] + ".5"
-        key_market = markets_to_keep[market["desc"]]
+        key_market = markets_to_keep[market["desc"]] if not is_3_pts else "3 Points"
         if key_player not in sub_markets[key_market]:
             sub_markets[key_market][key_player] = {"odds":{"parionssport":[]}}
         sub_markets[key_market][key_player]["odds"]["parionssport"].append(float(odd["price"].replace(",", ".")))

@@ -42,7 +42,7 @@ def merge_dicts_nba(match, id_betclic, id_parionssport, id_pinnacle, id_pmu, id_
         zebet.get_sub_markets_players_basketball_zebet(id_zebet)
     ]
     bookmakers = ["betclic", "pasionssport", "pinnacle", "pmu", "unibet", "winamax", "zebet"]
-    sub_markets = ['Points + passes + rebonds', 'Passes', 'Rebonds', 'Points + passes', 'Points + rebonds', 'Passes + rebonds', 'Points']
+    sub_markets = ['Points + passes + rebonds', 'Passes', 'Rebonds', 'Points + passes', 'Points + rebonds', 'Passes + rebonds', 'Points', '3 Points']
     best = {}
     best_books = {}
     middles = {}
