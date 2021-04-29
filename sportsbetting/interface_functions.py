@@ -1010,10 +1010,17 @@ def best_match_miles_interface(window, values):
 def get_best_conversion_rates_freebet(window):
     conversion_rates = {}
     high_conversion_rates = []
+    with open(sb.PATH_FREEBETS, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            bookmaker, rate = line.split()
+            sb.FREEBETS_RATES[bookmaker] = float(rate)
     for sport in sb.ODDS:
         if sb.SEEN_SUREBET[sport]:
             continue
-        for site in sb.BOOKMAKERS:
+        if not sb.ODDS[sport]:
+            continue
+        for site in sb.FREEBETS_RATES:
             old_stdout = sys.stdout  # Memorize the default stdout stream
             sys.stdout = buffer = io.StringIO()
             best_match_freebet(site, 100, sport)
@@ -1027,7 +1034,7 @@ def get_best_conversion_rates_freebet(window):
                 conversion_rates[site] = [conversion_rate, sport]
     table = []
     for site, details in conversion_rates.items():
-        if details[0] >= 80:
+        if details[0] >= sb.FREEBETS_RATES[site]:
             high_conversion_rates.append(site)
         table.append([site]+details)
     table.sort(key=lambda x: x[1], reverse=True)

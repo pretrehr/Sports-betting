@@ -41,6 +41,7 @@ SUREBETS = {}
 MIDDLES = {}
 MILES_RATES = {"5€" : 385, "10€" : 770, "20€" : 1510, "50€" : 3700, "100€": 7270, "200€" : 14290, "500€" : 35090, "1000€" : 69000, "2000€":135600, "5000€": 333330}
 SEEN_SUREBET = {x:True for x in SPORTS}
+FREEBETS_RATES = {bookmaker : 80 for bookmaker in BOOKMAKERS}
 
 
 class UnavailableCompetitionException(Exception):
@@ -95,6 +96,20 @@ print(PATH_DRIVER)
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
 
 PATH_TOKENS = os.path.dirname(__file__) + "/bookmakers/tokens.txt"
+
+PATH_FREEBETS = os.path.dirname(__file__) + "/freebets.txt"
+if not os.path.exists(PATH_FREEBETS):
+    with open(PATH_FREEBETS, "a+") as file:
+        for bookmaker, rate in FREEBETS_RATES.items():
+            if bookmaker in ["pinnacle", "betfair"]:
+                continue
+            file.write("{} {}\n".format(bookmaker, rate))
+else:
+    with open(PATH_FREEBETS, "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            bookmaker, rate = line.split()
+            FREEBETS_RATES[bookmaker] = float(rate)
 
 PATH_TRANSLATION = os.path.dirname(__file__) + "/resources/translation.json"
 with open(PATH_TRANSLATION, encoding='utf-8') as file:
