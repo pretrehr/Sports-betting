@@ -1033,6 +1033,6 @@ def get_best_conversion_rates_freebet(window):
     table.sort(key=lambda x: x[1], reverse=True)
     window["CONVERT_RATES_FREEBET"].update(table)
     visible = len(high_conversion_rates) > 0
-    window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet > 80% ({})".format(", ".join(high_conversion_rates)), visible=visible)
+    window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet haut ({})".format(", ".join(high_conversion_rates)), visible=visible, text_color="orange")
     
     
