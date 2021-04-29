@@ -1,0 +1,33 @@
+Alavés - Valence
+{'date': datetime.datetime(2020, 11, 22, 21, 0),
+ 'odds': {'betclic': [2.48, 3.1, 2.9],
+          'bwin': [2.45, 2.95, 2.8],
+          'france_pari': [2.45, 3.15, 2.87],
+          'joa': [2.62, 3.15, 2.85],
+          'netbet': [2.42, 3.1, 2.85],
+          'parionssport': [2.4, 3.15, 2.85],
+          'pasinobet': [2.45, 3.1, 2.86],
+          'pmu': [2.5, 3.15, 3.0],
+          'pokerstars': [2.6, 3.05, 2.7],
+          'unibet': [2.47, 3.1, 2.9],
+          'winamax': [2.5, 3.15, 2.95],
+          'zebet': [2.5, 3.2, 2.92]}}
+taux de retour au joueur = 96.855 %
+somme des mises = 15.86
+gain min = 15.35
+gain max = 15.37
+plus-value min = -0.51
+plus-value max = -0.49
+mises arrondies = [5.86, 4.88, 5.12]
+cotes = [2.62, 3.15, 3.0]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+╒═════════╤═════════════╤════════╤════════╤═════════╕
+│ Issue   │ Bookmaker   │   Cote │   Mise │   Total │
+╞═════════╪═════════════╪════════╪════════╪═════════╡
+│ Alavés  │ joa         │   2.62 │   5.86 │   15.35 │
+├─────────┼─────────────┼────────┼────────┼─────────┤
+│ Nul     │ pmu         │   3.15 │   4.88 │   15.37 │
+├─────────┼─────────────┼────────┼────────┼─────────┤
+│ Valence │ pmu         │   3    │   5.12 │   15.36 │
+╘═════════╧═════════════╧════════╧════════╧═════════╛

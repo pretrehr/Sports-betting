@@ -1,0 +1,33 @@
+Dijon - Lens
+{'date': datetime.datetime(2020, 11, 22, 15, 0),
+ 'odds': {'betclic': [3.25, 3.4, 2.13],
+          'bwin': [3.25, 3.25, 2.05],
+          'france_pari': [3.3, 3.45, 2.1],
+          'joa': [3.3, 3.45, 2.14],
+          'netbet': [3.3, 3.4, 2.1],
+          'parionssport': [3.4, 3.45, 2.05],
+          'pasinobet': [3.32, 3.41, 2.14],
+          'pmu': [3.4, 3.5, 2.15],
+          'pokerstars': [3.3, 3.35, 2.05],
+          'unibet': [3.3, 3.45, 2.14],
+          'winamax': [3.4, 3.55, 2.15],
+          'zebet': [3.35, 3.5, 2.15]}}
+taux de retour au joueur = 95.699 %
+somme des mises = 9.99
+gain min = 9.55
+gain max = 9.57
+plus-value min = -0.44
+plus-value max = -0.42
+mises arrondies = [2.81, 2.73, 4.45]
+cotes = [3.4, 3.5, 2.15]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+╒═════════╤═════════════╤════════╤════════╤═════════╕
+│ Issue   │ Bookmaker   │   Cote │   Mise │   Total │
+╞═════════╪═════════════╪════════╪════════╪═════════╡
+│ Dijon   │ pmu         │   3.4  │   2.81 │    9.55 │
+├─────────┼─────────────┼────────┼────────┼─────────┤
+│ Nul     │ pmu         │   3.5  │   2.73 │    9.55 │
+├─────────┼─────────────┼────────┼────────┼─────────┤
+│ Lens    │ pmu         │   2.15 │   4.45 │    9.57 │
+╘═════════╧═════════════╧════════╧════════╧═════════╛

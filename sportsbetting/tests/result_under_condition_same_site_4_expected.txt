@@ -1,0 +1,32 @@
+Valladolid - Levante
+{'date': datetime.datetime(2020, 11, 27, 21, 0),
+ 'odds': {'betclic': [2.55, 3.05, 2.85],
+          'bwin': [2.45, 3.0, 2.8],
+          'france_pari': [2.47, 3.1, 2.87],
+          'joa': [2.6, 3.1, 2.92],
+          'netbet': [2.47, 3.05, 2.85],
+          'parionssport': [2.55, 3.0, 2.85],
+          'pasinobet': [2.55, 3.04, 2.78],
+          'pmu': [2.45, 2.9, 2.8],
+          'unibet': [2.55, 3.05, 2.85],
+          'winamax': [2.55, 3.05, 2.85],
+          'zebet': [2.45, 3.05, 2.85]}}
+taux de retour au joueur = 92.031 %
+somme des mises = 15.48
+gain min = 14.24
+gain max = 14.25
+plus-value min = -1.24
+plus-value max = -1.23
+mises arrondies = [5.48, 4.91, 5.09]
+cotes = [2.6, 2.9, 2.8]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+╒════════════╤═════════════╤════════╤════════╤═════════╕
+│ Issue      │ Bookmaker   │   Cote │   Mise │   Total │
+╞════════════╪═════════════╪════════╪════════╪═════════╡
+│ Valladolid │ joa         │    2.6 │   5.48 │   14.25 │
+├────────────┼─────────────┼────────┼────────┼─────────┤
+│ Nul        │ pmu         │    2.9 │   4.91 │   14.24 │
+├────────────┼─────────────┼────────┼────────┼─────────┤
+│ Levante    │ pmu         │    2.8 │   5.09 │   14.25 │
+╘════════════╧═════════════╧════════╧════════╧═════════╛

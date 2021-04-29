@@ -1,0 +1,31 @@
+Celta Vigo - Granada
+{'date': datetime.datetime(2020, 11, 29, 18, 30),
+ 'odds': {'betclic': [2.08, 3.15, 3.45],
+          'bwin': [2.05, 3.2, 3.3],
+          'france_pari': [2.07, 3.25, 3.55],
+          'joa': [2.2, 3.25, 3.5],
+          'netbet': [2.05, 3.2, 3.55],
+          'pasinobet': [2.09, 3.17, 3.5],
+          'pmu': [2.0, 3.05, 3.5],
+          'unibet': [2.11, 3.2, 3.52],
+          'winamax': [2.1, 3.2, 3.5],
+          'zebet': [2.05, 3.2, 3.5]}}
+taux de retour au joueur = 93.622 %
+somme des mises = 17.41
+gain min = 16.29
+gain max = 16.31
+plus-value min = -1.12
+plus-value max = -1.1
+mises arrondies = [7.41, 5.34, 4.66]
+cotes = [2.2, 3.05, 3.5]
+
+Répartition des mises (les totaux affichés prennent en compte les éventuels freebets):
+╒════════════╤═════════════╤════════╤════════╤═════════╕
+│ Issue      │ Bookmaker   │   Cote │   Mise │   Total │
+╞════════════╪═════════════╪════════╪════════╪═════════╡
+│ Celta Vigo │ joa         │   2.2  │   7.41 │   16.3  │
+├────────────┼─────────────┼────────┼────────┼─────────┤
+│ Nul        │ pmu         │   3.05 │   5.34 │   16.29 │
+├────────────┼─────────────┼────────┼────────┼─────────┤
+│ Granada    │ pmu         │   3.5  │   4.66 │   16.31 │
+╘════════════╧═════════════╧════════╧════════╧═════════╛
