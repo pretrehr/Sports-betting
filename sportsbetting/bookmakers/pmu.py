@@ -78,8 +78,12 @@ def parse_pmu_html(soup):
                 is_rugby_13 = False
                 continue
             if not handicap:
-                odds = list(
-                    map(lambda x: float(x.replace(",", ".")), list(line.stripped_strings)))
+                odds = []
+                for child in line.findChildren("a", recursive=True):
+                    if "class" in child.attrs and "btn-disabled" in child["class"]:
+                        odds.append(1.01)
+                    else:
+                        odds.append(float(child.text.strip().replace(",", ".")))
             match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"pmu": odds}
             match_odds_hash[match]['date'] = date_time
