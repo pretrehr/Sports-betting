@@ -580,7 +580,7 @@ def odds_match_interface(window, values):
         window["COMPETITION_ODDS"].update(competition, visible=True)
         trj, bookmakers, best_odds = trj_match(sb.ODDS[sport][match])
         window["TRJ_ODDS"].update("TRJ : {}%".format(round(trj*100, 3)))
-        window["INFOS_ODDS"].update(" / ".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
+        window["INFOS_ODDS"].update("\n".join(bookmaker + " @ " + str(odd) for bookmaker, odd in zip(bookmakers, best_odds)))
         window["GOTO_SITE_ODDS"].update(visible=sb.BETA)
         window["DELETE_SITE_ODDS"].update(visible=True)
         window["DELETE_MATCH_ODDS"].update(visible=True)
