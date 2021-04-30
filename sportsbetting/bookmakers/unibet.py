@@ -115,6 +115,7 @@ def get_sub_markets_players_basketball_unibet(id_match):
                 price_down = int(selection['currentPriceDown'])
                 odd = round(price_up / price_down + 1, 2)
                 limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
+                plus = "Plus de" in selection['name']
                 if not is_3_pts:
                     player = selection['name'].split(' - ')[0]
                     ref_player = player
@@ -134,7 +135,10 @@ def get_sub_markets_players_basketball_unibet(id_match):
                 key_player = ref_player + "_" + limit
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"unibet":[]}}
-                sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
+                if plus:
+                    sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
+                else:
+                    sub_markets[key_market][key_player]["odds"]["unibet"].append(odd)
                 if key_market == "3 Points":
                     sub_markets[key_market][key_player]["odds"]["unibet"].reverse()
                 if key_market == "Points":
