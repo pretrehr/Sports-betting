@@ -3,7 +3,7 @@ import os
 import sportsbetting as sb
 import sys
 from sportsbetting.auxiliary_functions import load_odds
-from sportsbetting.user_functions import best_match_under_conditions
+from sportsbetting.user_functions import best_match_under_conditions, best_match_under_conditions2
 
 def are_identical_files(filename1, filename2):
     lines1 = []
