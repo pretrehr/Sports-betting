@@ -139,8 +139,6 @@ def get_sub_markets_players_basketball_unibet(id_match):
                     sub_markets[key_market][key_player]["odds"]["unibet"].insert(0, odd)
                 else:
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(odd)
-                if key_market == "3 Points":
-                    sub_markets[key_market][key_player]["odds"]["unibet"].reverse()
                 if key_market == "Points":
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(1.01)
     
