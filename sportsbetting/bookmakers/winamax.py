@@ -102,7 +102,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
             id_team = is_in_db_site(bet['betTitle'].split(" par ")[-1], "basketball", "winamax")
             if id_team:
                 ref_player = get_formatted_name_by_id(id_team[0])
-            limit = bet['specialBetValue'].split("sbv=")[-1]
+            limit = bet['specialBetValue'].split("sbv=")[-1].replace(",", ".")
             is_3_pts = bet['marketId'] in [9021, 9022]
             id_outcomes = bet['outcomes']
             for id_outcome in id_outcomes:
