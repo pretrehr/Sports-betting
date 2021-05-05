@@ -8,20 +8,22 @@ import os
 import re
 import urllib
 
-import OpenSSL
+from collections import defaultdict
 import seleniumwire
 
-from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts
-from sportsbetting.database_functions import is_player_in_db, add_close_player_to_db, is_player_added_in_db, is_in_db_site, get_formatted_name_by_id
+from sportsbetting.database_functions import (
+    is_player_added_in_db, add_close_player_to_db, is_in_db_site,
+    get_formatted_name_by_id
+)
 
 def get_parionssport_token():
     """
     Get ParionsSport token to access the API
     """
-    token = ""
+    token = None
     if os.path.exists(sb.PATH_TOKENS):
         with open(sb.PATH_TOKENS, "r") as file:
             lines = file.readlines()
@@ -171,6 +173,9 @@ def parse_parionssport(url):
 
 
 def get_sub_markets_players_basketball_parionssport(id_match):
+    """
+    Get Parions Sport odds for sub-markets in basketball match
+    """
     if not id_match:
         return {}
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
@@ -179,15 +184,15 @@ def get_sub_markets_players_basketball_parionssport(id_match):
     content = urllib.request.urlopen(req).read()
     parsed = json.loads(content)
     items = parsed["items"]
-    odds = []
-    odds_match = {}
-    markets_to_keep = { 'Performance du Joueur - Total Passes décisives':'Passes', 
-                        'Performance du Joueur - Total Rebonds':'Rebonds', 
-                        'Performance du Joueur - Total Points + Passes':'Points + passes', 
-                        'Performance du Joueur - Total Points + Rebonds':'Points + rebonds',
-                        'Performance du Joueur - Total Rebonds + Passes':'Passes + rebonds',
-                        'Performance du joueur - Total Points (Supérieur à la valeur affichée)':'Points',
-                        'foo':'3 Points'}
+    markets_to_keep = {
+        'Performance du Joueur - Total Passes décisives':'Passes',
+        'Performance du Joueur - Total Rebonds':'Rebonds',
+        'Performance du Joueur - Total Points + Passes':'Points + passes',
+        'Performance du Joueur - Total Points + Rebonds':'Points + rebonds',
+        'Performance du Joueur - Total Rebonds + Passes':'Passes + rebonds',
+        'Performance du joueur - Total Points (Supérieur à la valeur affichée)':'Points',
+        'foo':'3 Points'
+    }
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for item in items:
         if not item.startswith("o"):
@@ -206,7 +211,6 @@ def get_sub_markets_players_basketball_parionssport(id_match):
             continue
         if "flags" in odd and "hidden" in odd["flags"]:
             continue
-        event = items[market["parent"]]
         if is_3_pts:
             limit = str(odd["spread"])
         else:
