@@ -84,7 +84,8 @@ parsing_layout = [
     [sg.Text("", size=(100, 1), key="SUREBET_PARSING", visible=False)],
     [sg.Text("", size=(100, 1), key="HIGH_FREEBET_PARSING", visible=False)],
     [sg.Col([[sg.Button('Démarrer', key="START_PARSING")]]),
-     sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING", visible=sb.BETA)]]),
+     sg.Col([[sg.Button('Récupérer tous les sports', key="START_ALL_PARSING")]]),
+     sg.Col([[sg.Checkbox('Seulement football, basketball et tennis', key="PARTIAL_PARSING", default=True)]]),
      sg.Col([[sg.Button('Stop', key="STOP_PARSING", button_color=("white", "red"), visible=False)]]),
      sg.Col([[sg.ProgressBar(max_value=100, orientation='h', size=(20, 20), key='PROGRESS_PARSING',
                              visible=False)]]),
@@ -652,7 +653,8 @@ while True:
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=False)
             if not sb.ABORT:
                 window["START_PARSING"].update(visible=True)
-                window["START_ALL_PARSING"].update(visible=sb.BETA)
+                window["START_ALL_PARSING"].update(visible=True)
+                window["PARTIAL_PARSING"].update(visible=True)
                 window['SUREBET_PARSING'].update("Recherche de surebet en cours", text_color="white", visible=sb.BETA)
                 sports_with_surebet = get_sports_with_surebet()
                 if sports_with_surebet:
@@ -761,6 +763,7 @@ while True:
             window["STOP_PARSING"].update(visible=True)
             window["START_PARSING"].update(visible=False)
             window["START_ALL_PARSING"].update(visible=False)
+            window["PARTIAL_PARSING"].update(visible=False)
             def parse_thread():
                 """
                 :return: Crée un thread pour le parsing des compétitions
@@ -783,18 +786,22 @@ while True:
                 window["PROGRESS_{}_PARSING".format(site)].update(0, 100, visible=True)
     elif event == 'START_ALL_PARSING':
         selected_sites = values["SITES"]
+        sports_parsing = ["football", "tennis", "basketball"]
+        if not values["PARTIAL_PARSING"]:
+            sports_parsing.append("rugby")
         window["MATCHES_ODDS"].update([])
         window["MATCHES"].update([])
         if selected_sites:
             window["STOP_PARSING"].update(visible=True)
             window["START_PARSING"].update(visible=False)
             window["START_ALL_PARSING"].update(visible=False)
+            window["PARTIAL_PARSING"].update(visible=False)
             def parse_all_thread():
                 """
                 :return: Crée un thread pour le parsing des compétitions
                 """
                 sb.PROGRESS = 0
-                for sport in ["football", "tennis", "basketball"]:
+                for sport in sports_parsing:
                     parse_competitions(["Tout le {}".format(sport)], sport, *selected_sites)
 
 
@@ -940,7 +947,7 @@ while True:
         save_odds(sb.ODDS, PATH_DATA)
     elif event == "GOTO_SITE_ODDS":
         open_bookmaker_odds(window, values)
-    elif event == "STAKE_ODDS" or event.startswith("OUTCOME_ODDS"):
+    elif event and (event == "STAKE_ODDS" or event.startswith("OUTCOME_ODDS")):
         compute_odds(window, values)
     elif event == "ADD_COMBI_OPT":
         sport = ""
@@ -977,7 +984,7 @@ while True:
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=[])
                 sg.Popup("Aucun match disponible en {}".format(sport))
                 break
-    elif "SEARCH_MATCH_COMBI_OPT_" in event:
+    elif event and "SEARCH_MATCH_COMBI_OPT_" in event:
         if not values["SPORT_COMBI_OPT"]:
             continue
         sport = values["SPORT_COMBI_OPT"][0]
