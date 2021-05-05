@@ -128,6 +128,8 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 key_market = markets_to_keep[str(bet['marketId'])]
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"winamax":[]}}
+                if not odd:
+                    odd = 1.01
                 sub_markets[key_market][key_player]["odds"]["winamax"].append(odd)
                 if key_market == "Points":
                     sub_markets[key_market][key_player]["odds"]["winamax"].append(1.01)
