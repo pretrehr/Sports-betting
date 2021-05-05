@@ -654,7 +654,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
     Trouve l'équipe de double la plus proche d'une équipe donnée
     """
     assert sport == "tennis"
-    if site in ["netbet", "france_pari"]:
+    if site in ["netbet", "france_pari", "betway"]:
         separator_team = "-"
     elif site in ["betclic", "winamax", "pmu", "zebet", "pinnacle"]:
         separator_team = " / "
@@ -669,7 +669,7 @@ def get_double_team_tennis(team, sport, site, only_null=False):
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
         if site in ["barrierebet", "pokerstars", "pasinobet", "pmu"]:
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
-        elif site in ["netbet", "france_pari", "winamax"]:
+        elif site in ["netbet", "france_pari", "winamax", "betway"]:
             players = list(map(lambda x: x.split(".")[-1], complete_names))
         elif site in ["parionssport"]:
             players = complete_names

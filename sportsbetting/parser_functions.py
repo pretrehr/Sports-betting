@@ -5,7 +5,7 @@ Fonctions de parsing
 import locale
 import sys
 
-from sportsbetting.bookmakers import (betclic, betfair, bwin, france_pari, joa, netbet, parionssport,
+from sportsbetting.bookmakers import (betclic, betfair, betway, bwin, france_pari, joa, netbet, parionssport,
                                       pasinobet, pinnacle, pmu, pokerstars, unibet, winamax, zebet)
 
 
@@ -24,6 +24,7 @@ def parse(site, url=""):
         "betclic" : betclic.parse_betclic,
         "barrierebet": lambda x: pasinobet.parse_pasinobet(x, True),
         "betfair" : betfair.parse_betfair,
+        "betway" : betway.parse_betway,
         "pokerstars" : pokerstars.parse_pokerstars,
         "bwin" : bwin.parse_bwin,
         "france_pari" : france_pari.parse_france_pari,
