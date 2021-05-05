@@ -920,11 +920,11 @@ def display_middle_info(window, values):
     down, up_market = down_up_market.split(" - ")
     up, market = up_market.split(".5 ")
     up += ".5 "
-    mean = (float(up) + float(down))/2
+    trj, bookmakers, best_odds = trj_match(sb.MIDDLES[player_down_up_market])
+    mean = (float(up)*best_odds[1] + float(down)*best_odds[0])/(best_odds[0] + best_odds[1])
     proba = 0
     for i in range(int(float(down)+1), int(float(up)+1)):
         proba += scipy.stats.poisson.pmf(i, mean)
-    trj, bookmakers, best_odds = trj_match(sb.MIDDLES[player_down_up_market])
     proba = round(proba*100, 3)
     trj = round(trj*100, 3)
     odds = sb.MIDDLES[player_down_up_market]["odds"]
@@ -965,11 +965,12 @@ def sort_middle_proba(window, values):
     def get_gap_proba(key):
         gap = key.split(" / ")[1]
         limit1, limit2 = gap.split()[:3:2]
-        mean = (float(limit1) + float(limit2))/2
+        trj, _, best_odds = trj_match(sb.MIDDLES[key])
+        mean = (float(limit2)*best_odds[1] + float(limit1)*best_odds[0])/(best_odds[0] + best_odds[1])
         proba = 0
         for i in range(int(float(limit1)+1), int(float(limit2)+1)):
             proba += scipy.stats.poisson.pmf(i, mean)
-        return proba + trj_match(sb.MIDDLES[key])[0]
+        return proba + trj
     middles = sorted(sb.MIDDLES.keys(), key=get_gap_proba, reverse=True)
     window["MIDDLES_PERF"].update(middles)
     
