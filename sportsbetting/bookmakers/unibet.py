@@ -25,7 +25,7 @@ def get_id_league(url):
     parsed = json.loads(content)
     sport = public_url.split("/")[2]
     if sport == "cotes-boostees":
-        sport = public_url.split("/")[-1].split("-")[0]
+        sport = public_url.split("-cotes-boostees")[0].split("/")[-1]
     if parsed["requestData"]:
         return parsed["requestData"].get("nodeId"), sport
     return None, None
