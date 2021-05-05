@@ -16,7 +16,7 @@ from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
+from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, is_url_in_db
 
 
 def convert_american_odds(american_odds):
@@ -116,7 +116,7 @@ def parse_pinnacle(id_league):
         sport = sports[match["league"]["sport"]["name"]]
         competition = match["league"]["name"]
         id_match = match["id"]
-        match_name = " - ".join(sb.TRANSLATION[sport].get(match["participants"][x]["name"], match["participants"][x]["name"]) for x in [0,1])
+        match_name = " - ".join(sb.TRANSLATION[sport].get(match["participants"][x]["name"], match["participants"][x]["name"].replace(" - ", "-")) for x in [0,1])
         if "5 Sets" in match_name:
             continue
         date_time = truncate_datetime(dateutil.parser.isoparse(match["startTime"])+datetime.timedelta(hours=2))
@@ -143,6 +143,9 @@ def parse_sport_pinnacle(sport):
         if any([x in league["name"] for x in ["ITF", "Challenger"]]):
             continue
         id_league = str(league["id"])
+        if sb.DB_MANAGEMENT and sport != "tennis" and not is_url_in_db(id_league, "pinnacle"):
+            print(league["name"], league["id"])
+            continue
         list_odds.append(parse_pinnacle(id_league))
     return merge_dicts(list_odds)
 

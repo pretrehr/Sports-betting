@@ -136,6 +136,7 @@ def parse_competitions(competitions, sport, *sites):
     sb.IS_PARSING = False
     sb.ABORT = False
     sb.SEEN_SUREBET[sport] = False
+    print("Dernière récupération des cotes à", datetime.datetime.today().strftime("%H:%M"))
 
 
 def odds_match(match, sport="football"):

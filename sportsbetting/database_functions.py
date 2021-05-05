@@ -105,6 +105,15 @@ def get_competition_url(name, sport, site):
             return line[1]
 
 
+def is_url_in_db(url, site):
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT competition FROM competitions WHERE url_{}='{}'
+    """.format(site, url))
+    return bool(c.fetchone())
+
+
 def import_teams_by_url(url):
     """
     Ajout dans la base de données de toutes les équipes/joueurs d'une même compétition (url) ayant
