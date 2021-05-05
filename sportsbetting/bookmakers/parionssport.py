@@ -58,7 +58,7 @@ def parse_parionssport_match_basketball(id_match):
     """
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
            "&showPromotions=true".format(id_match))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
     content = urllib.request.urlopen(req).read()
     parsed = json.loads(content)
     items = parsed["items"]
@@ -95,7 +95,7 @@ def parse_parionssport_api(id_league):
     """
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/next/50/{}?originId=3&lineId=1&breakdownEventsIntoDays=true"
            "&eType=G&showPromotions=true".format(id_league))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
     content = urllib.request.urlopen(req).read()
     parsed = json.loads(content)
     odds_match = {}
@@ -141,7 +141,7 @@ def parse_sport_parionssport(sport):
         "hockey-sur-glace"  : "ICEH"
     }
     url = "https://www.enligne.parionssport.fdj.fr/lvs-api/leagues?sport={}".format(sports_alias[sport])
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
     content = urllib.request.urlopen(req).read()
     competitions = json.loads(content)
     list_odds = []
@@ -157,12 +157,6 @@ def parse_parionssport(url):
     """
     Get ParionsSport odds from url
     """
-    if "parionssport" not in sb.TOKENS:
-        try:
-            token = get_parionssport_token()
-            sb.TOKENS["parionssport"] = token
-        except OpenSSL.crypto.Error:
-            return {}
     if "paris-" in url.split("/")[-1] and "?" not in url:
         sport = url.split("/")[-1].split("paris-")[-1]
         return parse_sport_parionssport(sport)
@@ -181,7 +175,7 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         return {}
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
            "&showPromotions=true".format(id_match))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': sb.TOKENS["parionssport"]})
+    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
     content = urllib.request.urlopen(req).read()
     parsed = json.loads(content)
     items = parsed["items"]

@@ -33,7 +33,6 @@ BOOKMAKERS = ["barrierebet", "betclic", "betfair", "bwin", "france_pari", "joa",
 BOOKMAKERS_BOOST = sorted(BOOKMAKERS + ["unibet_boost"])
 TEST = False
 DB_MANAGEMENT = False
-TOKENS = {}
 COOKIES_JOA_ACCEPTED = False
 TRANSLATION = {}
 BETA = False
@@ -88,9 +87,6 @@ try:
     print("Chrome version :", chromedriver_autoinstaller.get_chrome_version())
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
-#except urllib.error.URLError:
-#    print("Aucune connection internet")
-#    sys.exit()
 print(PATH_DRIVER)
 
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
