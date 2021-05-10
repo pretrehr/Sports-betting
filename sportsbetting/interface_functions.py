@@ -769,6 +769,8 @@ def odds_match_surebets_interface(window, values):
 
 def find_values_interface(window, values):
     matches = []
+    if not (values["SPORT_VALUES"] and values["RATE_VALUES"] and values["TRJ_VALUES"]):
+        return
     sport = values["SPORT_VALUES"][0]
     rate_min = float(values["RATE_VALUES"])/100
     trj_min = float(values["TRJ_VALUES"])/100
@@ -816,7 +818,7 @@ def odds_match_values_interface(window, values):
         window["INFOS_ODDS_VALUES"].update(" / ".join("{} @ {} (+{}%)".format(bookmaker, odd, round(r*100, 2)) for bookmaker, r, odd in infos_value))
         trj = trj_match(sb.ODDS[sport][match])[0]
         window["INFOS_TRJ_VALUES"].update("TRJ : {}%".format(round(trj*100, 3)))
-    except (IndexError, ValueError) as _:
+    except (IndexError, ValueError, TypeError) as _:
         pass
 
 def get_url_by_id(bookmaker, id_match, sport):
