@@ -115,8 +115,15 @@ def get_sub_markets_players_basketball_zebet(id_match):
     if not id_match:
         return {}
     url = 'https://www.zebet.fr/fr/event/' + id_match + '-'
-    markets_to_keep = {'Nombre de passes décisives pour le joueur (prolongations incluses) ?':'Passes',  'Nombre de rebonds pour le joueur (prolongations incluses) ?':'Rebonds',
-        'Nombre de points marqués par le joueur (prolongations incluses) ?':'Points'}
+    markets_to_keep = {
+        'Nombre de passes décisives pour le joueur (prolongations incluses) ?':'Passes',
+        'Nombre de rebonds pour le joueur (prolongations incluses) ?':'Rebonds',
+        'Nombre de points marqués par le joueur (prolongations incluses) ?':'Points',
+        'Nombre total de passes + rebonds (prolongations incluses)' : 'Passes + rebonds',
+        'Nombre total de points + passes (prolongations incluses)' : 'Points + passes',
+        'Nombre total de points + rebonds (prolongations incluses)' : 'Points + rebonds',
+        'Performance du joueur (points + rebonds + passes, prolongations incluses)' : 'Points + passes + rebonds'
+    }
     soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     market_name = None
