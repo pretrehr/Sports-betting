@@ -162,14 +162,18 @@ def parse_parionssport(url):
     if "paris-" in url.split("/")[-1] and "?" not in url:
         sport = url.split("/")[-1].split("paris-")[-1]
         return parse_sport_parionssport(sport)
-    regex = re.findall(r'\d+', url)
-    if regex:
-        id_league = regex[-1]
+    if "filtre" not in url:
+        print("Wrong parionssport url")
+    regex = re.findall(r'\d+', url.split("filtre=")[-1])
+    list_odds = []
+    odds = {}
+    for id_league in regex:
         try:
-            return parse_parionssport_api("p" + str(id_league))
+            odds = parse_parionssport_api("p" + str(id_league))
         except TypeError:
-            return {}
-    return {}
+            odds = {}
+        list_odds.append(odds)
+    return merge_dicts(list_odds)
 
 
 def get_sub_markets_players_basketball_parionssport(id_match):
