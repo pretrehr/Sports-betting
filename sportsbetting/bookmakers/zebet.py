@@ -138,9 +138,13 @@ def get_sub_markets_players_basketball_zebet(id_match):
                 if 'pmq-cote' in line['class']:
                     odd = float(line.text.strip().replace(',', '.'))
             if 'class' in line.attrs and 'pmq-cote-acteur' in line['class']:
-                plus = "+" in line.text
-                limit = re.split('\s[\-|\+]', line.text.strip())[(-1)].strip().replace(",", ".")
-                player = re.split('\s[\-|\+]', line.text.strip())[0].split("(")[0].strip()
+                plus = "+" in line.text or "Plus de" in line.text
+                limit = re.split(r'(\s\-\s(Moins|Plus)\sde\s|\s(\+|\-))', line.text.strip())[(-1)].strip().replace(",", ".")
+                try:
+                    _ = float(limit)
+                except ValueError:
+                    continue
+                player = re.split(r'(\s\-\s(Moins|Plus)\sde\s|\s(\+|\-))', line.text.strip())[0].split("(")[0].strip()
                 ref_player = player
                 if is_player_added_in_db(player, "zebet"):
                     ref_player = is_player_added_in_db(player, "zebet")
