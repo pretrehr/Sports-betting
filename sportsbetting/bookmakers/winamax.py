@@ -78,16 +78,24 @@ def get_sub_markets_players_basketball_winamax(id_match):
         soup = BeautifulSoup(webpage, features='lxml')
     except urllib.error.HTTPError:
         raise sb.UnavailableSiteException
-    
-    markets_to_keep = {'9017':'Points + passes + rebonds', 
-    '9016':'Passes', 
-    '9015':'Rebonds', 
-    '9007':'Points + passes + rebonds', 
-    '9006':'Passes', 
-    '9005':'Rebonds', '9011':'Points',
-    '9001':'Points',
-    '9021':'3 Points',
-    '9022':'3 Points'}
+    markets_to_keep = {
+        '4436':'Points + passes + rebonds',
+        '4437':'Passes',
+        '4438':'Rebonds',
+        '4971':'Points + passes + rebonds',
+        '4970':'Passes',
+        '4969':'Rebonds',
+        '4442':'Points',
+        '4968':'Points',
+        '4433':'3 Points',
+        '4432':'3 Points',
+        '5423':'Points + rebonds',
+        '5421':'Points + rebonds',
+        '5424':'Points + passes',
+        '5425':'Points + passes',
+        '5426':'Passes + rebonds',
+        '5427':'Passes + rebonds',
+    }
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for line in soup.find_all(['script']):
         if 'PRELOADED_STATE' not in str(line.string):
@@ -97,7 +105,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
             json_text = json_text[:-1]
         dict_matches = json.loads(json_text)
         for bet in dict_matches['bets'].values():
-            if str(bet['marketId']) not in markets_to_keep:
+            if str(bet['betType']) not in markets_to_keep:
                 continue
             id_team = is_in_db_site(bet['betTitle'].split(" par ")[-1], "basketball", "winamax")
             if id_team:
@@ -125,7 +133,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
                         else:
                             continue
                 key_player = ref_player + "_" + limit
-                key_market = markets_to_keep[str(bet['marketId'])]
+                key_market = markets_to_keep[str(bet['betType'])]
                 if key_player not in sub_markets[key_market]:
                     sub_markets[key_market][key_player] = {"odds":{"winamax":[]}}
                 if not odd:
