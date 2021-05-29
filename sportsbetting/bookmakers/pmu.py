@@ -2,6 +2,7 @@
 PMU odds scraper
 """
 
+from collections import defaultdict
 import datetime
 import json
 import urllib
@@ -9,7 +10,6 @@ import urllib.error
 import urllib.request
 
 from bs4 import BeautifulSoup
-from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
@@ -34,6 +34,7 @@ def parse_pmu_html(soup):
     date_time = "undefined"
     live = False
     handicap = False
+    series = False
     date = ""
     match_id = None
     for line in soup.find_all():
@@ -56,26 +57,31 @@ def parse_pmu_html(soup):
             live = True
         elif "class" in line.attrs and "trow--event--name" in line["class"]:
             string = "".join(list(line.stripped_strings))
-            if "//" in string:
-                try:
-                    is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
-                except TypeError:
-                    is_rugby_13 = False
-                if is_rugby_13 or live:
-                    continue
-                handicap = False
-                if "+" in string or "Egalité" in string:
-                    handicap = True
-                    match, odds = parse_page_match_pmu("https://paris-sportifs.pmu.fr"
-                                                        + line.parent["href"])
-                else:
-                    match = string.replace(" - ", "-")
-                    match = match.replace(" // ", " - ")
-                    match = match.replace("//", " - ")
+            if "//" not in string:
+                continue
+            try:
+                is_rugby_13 = line.find_parent("a")["data-sport_id"] == "rugby_a_xiii"
+            except TypeError:
+                is_rugby_13 = False
+            if is_rugby_13 or live:
+                continue
+            series = "Séries" in line.find_parent("a")["title"]
+            competition = line.find_parent("a")["title"].split(" - ")[1]
+            handicap = False
+            if "+" in string or "Egalité" in string:
+                handicap = True
+                match, odds = parse_page_match_pmu(
+                    "https://paris-sportifs.pmu.fr" + line.parent["href"]
+                )
+            else:
+                match = string.replace(" - ", "-")
+                match = match.replace(" // ", " - ")
+                match = match.replace("//", " - ")
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
-            if live or is_rugby_13:
+            if any([live, is_rugby_13, series]):
                 live = False
                 is_rugby_13 = False
+                series = False
                 continue
             if not handicap:
                 odds = []
@@ -88,6 +94,7 @@ def parse_pmu_html(soup):
             match_odds_hash[match]['odds'] = {"pmu": odds}
             match_odds_hash[match]['date'] = date_time
             match_odds_hash[match]['id'] = {"pmu": match_id}
+            match_odds_hash[match]['competition'] = competition
         elif "data-ev_id" in line.attrs:
             match_id = line["data-ev_id"]
     if not match_odds_hash:
@@ -125,7 +132,7 @@ def parse_sport_pmu(sport):
     """
     list_odds = []
     id_sport = {"football": [8], "tennis": [11], "rugby": [7],
-                "hockey-sur-glace": [40, 44], "basketball": [5, 37]}
+                "hockey-sur-glace": [40, 44], "basketball": [5]}
     i = 0
     for _id in id_sport[sport]:
         while True:
@@ -140,19 +147,21 @@ def parse_sport_pmu(sport):
                 break
     return merge_dicts(list_odds)
 
-def get_odds_from_market_id(id_market):
-    url = 'https://paris-sportifs.pmu.fr/pservices/render-market/{}?referrer_page=event'.format(id_market)
-    soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
-    fields = list(soup.find('tbody').stripped_strings)
-    return (fields[1], [float(fields[2].replace(',', '.')), float(fields[5].replace(',', '.'))])
 
 def get_sub_markets_players_basketball_pmu(id_match):
+    """
+    Get submarkets odds from basketball match
+    """
     if not id_match:
         return {}
     url = 'https://mobile.parier.pmu.fr/PMU-Webkit/page/sportif/match?matchId=' + id_match
-    markets_to_keep = {'Passes décisives':'Passes',  'Rebonds':'Rebonds', 'Joueur(s) qui marque(nt) 20 points ou plus':'Points',
-        'Joueur(s) qui marque(nt) 25 points ou plus':'Points', 'Joueur(s) qui marque(nt) 30 points ou plus':'Points',
-        'Joueur(s) qui marque(nt) 35 points ou plus':'Points', 'Joueur(s) qui marque(nt) 40 points ou plus':'Points'
+    markets_to_keep = {
+        'Passes décisives':'Passes', 'Rebonds':'Rebonds',
+        'Joueur(s) qui marque(nt) 20 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 25 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 30 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 35 points ou plus':'Points',
+        'Joueur(s) qui marque(nt) 40 points ou plus':'Points'
     }
     soup = BeautifulSoup((urllib.request.urlopen(url)), features='lxml')
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
@@ -213,15 +222,6 @@ def get_sub_markets_players_basketball_pmu(id_match):
                 market_name = None
                 odds = []
                 break
-#                 try:
-#                     market_name, limit = market_limit.split(" (")
-#                 except ValueError:
-#                     continue
-#                 limit = limit.strip(")")
-#                 if market_name and 'class' in line.attrs and 'odd' in line['class']:
-#                     odds.append(float(line.text.strip().replace(",", ".")))
-
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
-    
     return sub_markets
