@@ -140,4 +140,5 @@ def get_sub_markets_players_basketball_betclic(id_match):
             if is_points_market:
                 odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(1.01)
         sub_markets[markets_to_keep[market['mtc']]] = {**dict(odds_market), **sub_markets[markets_to_keep[market['mtc']]]}
+    return sub_markets
 
