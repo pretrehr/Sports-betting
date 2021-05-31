@@ -249,7 +249,7 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
     Affichage de la répartition des mises
     """
     opponents = []
-    is_1n2 = sport not in ["tennis", "volleyball", "basketball", "nba"]
+    is_1n2 = get_nb_outcomes(sport) == 3
     for match in matches:
         opponents_match = match.split(" - ")
         if is_1n2:
