@@ -28,7 +28,7 @@ def test_parsing():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
-    name_competition = random.choice(names)
+#     name_competition = random.choice(names)
     name_competition = "Euro 2021"
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sb.ODDS) > 0
@@ -49,7 +49,7 @@ def test_parsing_chromedriver():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
-    name_competition = random.choice(names)
+#     name_competition = random.choice(names)
     name_competition = "Euro 2021"
     print(name_competition)
     parse_competitions([name_competition], "football", "joa")
@@ -72,7 +72,7 @@ def test_parsing_token():
             for link in line.findParent().find_all(["a"]):
                 names.append(link.text.strip())
             break
-    name_competition = random.choice(names)
+#     name_competition = random.choice(names)
     name_competition = "Euro 2021"
     print(name_competition)
     parse_competitions([name_competition], "football", "bwin", "parionssport")
