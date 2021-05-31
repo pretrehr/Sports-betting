@@ -164,4 +164,5 @@ def get_sub_markets_players_basketball_unibet(id_match):
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(1.01)
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
+    return sub_markets
 
