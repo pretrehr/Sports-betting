@@ -2,6 +2,7 @@
 Winamax odds scraper
 """
 
+from collections import defaultdict
 import datetime
 import json
 import urllib
@@ -9,10 +10,12 @@ import urllib.error
 import urllib.request
 
 from bs4 import BeautifulSoup
-from collections import defaultdict
 
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+from sportsbetting.database_functions import (
+    is_player_in_db, add_player_to_db, is_player_added_in_db,
+    add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+)
 
 def parse_winamax(url):
     """
@@ -74,12 +77,14 @@ def parse_winamax(url):
     raise sb.UnavailableSiteException
 
 def get_sub_markets_players_basketball_winamax(id_match):
+    """
+    Get submarkets odds from basketball match
+    """
     if not id_match:
         return {}
     url = 'https://www.winamax.fr/paris-sportifs/match/' + id_match
     try:
-        req = urllib.request.Request(url,
-        headers={'User-Agent': sb.USER_AGENT})
+        req = urllib.request.Request(url, headers={'User-Agent': sb.USER_AGENT})
         webpage = urllib.request.urlopen(req, timeout=10).read()
         soup = BeautifulSoup(webpage, features='lxml')
     except urllib.error.HTTPError:
@@ -93,6 +98,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
         '4969':'Rebonds',
         '4442':'Points',
         '4968':'Points',
+        '4434':'3 Points',
         '4433':'3 Points',
         '4432':'3 Points',
         '5423':'Points + rebonds',
@@ -118,6 +124,9 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 ref_player = get_formatted_name_by_id(id_team[0])
             limit = bet['specialBetValue'].split("sbv=")[-1].replace(",", ".")
             is_3_pts = bet['marketId'] in [9021, 9022]
+            if bet["marketId"] == 9020:
+                ref_player = "Match"
+                is_3_pts = True
             id_outcomes = bet['outcomes']
             for id_outcome in id_outcomes:
                 odd = dict_matches['odds'][str(id_outcome)]
@@ -134,7 +143,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
                         add_player_to_db(player, "winamax")
                     else:
                         if sb.DB_MANAGEMENT:
-                            print(player, "winamax")
+                            print("nouveau joueur : ", player, "winamax")
                             add_new_player_to_db(player)
                         else:
                             continue
@@ -147,7 +156,6 @@ def get_sub_markets_players_basketball_winamax(id_match):
                 sub_markets[key_market][key_player]["odds"]["winamax"].append(odd)
                 if key_market == "Points":
                     sub_markets[key_market][key_player]["odds"]["winamax"].append(1.01)
-    
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
     return dict(sub_markets)

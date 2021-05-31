@@ -2,6 +2,7 @@
 ZeBet odds scraper
 """
 
+from collections import defaultdict
 import datetime
 import re
 import urllib
@@ -9,7 +10,6 @@ import urllib.error
 import urllib.request
 
 from bs4 import BeautifulSoup
-from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db
@@ -53,7 +53,6 @@ def parse_zebet(url):
         elif "href" in line.attrs and "/fr/event/" in line["href"]:
             match_id = line["href"].split("-")[0].split("/")[-1]
             match_odds_hash[match]['id'] = {"zebet": match_id}
-            
     return match_odds_hash
 
 
@@ -112,6 +111,9 @@ def format_zebet_names(match):
 
 
 def get_sub_markets_players_basketball_zebet(id_match):
+    """
+    Get submarkets odds from basketball match
+    """
     if not id_match:
         return {}
     url = 'https://www.zebet.fr/fr/event/' + id_match + '-'
@@ -168,8 +170,6 @@ def get_sub_markets_players_basketball_zebet(id_match):
                     sub_markets[key_market][key_player]["odds"]["zebet"].append(odd)
                 if len(sub_markets[key_market][key_player]["odds"]["zebet"]) > 2:
                     del sub_markets[key_market][key_player]["odds"]["zebet"][last]
-    
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
-    
     return sub_markets

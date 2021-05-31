@@ -2,18 +2,20 @@
 Betclic odds scraper
 """
 
+from collections import defaultdict
 import datetime
-import json
 import re
-import urllib
 
 import dateutil.parser
+import requests
 
-from collections import defaultdict
 
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_close_player_to_db
+from sportsbetting.database_functions import (
+    is_player_in_db, add_player_to_db, is_player_added_in_db,
+    add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+)
 
 def parse_betclic_api(id_league):
     """
@@ -21,8 +23,8 @@ def parse_betclic_api(id_league):
     """
     url = ("https://offer.cdn.betclic.fr/api/pub/v2/competitions/{}?application=2&countrycode=fr"
            "&fetchMultipleDefaultMarkets=true&language=fr&sitecode=frfr".format(id_league))
-    content = urllib.request.urlopen(url).read()
-    parsed = json.loads(content)
+    req = requests.get(url)
+    parsed = req.json()
     odds_match = {}
     if (not parsed) or "unifiedEvents" not in parsed:
         return odds_match
@@ -70,8 +72,8 @@ def parse_sport_betclic(id_sport):
     """
     url = ("https://offer.cdn.betclic.fr/api/pub/v2/sports/{}?application=2&countrycode=fr&language=fr&sitecode=frfr"
            .format(id_sport))
-    content = urllib.request.urlopen(url).read()
-    parsed = json.loads(content)
+    req = requests.get(url)
+    parsed = req.json()
     list_odds = []
     competitions = parsed["competitions"]
     for competition in competitions:
@@ -81,25 +83,33 @@ def parse_sport_betclic(id_sport):
 
 
 def get_sub_markets_players_basketball_betclic(id_match):
+    """
+    Get submarket odds from basketball match
+    """
     if not id_match:
         return {}
-    url = 'https://offer.cdn.betclic.fr/api/pub/v4/events/{}?application=2&countrycode=fr&language=fr&sitecode=frfr'.format(str(id_match))
-    content = urllib.request.urlopen(url).read()
-    parsed = json.loads(content)
+    url = (
+        'https://offer.cdn.betclic.fr/api/pub/v4/events/{}?application=2&'
+        'countrycode=fr&language=fr&sitecode=frfr'.format(str(id_match))
+    )
+    req = requests.get(url)
+    parsed = req.json()
     if not parsed:
         return {}
     markets = parsed['markets']
-    markets_to_keep = {'Bkb_Ppf2':'Points + passes + rebonds',  'Bkb_Pta2':'Passes', 
-    'Bkb_Ptr2':'Rebonds', 
-    'Bkb_PnA':'Points + passes', 
-    'Bkb_PnR':'Points + rebonds', 
-    'Bkb_AeR':'Passes + rebonds',
-    'Bkb_20p':'Points', 'Bkb_25p':'Points', 'Bkb_30p':'Points', 'Bkb_35p':'Points', 'Bkb_40p':'Points'}
+    markets_to_keep = {
+        'Bkb_Ppf2':'Points + passes + rebonds', 'Bkb_Pta2':'Passes',
+        'Bkb_Ptr2':'Rebonds', 'Bkb_PnA':'Points + passes',
+        'Bkb_PnR':'Points + rebonds', 'Bkb_AeR':'Passes + rebonds',
+        'Bkb_20p':'Points', 'Bkb_25p':'Points', 'Bkb_30p':'Points',
+        'Bkb_35p':'Points', 'Bkb_40p':'Points', 'BKB_3pt':'3 Points'
+    }
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market in markets:
         if market['mtc'] not in markets_to_keep:
             continue
         is_points_market = market['mtc'][-1] == 'p'
+        is_3_points = market['mtc'] == "BKB_3pt"
         selections = market['selections']
         odds_market = {}
         for selection in selections:
@@ -108,26 +118,26 @@ def get_sub_markets_players_basketball_betclic(id_match):
                 limit = str(int(market['mtc'].strip("Bkb_").strip('p'))-0.5)
             else:
                 limit = selection['name'].split(' de ')[(-1)].replace(",", ".")
-            player = re.split('\\s\\+\\s|\\s\\-\\s', selection['name'].replace(".", " "))[0].strip()
-            ref_player = player
-            if is_player_added_in_db(player, "betclic"):
-                ref_player = is_player_added_in_db(player, "betclic")
-            elif is_player_in_db(player):
-                add_player_to_db(player, "betclic")
-            elif add_close_player_to_db(player, "betclic"):
-                ref_player = is_player_added_in_db(player, "betclic")
+            if is_3_points:
+                ref_player = "Match"
             else:
-                if sb.DB_MANAGEMENT:
-                    print(player, "betclic")
-                continue
+                player = re.split('\\s\\+\\s|\\s\\-\\s', selection['name'].replace(".", " "))[0].strip()
+                ref_player = player
+                if is_player_added_in_db(player, "betclic"):
+                    ref_player = is_player_added_in_db(player, "betclic")
+                elif is_player_in_db(player):
+                    add_player_to_db(player, "betclic")
+                elif add_close_player_to_db(player, "betclic"):
+                    ref_player = is_player_added_in_db(player, "betclic")
+                else:
+                    if sb.DB_MANAGEMENT:
+                        print(player, "betclic")
+                    continue
             key_player = ref_player + "_" + limit
             if key_player not in odds_market:
                 odds_market[key_player] = {"odds":{"betclic":[]}}
             odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(selection['odds'])
             if is_points_market:
                 odds_market[ref_player + "_" + limit]["odds"]["betclic"].append(1.01)
-            
-    
         sub_markets[markets_to_keep[market['mtc']]] = {**dict(odds_market), **sub_markets[markets_to_keep[market['mtc']]]}
-    
-    return sub_markets
+

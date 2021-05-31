@@ -2,13 +2,12 @@
 ParionsSport odds scraper
 """
 
+from collections import defaultdict
 import datetime
-import json
 import os
 import re
-import urllib
 
-from collections import defaultdict
+import requests
 import seleniumwire
 
 
@@ -60,9 +59,8 @@ def parse_parionssport_match_basketball(id_match):
     """
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
            "&showPromotions=true".format(id_match))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
-    content = urllib.request.urlopen(req).read()
-    parsed = json.loads(content)
+    req = requests.get(url, headers={'X-LVS-HSToken': get_parionssport_token()})
+    parsed = req.json()
     items = parsed["items"]
     odds = []
     odds_match = {}
@@ -97,9 +95,8 @@ def parse_parionssport_api(id_league):
     """
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/next/50/{}?originId=3&lineId=1&breakdownEventsIntoDays=true"
            "&eType=G&showPromotions=true".format(id_league))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
-    content = urllib.request.urlopen(req).read()
-    parsed = json.loads(content)
+    req = requests.get(url, headers={'X-LVS-HSToken': get_parionssport_token()})
+    parsed = req.json()
     odds_match = {}
     if "items" not in parsed:
         return odds_match
@@ -119,6 +116,7 @@ def parse_parionssport_api(id_league):
                 odds = parse_parionssport_match_basketball(market["parent"])
                 if odds:
                     odds_match[name] = odds
+                    odds_match[name]["competition"] = competition
         else:
             if not name in odds_match:
                 odds_match[name] = {}
@@ -143,9 +141,8 @@ def parse_sport_parionssport(sport):
         "hockey-sur-glace"  : "ICEH"
     }
     url = "https://www.enligne.parionssport.fdj.fr/lvs-api/leagues?sport={}".format(sports_alias[sport])
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
-    content = urllib.request.urlopen(req).read()
-    competitions = json.loads(content)
+    req = requests.get(url, headers={'X-LVS-HSToken': get_parionssport_token()})
+    competitions = req.json()
     list_odds = []
     for competition in competitions:
         for id_competition in competition["items"]:
@@ -184,9 +181,8 @@ def get_sub_markets_players_basketball_parionssport(id_match):
         return {}
     url = ("https://www.enligne.parionssport.fdj.fr/lvs-api/ff/{}?originId=3&lineId=1&showMarketTypeGroups=true&ext=1"
            "&showPromotions=true".format(id_match))
-    req = urllib.request.Request(url, headers={'X-LVS-HSToken': get_parionssport_token()})
-    content = urllib.request.urlopen(req).read()
-    parsed = json.loads(content)
+    req = requests.get(url, headers={'X-LVS-HSToken': get_parionssport_token()})
+    parsed = req.json()
     items = parsed["items"]
     markets_to_keep = {
         'Performance du Joueur - Total Passes décisives':'Passes',

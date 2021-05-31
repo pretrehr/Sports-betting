@@ -24,13 +24,15 @@ async def get_json_pasinobet_api(id_league, barriere):
         await websocket.send(json.dumps(data))
         response = await websocket.recv()
         data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
-                '"game":["id", "start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                '"game":["id", "is_blocked", "start_ts","team1_name","team2_name","is_started"],'
+                '"market":["event"],"event":["price","order"]},'
                 '"where":{"competition":{"id":'+str(id_league)+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
                 '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}}}}')
         await websocket.send(data)
         response = await websocket.recv()
         parsed = json.loads(response)
         return parsed
+
 
 
 async def get_json_sport_pasinobet_api(sport, barriere):
@@ -40,7 +42,7 @@ async def get_json_sport_pasinobet_api(sport, barriere):
     site_id = "1869622" if barriere else "599"
     async with websockets.connect('wss://swarm-2.vbet.fr/', ssl=ssl.SSLContext(protocol=ssl.PROTOCOL_TLS)) as websocket:
         data = {"command":"request_session",
-                "params":{"language":"fra", "site_id":"599"}}
+                "params":{"language":"fra", "site_id":site_id}}
         await websocket.send(json.dumps(data))
         response = await websocket.recv()
         data = {"command":"get",
@@ -57,7 +59,8 @@ async def get_json_sport_pasinobet_api(sport, barriere):
             if "Compétition" in league["name"]:
                 continue
             data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
-                    '"game":["id", "start_ts","team1_name","team2_name","is_started"],"market":["event"],"event":["price","order"]},'
+                    '"game":["id", "is_blocked", "start_ts","team1_name","team2_name","is_started"],'
+                    '"market":["event"],"event":["price","order"]},'
                     '"where":{"competition":{"id":'+str(league["id"])+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
                     '{"visible_in_prematch":1,"type":1}]},"market":{"display_key":"WINNER", "type":{"@in":["P1P2", "P1XP2"]}}'
                     '}}}}')
@@ -82,9 +85,11 @@ def get_odds_from_league_json(parsed_league, barrierebet):
         for game in games.values():
             if "is_started" in game and game["is_started"]:
                 continue
+            if "is_blocked" in game and game["is_blocked"]:
+                continue
             if not game.get("team1_name") or not game.get("team2_name"):
                 continue
-            id = str(game["id"])
+            match_id = str(game["id"])
             name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
             date = datetime.datetime.fromtimestamp(game["start_ts"])
             markets = game["market"]
@@ -94,7 +99,7 @@ def get_odds_from_league_json(parsed_league, barrierebet):
                     odds.append(event["price"])
             if reversed_odds:
                 name, odds = reverse_match_odds(name, odds)
-            odds_league[name] = {"date":date, "odds":{bookmaker:odds}, "id":{bookmaker:id}}
+            odds_league[name] = {"date":date, "odds":{bookmaker:odds}, "id":{bookmaker:match_id}}
     return odds_league
 
 

@@ -22,14 +22,14 @@ def parse_france_pari(url):
     date = ""
     match = ""
     date_time = None
-    id = None
+    id_match = None
     for line in soup.find_all():
         if "class" in line.attrs and "date" in line["class"]:
             date = line.text + year
         elif "class" in line.attrs and "odd-event-block" in line["class"]:
             strings = list(line.stripped_strings)
             if "snc-odds-date-lib" in line["class"]:
-                id = line.findChild("a" , recursive=True).get("href").split("-")[0].split("/")[-1]
+                id_match = line.findChild("a", recursive=True).get("href").split("-")[0].split("/")[-1]
                 hour = strings[0]
                 try:
                     i = strings.index("/")
@@ -55,7 +55,7 @@ def parse_france_pari(url):
                         match_odds_hash[match] = {}
                         match_odds_hash[match]['odds'] = {"france_pari": odds}
                         match_odds_hash[match]['date'] = date_time
-                        match_odds_hash[match]['id'] = {"france_pari": id}
+                        match_odds_hash[match]['id'] = {"france_pari": id_match}
                 except UnboundLocalError:
                     pass
     if not match_odds_hash:

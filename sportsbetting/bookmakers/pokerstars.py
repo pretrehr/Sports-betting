@@ -3,7 +3,6 @@ Pokerstars odds scraper
 """
 
 import datetime
-import json
 import random
 import re
 import requests
@@ -15,9 +14,14 @@ def parse_pokerstars_api(id_league):
     """
     Get pokerstars odds from league id
     """
-    url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getCompetitionEvents?competitionId={}"
-           "&marketTypes=SOCCER%3AFT%3AAXB%2CMRES,BASKETBALL%3AFTOT%3AML,AB,RUGBYUNION%3AFT%3AMRES,HANDBALL%3AFT%3AMRES,"
-           "ICEHOCKEY%3AFT%3AAXB&includeOutrights=false&channelId=11&locale=fr-fr&siteId=32&foo={}".format(id_league, str(random.random())[2:10]))
+    url = (
+        "https://sports.pokerstarssports.fr/sportsbook/v1/api/"
+        "getCompetitionEvents?competitionId={}&"
+        "marketTypes=SOCCER%3AFT%3AAXB%2CMRES,BASKETBALL%3AFTOT%3AML,AB,"
+        "RUGBYUNION%3AFT%3AMRES,HANDBALL%3AFT%3AMRES,ICEHOCKEY%3AFT%3AAXB&"
+        "includeOutrights=false&channelId=11&locale=fr-fr&siteId=32&foo={}"
+        .format(id_league, str(random.random())[2:10])
+    )
     req = requests.get(url)
     if req.status_code == 503:
         raise sb.UnavailableSiteException
@@ -74,8 +78,12 @@ def parse_sport_pokerstars(sport):
     """
     Get pokerstars odds from sport
     """
-    url = ("https://sports.pokerstarssports.fr/sportsbook/v1/api/getSportTree?sport={}&includeOutrights=false"
-           "&includeEvents=false&includeCoupons=true&channelId=11&locale=fr-fr&siteId=32&foo={}".format(sport.upper(), str(random.random())[2:10]))
+    url = (
+        "https://sports.pokerstarssports.fr/sportsbook/v1/api/getSportTree?"
+        "sport={}&includeOutrights=false&includeEvents=false&"
+        "includeCoupons=true&channelId=11&locale=fr-fr&siteId=32&foo={}"
+        .format(sport.upper(), str(random.random())[2:10])
+    )
     req = requests.get(url)
     if req.status_code == 503:
         raise sb.UnavailableSiteException

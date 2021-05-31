@@ -2,14 +2,17 @@
 Unibet odds scraper
 """
 
+from collections import defaultdict
 import datetime
 import json
+
 import requests
 
-from collections import defaultdict
-
 import sportsbetting as sb
-from sportsbetting.database_functions import is_player_in_db, add_player_to_db, is_player_added_in_db, add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+from sportsbetting.database_functions import (
+    is_player_in_db, add_player_to_db, is_player_added_in_db,
+    add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+)
 
 def get_id_league(url):
     """
@@ -65,7 +68,12 @@ def parse_unibet_api(id_league, sport, boost):
                         price_up = int(selection["currentPriceUp"])
                         price_down = int(selection["currentPriceDown"])
                         odds.append(round(price_up / price_down + 1, 2))
-                    odds_match[name] = {"date":date, "odds":{site_name:odds}, "id":{"unibet":event["eventId"]}, "competition":event["competitionName"]}
+                    odds_match[name] = {
+                        "date":date,
+                        "odds":{site_name:odds},
+                        "id":{"unibet":event["eventId"]},
+                        "competition":event["competitionName"]
+                    }
     return odds_match
 
 def parse_unibet(url, boost=False):
@@ -80,24 +88,31 @@ def parse_unibet(url, boost=False):
 
 
 def get_sub_markets_players_basketball_unibet(id_match):
+    """
+    Get submarkets odds from basketball match
+    """
     if not id_match:
         return {}
     url = 'https://www.unibet.fr/zones/event.json?eventId=' + id_match
     content = requests.get(url).content
     parsed = json.loads(content)
     markets_class_list = parsed.get('marketClassList', [])
-    markets_to_keep = {'Performance du Joueur (Points + Rebonds + Passes)':'Points + passes + rebonds',  'Nombre de passes du joueur':'Passes', 
-    'Nombre de rebonds du joueur':'Rebonds', 
-    'Performance du Joueur (Points + Passes)':'Points + passes', 
-    'Performance du Joueur (Points + Rebonds)':'Points + rebonds',
-    'Performance du Joueur (Passes + Rebonds)':'Passes + rebonds',
-    "Joueur marquant 20 points ou plus":"Points",
-    "Joueur marquant 25 points ou plus":"Points",
-    "Joueur marquant 30 points ou plus":"Points",
-    "Joueur marquant 35 points ou plus":"Points",
-    "Joueur marquant 40 points ou plus":"Points",
-    "Equipe à domicile - Nombre de 3 points marqués":"3 Points",
-    "Equipe à l'exterieur - Nombre de 3 points marqués":"3 Points"}
+    markets_to_keep = {
+        'Performance du Joueur (Points + Rebonds + Passes)':'Points + passes + rebonds',
+        'Nombre de passes du joueur':'Passes',
+        'Nombre de rebonds du joueur':'Rebonds',
+        'Performance du Joueur (Points + Passes)':'Points + passes',
+        'Performance du Joueur (Points + Rebonds)':'Points + rebonds',
+        'Performance du Joueur (Passes + Rebonds)':'Passes + rebonds',
+        "Joueur marquant 20 points ou plus":"Points",
+        "Joueur marquant 25 points ou plus":"Points",
+        "Joueur marquant 30 points ou plus":"Points",
+        "Joueur marquant 35 points ou plus":"Points",
+        "Joueur marquant 40 points ou plus":"Points",
+        "Equipe à domicile - Nombre de 3 points marqués":"3 Points",
+        "Equipe à l'exterieur - Nombre de 3 points marqués":"3 Points",
+        "Nombre total de 3 pts marqués dans le match":"3 Points"
+    }
     sub_markets = {v:defaultdict(list) for v in markets_to_keep.values()}
     for market_class_list in markets_class_list:
         market_name = market_class_list['marketName']
@@ -105,10 +120,16 @@ def get_sub_markets_players_basketball_unibet(id_match):
             continue
         markets = market_class_list['marketList']
         for market in markets:
-            id_team = is_in_db_site(market.get("event{}Name".format(market["marketType"].split(" - ")[0].replace(" ", ""))), "basketball", "unibet")
+            team_name = market.get("event{}Name".format(market["marketType"]
+                                                        .split(" - ")[0]
+                                                        .replace(" ", "")))
+            id_team = is_in_db_site(team_name, "basketball", "unibet")
             if id_team:
                 ref_player = get_formatted_name_by_id(id_team[0])
-            is_3_pts = "Nombre de 3 points marqués" in market["marketName"]
+            is_3_pts = "3 points marqués" in market["marketName"]
+            if "3 pts marqués" in market["marketName"]:
+                ref_player = "Match"
+                is_3_pts = True
             selections = market['selections']
             for selection in selections:
                 price_up = int(selection['currentPriceUp'])
@@ -141,8 +162,6 @@ def get_sub_markets_players_basketball_unibet(id_match):
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(odd)
                 if key_market == "Points":
                     sub_markets[key_market][key_player]["odds"]["unibet"].append(1.01)
-    
     for sub_market in sub_markets:
         sub_markets[sub_market] = dict(sub_markets[sub_market])
-    
-    return sub_markets
+
