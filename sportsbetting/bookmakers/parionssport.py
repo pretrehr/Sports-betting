@@ -108,6 +108,8 @@ def parse_parionssport_api(id_league):
         market = items[odd["parent"]]
         if not market["style"] in ["WIN_DRAW_WIN", "TWO_OUTCOME_LONG"]:
             continue
+        if not market["desc"] in ["1 N 2", "Face à Face"]:
+            continue
         event = items[market["parent"]]
         name = event["a"] + " - " + event["b"]
         competition = event["path"]["Category"] + " - " + event["path"]["League"]
