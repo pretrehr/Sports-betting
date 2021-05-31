@@ -59,8 +59,10 @@ def parse_netbet(url):
     date_time = None
     valid_match = True
     for line in soup.find_all():
-        if sport and "class" in line.attrs and "nb-link-event" in line["class"] and "href" in line.attrs:
-            valid_match = sport+"/" in line["href"]
+        if "class" in line.attrs and "nb-link-event" in line["class"] and "href" in line.attrs:
+            if sport:
+                valid_match = sport+"/" in line["href"]
+            link = line["href"]
         if "class" in line.attrs and "nb-event_datestart" in line["class"]:
             date = list(line.stripped_strings)[0] + year
             if "Auj." in date:
@@ -92,6 +94,7 @@ def parse_netbet(url):
                     match_odds_hash[match] = {}
                     match_odds_hash[match]['odds'] = {"netbet": odds}
                     match_odds_hash[match]['date'] = date_time
+                    match_odds_hash[match]['id'] = {"netbet": link}
             except ValueError:  # match live (cotes non disponibles)
                 pass
     return match_odds_hash

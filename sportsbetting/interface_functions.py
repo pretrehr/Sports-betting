@@ -849,6 +849,8 @@ def get_url_by_id(bookmaker, id_match, sport):
         return "https://orbitxch.com/customer/sport/event/{}".format(id_match)
     if bookmaker == "betway":
         return "https://www.betway.fr/evenement/{}".format(id_match)
+    if bookmaker == "netbet":
+        return "https://www.netbet.fr" + id_match
     if bookmaker in ["barrierebet", "pasinobet"]:
         sports = {"football":"Soccer", "tennis":"Tennis", "rugby":"RugbyUnion",
                   "handball":"Handball", "hockey-sur-glace":"IceHockey",
