@@ -13,8 +13,8 @@ import requests
 import sportsbetting as sb
 from sportsbetting.auxiliary_functions import merge_dicts, truncate_datetime
 from sportsbetting.database_functions import (
-    is_player_in_db, add_player_to_db, is_player_added_in_db,
-    add_new_player_to_db, is_in_db_site, get_formatted_name_by_id
+    is_player_in_db, add_close_player_to_db, add_player_to_db, is_player_added_in_db,
+    is_in_db_site, get_formatted_name_by_id
 )
 
 def parse_betclic_api(id_league):
