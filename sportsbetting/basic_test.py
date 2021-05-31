@@ -29,6 +29,7 @@ def test_parsing():
                 names.append(link.text.strip())
             break
     name_competition = random.choice(names)
+    name_competition = "Euro 2021"
     parse_competitions([name_competition], "football", "pmu", "winamax")
     assert len(sb.ODDS) > 0
     sb.TEST = False
@@ -49,6 +50,7 @@ def test_parsing_chromedriver():
                 names.append(link.text.strip())
             break
     name_competition = random.choice(names)
+    name_competition = "Euro 2021"
     print(name_competition)
     parse_competitions([name_competition], "football", "joa")
     sb.selenium_init.DRIVER["joa"].quit()
@@ -71,6 +73,7 @@ def test_parsing_token():
                 names.append(link.text.strip())
             break
     name_competition = random.choice(names)
+    name_competition = "Euro 2021"
     print(name_competition)
     parse_competitions([name_competition], "football", "bwin", "parionssport")
     sb.TEST = False
