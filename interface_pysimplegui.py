@@ -69,6 +69,7 @@ nb_bookmakers = len(sb.BOOKMAKERS)
 
 
 # All the stuff inside your window.
+sg.change_look_and_feel('LightGrey1')
 sg.set_options(enable_treeview_869_patch=False)
 parsing_layout = [
     [
@@ -512,7 +513,7 @@ surebets_layout = [
 
 values_layout = [
     [
-        sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_VALUES")],
+        sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_VALUES", enable_events=True)],
                    [sg.Text("Value minimale", size=(12, 1)), sg.InputText(key='RATE_VALUES', size=(6, 1), default_text="20"), sg.Text("%", size=(3, 1))],
                    [sg.Text("TRJ minimal", size=(12, 1)), sg.InputText(key='TRJ_VALUES', size=(6, 1), default_text="95"), sg.Text("%", size=(3, 1))],
                    [sg.Button("Chercher", key="FIND_VALUES")],
@@ -655,12 +656,11 @@ while True:
                 window["START_PARSING"].update(visible=True)
                 window["START_ALL_PARSING"].update(visible=True)
                 window["PARTIAL_PARSING"].update(visible=True)
-                window['SUREBET_PARSING'].update("Recherche de surebet en cours", text_color="white", visible=sb.BETA)
                 sports_with_surebet = get_sports_with_surebet()
                 if sports_with_surebet:
-                    window['SUREBET_PARSING'].update("Surebet disponible ({})".format(", ".join(sports_with_surebet)), text_color="red")
+                    window['SUREBET_PARSING'].update("Surebet disponible ({})".format(", ".join(sports_with_surebet)), text_color="red", visible=sb.BETA)
                 else:
-                    window['SUREBET_PARSING'].update("Aucun surebet")
+                    window['SUREBET_PARSING'].update("Aucun surebet", text_color="black", visible=sb.BETA)
                 get_best_conversion_rates_freebet(window)
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
@@ -716,6 +716,7 @@ while True:
     try:
         if not thread_perf.is_alive():
             window["PROGRESS_PERF"].update(0, 100, visible=False)
+            window["FIND_PERF"].update(visible=True)
             thread_perf = None
         else:
             window["PROGRESS_PERF"].update(ceil(sb.PROGRESS), 100)
@@ -998,7 +999,7 @@ while True:
         find_surebets_interface(window, values)
     elif event == "MATCHES_SUREBETS":
         odds_match_surebets_interface(window, values)
-    elif event == "FIND_VALUES":
+    elif event in ["FIND_VALUES", "SPORT_VALUES"]:
         find_values_interface(window, values)
     elif event == "MATCHES_VALUES":
         odds_match_values_interface(window, values)
@@ -1006,7 +1007,7 @@ while True:
         def perf_thread():
             find_perf_players(window, values)
 
-
+        window["FIND_PERF"].update(visible=False)
         thread_perf = threading.Thread(target=perf_thread)
         thread_perf.start()
         window["PROGRESS_PERF"].update(0, 100, visible=True)

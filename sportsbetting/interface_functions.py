@@ -927,7 +927,10 @@ def display_middle_info(window, values):
     up, market = up_market.split(".5 ")
     up += ".5 "
     trj, bookmakers, best_odds = trj_match(sb.MIDDLES[player_down_up_market])
-    mean = (float(up)*best_odds[1] + float(down)*best_odds[0])/(best_odds[0] + best_odds[1])
+    if market == "Points":
+        mean = float(up)
+    else:
+        mean = (float(up) + float(down))/2
     proba = 0
     for i in range(int(float(down)+1), int(float(up)+1)):
         proba += scipy.stats.poisson.pmf(i, mean)
@@ -946,7 +949,7 @@ def display_middle_info(window, values):
     window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(up, best_odds[1], bookmakers[1]))
     window["TRJ_PERF"].update("TRJ : {}%".format(trj))
     window["PROBA_MIDDLE_PERF"].update("Probabilité de middle : {} %".format(proba))
-    window["SUM_MIDDLE_PERF"].update("TRJ + proba : {} %".format(trj + proba), text_color="red" if trj+proba>100 else "white")
+    window["SUM_MIDDLE_PERF"].update("TRJ + proba : {} %".format(trj + proba), text_color="red" if trj+proba>100 else "black")
 
 def sort_middle_gap(window, values):
     if not sb.MIDDLES:
@@ -969,12 +972,17 @@ def sort_middle_proba(window, values):
     if not sb.MIDDLES:
         return
     def get_gap_proba(key):
-        gap = key.split(" / ")[1]
-        limit1, limit2 = gap.split()[:3:2]
+        _, down_up_market = key.split(" / ")
+        down, up_market = down_up_market.split(" - ")
+        up, market = up_market.split(".5 ")
+        up += ".5 "
         trj, _, best_odds = trj_match(sb.MIDDLES[key])
-        mean = (float(limit2)*best_odds[1] + float(limit1)*best_odds[0])/(best_odds[0] + best_odds[1])
+        if market == "Points":
+            mean = float(up)
+        else:
+            mean = (float(up) + float(down))/2
         proba = 0
-        for i in range(int(float(limit1)+1), int(float(limit2)+1)):
+        for i in range(int(float(down)+1), int(float(up)+1)):
             proba += scipy.stats.poisson.pmf(i, mean)
         return proba + trj
     middles = sorted(sb.MIDDLES.keys(), key=get_gap_proba, reverse=True)
