@@ -44,6 +44,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 PATH_SITES = os.path.dirname(sb.__file__) + "/resources/sites.json"
+PATH_THEME = os.path.dirname(sb.__file__) + "/resources/theme.txt"
 
 print(r"""
    _____                  __             __         __  __  _            
@@ -69,7 +70,15 @@ nb_bookmakers = len(sb.BOOKMAKERS)
 
 
 # All the stuff inside your window.
-sg.change_look_and_feel('LightGrey1')
+theme = "DarkBlue3"
+if not os.path.exists(PATH_THEME):
+    with open(PATH_THEME, "a+") as file:
+        file.write(theme)
+else:
+    with open(PATH_THEME, "r") as file:
+        theme = file.readlines()[0].strip()
+sg.change_look_and_feel(theme)
+
 sg.set_options(enable_treeview_869_patch=False)
 parsing_layout = [
     [
