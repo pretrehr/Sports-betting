@@ -278,7 +278,10 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                     sites_bet_combinaison[list_sites[i]]["mise"] += list_mises[j][i]
             else:
                 sites_bet_combinaison[list_sites[i]] = {}
-                if i in [rang_freebet, rang_2e_freebet] or uniquement_freebet:
+                if uniquement_freebet:
+                    sites_bet_combinaison[list_sites[i]]["mise freebet"] = list_mises[j][i]
+                    sites_bet_combinaison[list_sites[i]]["cote"] = cotes[list_sites[i]][i]
+                elif i in [rang_freebet, rang_2e_freebet]:
                     sites_bet_combinaison[list_sites[i]]["mise freebet"] = list_mises[j][i]
                     sites_bet_combinaison[list_sites[i]]["cote"] = (cotes[list_sites[i]][i]
                                                                     + (not rang_freebet == i)
