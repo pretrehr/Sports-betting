@@ -17,6 +17,8 @@ def parse_betway(url):
     if url.count("/") < 5:
         return parse_sport_betway(url)
     parsed = str(requests.get(url).content)
+    if "prematch_event_list:" not in parsed or "params:{}}," not in parsed:
+        return {}
     parsed = parsed.split("prematch_event_list:")[-1]
     parsed = parsed.split("params:{}},")[0] + "params:{}}"
     parsed = re.sub("[A-Za-z_$]{1,2}[0-9]?,", '1.01,', parsed)
