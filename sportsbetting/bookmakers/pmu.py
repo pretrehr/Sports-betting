@@ -37,6 +37,8 @@ def parse_pmu_html(soup):
     series = False
     date = ""
     match_id = None
+    is_rugby_13 = False
+    competition = ""
     for line in soup.find_all():
         if "n'est pas accessible pour le moment !" in line.text:
             raise sb.UnavailableSiteException
