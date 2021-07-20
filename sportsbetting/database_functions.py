@@ -231,25 +231,33 @@ def add_id_to_db(_id):
     for line in soup.findAll("a", {"class": "otn"}):
         if str(_id) in line["href"]:
             sport = line["href"].split("/")[1]
+            name, category = line.text, None
+            if " (" in line.text:
+                name, category = line.text.split(" (")
+                category.strip(")")
             conn = sqlite3.connect(sb.PATH_DB)
             c = conn.cursor()
             c.execute("""
-            INSERT INTO names (id, name, sport)
-            VALUES ({}, "{}", "{}")
-            """.format(_id, line.text, sport))
+            INSERT INTO names (id, name, sport, category)
+            VALUES ({}, "{}", "{}", "{}")
+            """.format(_id, name, sport, category))
             conn.commit()
             c.close()
             break
     else:
         if "Aucun évènement n'est programmé pour" in soup.text:
             name = soup.text.split("Aucun évènement n'est programmé pour")[1].split("\n")[0].strip()
+            category = None
+            if " (" in name:
+                name, category = name.split(" (")
+                category = category.strip(")")
             sport = soup.find("div", {"class": "head"}).text.split("(")[-1].strip(")").lower()
             conn = sqlite3.connect(sb.PATH_DB)
             c = conn.cursor()
             c.execute("""
-            INSERT INTO names (id, name, sport)
-            VALUES ({}, "{}", "{}")
-            """.format(_id, name, sport))
+            INSERT INTO names (id, name, sport, category)
+            VALUES ({}, "{}", "{}", "{}")
+            """.format(_id, name, sport, category))
             conn.commit()
             c.close()
 
@@ -317,8 +325,9 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                     "Date du prochain match de l'équipe à ajouter : {}\n"
                                     "Date du prochain match de l'équipe existant dans la db : {}\n"
                                     "Prochaine compétition jouée dans la db : {}\n"
+                                    "Catégorie : {}\n"
                                     .format(formatted_name, _id, site, name, date_next_match,
-                                            date_next_match_db, get_next_competition(_id)))
+                                            date_next_match_db, get_next_competition(_id), get_category(_id)))
                 ans = sb.QUEUE_FROM_GUI.get(True)
             elif not sb.TEST:
                 ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -353,8 +362,9 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
                                         "Date du prochain match de l'équipe à ajouter : {}\n"
                                         "Date du prochain match de l'équipe existant dans la db : {}\n"
                                         "Prochaine compétition jouée dans la db : {}\n"
+                                        "Catégorie : {}\n"
                                         .format(formatted_name, site, name, name_site, date_next_match,
-                                                date_next_match_db, get_next_competition(_id)))
+                                                date_next_match_db, get_next_competition(_id), get_category(_id)))
                     ans = sb.QUEUE_FROM_GUI.get(True)
                 elif not sb.TEST:
                     ans = input("Créer une nouvelle entrée pour {} sur {} "
@@ -363,9 +373,9 @@ def add_name_to_db(_id, name, site, check=False, date_next_match=None, date_next
             if not check or ans in ['y', 'Yes']:
                 if name_site and not is_id_available_for_site(_id, site):
                     c.execute("""
-                    INSERT INTO names (id, name, sport, name_{})
-                    VALUES ({}, "{}", "{}", "{}")
-                    """.format(site, _id, formatted_name, sport, name))
+                    INSERT INTO names (id, name, sport, category, name_{})
+                    VALUES ({}, "{}", "{}", "{}", "{}")
+                    """.format(site, _id, formatted_name, sport, get_category(_id), name))
                 else:
                     c.execute("""
                     UPDATE names
@@ -626,6 +636,21 @@ def get_next_competition(id_team):
             return
     return
 
+def get_category(id_team):
+    """
+    Retourne la catégorie d'une équipe
+    """
+    conn = sqlite3.connect(sb.PATH_DB)
+    c = conn.cursor()
+    c.execute("""
+    SELECT category FROM names WHERE id={}
+    """.format(id_team))
+    category = c.fetchone()
+    if category:
+        return category[0]
+    return ""
+    
+
 def is_matching_next_match(id_competition, id_team, name_team, matches):
     try:
         date_next_match = sorted([matches[x] for x in matches.keys() if name_team in x.split(" - ")],
@@ -865,20 +890,23 @@ def is_id_consistent(_id):
     list_sites = sb.BOOKMAKERS
     out = True
     for i in range(n):
-        if not(any(results[i][3:])):
+        if "None" in results[i]:
+            print("None", _id)
+            out = False
+        if not(any(results[i][4:])):
             print("Ligne vide", _id)
             out = False
-    for j in range(3, len(results[0])):
+    for j in range(4, len(results[0])):
         null = False
         previous = None
         for i in range(n):
             if results[i][j] and results[i][j] == previous:
-                print("Valeurs identiques", _id, previous, list_sites[j-3])
+                print("Valeurs identiques", _id, previous, list_sites[j-4])
                 out = False
             elif not null and not results[i][j]:
                 null = True
             elif i>0 and not previous and results[i][j]:
-                print("Valeurs alternées", _id, list_sites[j-3])
+                print("Valeurs alternées", _id, list_sites[j-4])
                 out = False
             previous = results[i][j]
     return out
@@ -933,8 +961,6 @@ def get_close_player_name(name, site):
     elif "  " in name:
         split_name = name.split("(")[0].split("  ")
     else:
-        if sb.DB_MANAGEMENT:
-            print(name)
         return results
     if len(split_name) == 2 and len(split_name[0]) == 1:
         init_first_name = split_name[0]
