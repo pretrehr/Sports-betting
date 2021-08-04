@@ -645,11 +645,11 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
                     if odds[0] == "unibet_boost":
                         continue
                     for i in range(n):
-                        if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.1 or odds[0] == "pmu"):
+                        if odds[1][i] > best_odds[i] and (odds[1][i] >= 1.05 or odds[0] == "pmu"):
                             best_odds[i] = odds[1][i]
                             best_sites[i] = odds[0]
             for odd_i, site_i in zip(best_odds, best_sites):
-                if odd_i < 1.1 and site_i != "pmu":
+                if odd_i < 1.05 and site_i != "pmu":
                     break
             else:
                 for i in range(n):
