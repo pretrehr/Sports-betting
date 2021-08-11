@@ -167,6 +167,9 @@ def best_match_under_conditions_interface(window, values):
             window["ODDS_UNDER_CONDITION"].update(odds_table(what_was_printed), visible=True)
             window["RESULT_UNDER_CONDITION"].update(stakes(what_was_printed), visible=True)
             window["TEXT_UNDER_CONDITION"].update(visible=True)
+            for i in range(5):
+                window["INDICATORS_UNDER_CONDITION" + str(i)].update(visible=False)
+                window["RESULTS_UNDER_CONDITION" + str(i)].update(visible=False)
             for i, elem in enumerate(indicators(what_was_printed)):
                 window["INDICATORS_UNDER_CONDITION" + str(i)].update(elem[0].capitalize(),
                                                                      visible=True)
