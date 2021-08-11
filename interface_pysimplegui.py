@@ -40,7 +40,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
                                                find_values_interface, odds_match_values_interface,
                                                open_bookmaker_odds, find_perf_players, display_middle_info, search_perf,
                                                display_surebet_info, best_match_miles_interface, sort_middle_gap, sort_middle_trj,
-                                               sort_middle_proba, get_best_conversion_rates_freebet, compute_odds)
+                                               sort_middle_proba, get_best_conversion_rates_freebet, compute_odds, calculator_interface)
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 PATH_SITES = os.path.dirname(sb.__file__) + "/resources/sites.json"
@@ -63,7 +63,7 @@ except FileNotFoundError:
 HEIGHT_FIELD_SIMPLE     = 10
 HEIGHT_FIELD_GAGNANT    = 12
 HEIGHT_FIELD_COMBINE    = 18
-LENGTH_FIELD            = 120
+LENGTH_FIELD            = 160
 
 sb.DB_MANAGEMENT = "--db" in sys.argv
 nb_bookmakers = len(sb.BOOKMAKERS)
@@ -610,6 +610,46 @@ miles_layout = [[sg.Column(column_miles),
                                                font="Consolas 10", visible=False)]])],
                                 ]
 
+visible_calc=2
+calculator_layout = [
+    [sg.Button("Ajouter cote", key="ADD_CALC"), sg.Button("Retirer cote", key="REMOVE_CALC")],
+    [
+        sg.Col([
+            [sg.Text("Site")],
+            *([[sg.InputText(size=(12, 1), key="SITE_CALC_" + str(i), visible=i<visible_calc, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Back")],
+            *([[sg.Radio('', "BACK_LAY_CALC_" + str(i), key="BACK_BACK_LAY_CALC_" + str(i), visible=i<visible_calc, default=True, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Lay")],
+            *([[sg.Radio('', "BACK_LAY_CALC_" + str(i), key="LAY_BACK_LAY_CALC_" + str(i), visible=i<visible_calc, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Cote")],
+            *([[sg.InputText(size=(7, 1), key="ODD_CALC_" + str(i), visible=i<visible_calc, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Commission (%)")],
+            *([[sg.InputText(size=(7, 1), key="COMMISSION_CALC_" + str(i), visible=i<visible_calc, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Intitulé")],
+            *([[sg.InputText(size=(60, 1), key="NAME_CALC_" + str(i), visible=i<visible_calc, enable_events=True)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Mise")],
+            *([[sg.InputText(size=(7, 1), key="STAKE_CALC_" + str(i), visible=i<visible_calc, enable_events=True, disabled=i!=0)] for i in range(9)])
+        ]),
+        sg.Col([
+            [sg.Text("Référence")],
+            *([[sg.Radio('', "REFERENCE_STAKE_CALC", key="REFERENCE_STAKE_CALC_" + str(i), visible=i<2, default=i==0, enable_events=True)] for i in range(9)])
+        ])
+    ],
+    [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_CALC", font="Consolas 10", visible=False)]
+]
+
 
 layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Cotes', odds_layout),
@@ -625,7 +665,8 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Surebets', surebets_layout),
                          sg.Tab('Values', values_layout, visible=sb.BETA),
                          sg.Tab('Perf players', perf_players_layout, visible=sb.BETA),
-                         sg.Tab('Miles', miles_layout, visible=sb.BETA)
+                         sg.Tab('Miles', miles_layout, visible=sb.BETA),
+                         sg.Tab('Calculateur', calculator_layout, visible=sb.BETA),
                          ]])],
           [sg.Button('Quitter', button_color=("white", "red"))]]
 
@@ -1041,6 +1082,54 @@ while True:
             del sb.ODDS[sport_miles[0]][match_miles]
     elif event == "RELOAD_ODDS_MILES":
         sb.ODDS = load_odds(PATH_DATA)
+    elif event == "ADD_CALC":
+        if visible_calc < 9:
+            window["SITE_CALC_" + str(visible_calc)].update(visible=True)
+            window["BACK_BACK_LAY_CALC_" + str(visible_calc)].update(visible=True)
+            window["LAY_BACK_LAY_CALC_" + str(visible_calc)].update(visible=True)
+            window["ODD_CALC_" + str(visible_calc)].update(visible=True)
+            window["COMMISSION_CALC_" + str(visible_calc)].update(visible=True)
+            window["NAME_CALC_" + str(visible_calc)].update(visible=True)
+            window["STAKE_CALC_" + str(visible_calc)].update(visible=True)
+            window["REFERENCE_STAKE_CALC_" + str(visible_calc)].update(visible=True)
+            visible_calc += 1
+    elif event == "REMOVE_CALC":
+        if visible_calc > 2:
+            visible_calc -= 1
+            window["SITE_CALC_" + str(visible_calc)].update(visible=False)
+            window["BACK_BACK_LAY_CALC_" + str(visible_calc)].update(visible=False)
+            window["LAY_BACK_LAY_CALC_" + str(visible_calc)].update(visible=False)
+            window["ODD_CALC_" + str(visible_calc)].update(visible=False)
+            window["COMMISSION_CALC_" + str(visible_calc)].update(visible=False)
+            window["NAME_CALC_" + str(visible_calc)].update(visible=False)
+            window["STAKE_CALC_" + str(visible_calc)].update(visible=False)
+            window["REFERENCE_STAKE_CALC_" + str(visible_calc)].update(visible=False)
+    elif event.startswith("REFERENCE_STAKE_CALC_"):
+        ref_calc = int(event.split("_")[-1])
+        for i in range(9):
+            window["STAKE_CALC_" + str(i)].update(disabled=i!=ref_calc)
+        calculator_interface(window, values, visible_calc)
+    elif "LAY_BACK_LAY_CALC_" in event:
+        lay_calc = int(event.split("_")[-1])
+        window["COMMISSION_CALC_" + str(lay_calc)].update(3)
+        window["SITE_CALC_" + str(lay_calc)].update("OrbitX")
+        window["NAME_CALC_" + str(lay_calc)].update("Lay")
+        values["COMMISSION_CALC_" + str(lay_calc)] = 3
+        values["SITE_CALC_" + str(lay_calc)] = "OrbitX"
+        values["NAME_CALC_" + str(lay_calc)] = "Lay"
+        calculator_interface(window, values, visible_calc)
+    elif event.startswith("SITE_CALC_"):
+        site_calc = int(event.split("_")[-1])
+        window["BACK_BACK_LAY_CALC_" + str(site_calc)].update(True)
+        window["COMMISSION_CALC_" + str(site_calc)].update(0)
+        values["BACK_BACK_LAY_CALC_" + str(site_calc)] = True
+        values["COMMISSION_CALC_" + str(site_calc)] = 0
+        if values["SITE_CALC_" + str(site_calc)].lower() == "orbitx":
+            window["COMMISSION_CALC_" + str(site_calc)].update(3)
+            values["COMMISSION_CALC_" + str(site_calc)] = 3
+        calculator_interface(window, values, visible_calc)
+    elif "_CALC_" in event:
+        calculator_interface(window, values, visible_calc)
     else:
         pass
 sb.INTERFACE = False

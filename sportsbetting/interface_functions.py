@@ -16,7 +16,7 @@ import PySimpleGUI as sg
 import webbrowser
 
 import sportsbetting as sb
-from sportsbetting.auxiliary_functions import get_nb_outcomes, copy_to_clipboard
+from sportsbetting.auxiliary_functions import get_nb_outcomes, copy_to_clipboard, calculator
 from sportsbetting.database_functions import get_all_current_competitions, get_all_competitions
 from sportsbetting.user_functions import (best_match_under_conditions, best_match_under_conditions2,
                                           best_match_freebet, best_stakes_match,
@@ -1068,5 +1068,36 @@ def get_best_conversion_rates_freebet(window):
     window["CONVERT_RATES_FREEBET"].update(table)
     visible = len(high_conversion_rates) > 0
     window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet haut ({})".format(", ".join(high_conversion_rates)), visible=visible, text_color="orange")
+
+def calculator_interface(window, values, visible_calc):
+    odds = []
+    lay = []
+    commissions = []
+    stake = 0
+    reference = 0
+    outcomes = []
+    sites = []
+    for i in range(visible_calc):
+        odd = 0
+        try:
+            odd = float(values["ODD_CALC_" + str(i)])
+        except ValueError:
+            pass
+        odds.append(odd)
+        lay.append(bool(values["LAY_BACK_LAY_CALC_" + str(i)]))
+        commission = values["COMMISSION_CALC_" + str(i)]
+        commissions.append(float(commission)/100 if commission else 0)
+        outcomes.append(values["NAME_CALC_" + str(i)])
+        sites.append(values["SITE_CALC_" + str(i)])
+        if values["REFERENCE_STAKE_CALC_" + str(i)]:
+            reference = i
+            stake = values["STAKE_CALC_" + str(i)]
+            stake = float(stake) if stake else 0
+    old_stdout = sys.stdout  # Memorize the default stdout stream
+    sys.stdout = buffer = io.StringIO()
+    calculator(odds, lay, commissions, stake, reference, outcomes, sites)
+    sys.stdout = old_stdout  # Put the old stream back in place
+    what_was_printed = buffer.getvalue()  # contains the entire contents of the buffer.
+    window["RESULT_CALC"].update(what_was_printed, visible=True)
     
     

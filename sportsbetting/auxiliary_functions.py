@@ -827,3 +827,37 @@ def save_odds(odds, path):
     with open(path, "w") as file:
         json.dump(saved_odds, file, indent=2)
 
+
+def get_real_odd(odd, commission, is_lay):
+    if is_lay:
+        return round(1 + (1 - commission) / (odd - 1), 3)
+    return round(1 + (1 - commission) * (odd - 1), 3)
+
+
+def calculator(odds, lay, commissions, stake, reference, outcomes, sites):
+    real_odds = []
+    back_odds = []
+    lay_odds = []
+    stakes = []
+    backers_stakes = []
+    trj = 0
+    profit = 0
+    try:
+        back_odds = ["" if lay else odd for odd, lay in zip(odds, lay)]
+        lay_odds = [odd if lay else "" for odd, lay in zip(odds, lay)]
+        real_odds = [get_real_odd(odd, commission, is_lay) for odd, commission, is_lay in zip(odds, commissions, lay)]
+        stakes = list(map(lambda x :round(x, 2), mises2(real_odds, stake, reference)))
+        backers_stakes = [round(stake_i / (odd_i - 1), 2) if lay_i else "" for stake_i, lay_i, odd_i in zip(stakes, lay, odds)]
+        trj = gain(real_odds)
+        profit = stake*real_odds[reference]-sum(stakes)
+    except ZeroDivisionError:
+        pass
+    table = {"Site":sites, "Issue": outcomes, "Lay":lay_odds, "Cote": real_odds, "Mise": stakes, "Stake" : backers_stakes, "Total": [round(odd_i*stake_i, 2) for odd_i, stake_i in zip(real_odds, stakes)], "Infos":["TRJ : {}%".format(round(100*trj, 3)), "Plus-value : {}".format(round(profit, 2))]}
+    if not any(lay):
+        del table["Lay"]
+        del table["Stake"]
+    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    print(text)
+    if sys.platform.startswith("win"):
+        copy_to_clipboard(text)
+
