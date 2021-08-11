@@ -27,7 +27,7 @@ async def get_json_pasinobet_api(id_league, barrierebet, vbet):
                 "params":{"language":"fra", "site_id":site_id}}
         await websocket.send(json.dumps(data))
         response = await websocket.recv()
-        data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
+        data = ('{"command":"get","params":{"source":"betting","what":{"region":["name"], "competition":["name", "teams_reversed"], '
                 '"game":["id", "is_blocked", "start_ts","team1_name","team2_name","is_started"],'
                 '"market":["event"],"event":["price","order"]},'
                 '"where":{"competition":{"id":'+str(id_league)+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
@@ -66,7 +66,7 @@ async def get_json_sport_pasinobet_api(sport, barrierebet, vbet):
         for league in parsed["data"]["data"]["competition"].values():
             if "Compétition" in league["name"]:
                 continue
-            data = ('{"command":"get","params":{"source":"betting","what":{"competition":["teams_reversed"], '
+            data = ('{"command":"get","params":{"source":"betting","what":{"region":["name"], "competition":["name", "teams_reversed"], '
                     '"game":["id", "is_blocked", "start_ts","team1_name","team2_name","is_started"],'
                     '"market":["event"],"event":["price","order"]},'
                     '"where":{"competition":{"id":'+str(league["id"])+'},"game":{"@or":[{"type":{"@in":[0,2]}},'
@@ -89,28 +89,33 @@ def get_odds_from_league_json(parsed_league, barrierebet, vbet):
         bookmaker = "barrierebet"
     elif vbet:
         bookmaker = "vbet"
+    regions = parsed_league["data"]["data"]["region"]
     odds_league = {}
-    for competition in competitions.values():
-        reversed_odds = competition["teams_reversed"]
-        games = competition["game"]
-        for game in games.values():
-            if "is_started" in game and game["is_started"]:
-                continue
-            if "is_blocked" in game and game["is_blocked"]:
-                continue
-            if not game.get("team1_name") or not game.get("team2_name"):
-                continue
-            match_id = str(game["id"])
-            name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
-            date = datetime.datetime.fromtimestamp(game["start_ts"])
-            markets = game["market"]
-            for market in markets.values():
-                odds = []
-                for event in sorted(market["event"].values(), key=lambda x: x["order"]):
-                    odds.append(event["price"])
-            if reversed_odds:
-                name, odds = reverse_match_odds(name, odds)
-            odds_league[name] = {"date":date, "odds":{bookmaker:odds}, "id":{bookmaker:match_id}}
+    for region in regions.values():
+        region_name = region["name"]
+        competitions = region["competition"]
+        for competition in competitions.values():
+            competition_name = competition["name"]
+            reversed_odds = competition["teams_reversed"]
+            games = competition["game"]
+            for game in games.values():
+                if "is_started" in game and game["is_started"]:
+                    continue
+                if "is_blocked" in game and game["is_blocked"]:
+                    continue
+                if not game.get("team1_name") or not game.get("team2_name"):
+                    continue
+                match_id = str(game["id"])
+                name = game["team1_name"].strip() + " - " + game["team2_name"].strip()
+                date = datetime.datetime.fromtimestamp(game["start_ts"])
+                markets = game["market"]
+                for market in markets.values():
+                    odds = []
+                    for event in sorted(market["event"].values(), key=lambda x: x["order"]):
+                        odds.append(event["price"])
+                if reversed_odds:
+                    name, odds = reverse_match_odds(name, odds)
+                odds_league[name] = {"date":date, "odds":{bookmaker:odds}, "id":{bookmaker:match_id}, "competition": region_name + " - " + competition_name}
     return odds_league
 
 
