@@ -501,25 +501,6 @@ combi_opt_layout = [
          [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_COMBINE), key="RESULT_COMBI_OPT", font="Consolas 10", visible=False)]])
      ]]
 
-surebets_layout = [
-    [
-        sg.Column([[sg.Text("Cet onglet sera bientôt supprimé, utilisez plutôt l'onglet \"Cotes\"", text_color="red")],
-                   [sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_SUREBETS")],
-                   [sg.Text("TRJ minimal", size=(10, 1)), sg.InputText(key='TRJ_SUREBETS', size=(6, 1), default_text="100"), sg.Text("%", size=(3, 1))],
-                   [sg.Button("Chercher", key="FIND_SUREBETS")],
-                   [sg.Text("", size=(30, 1), key="MESSAGE_SUREBETS")]
-                   ]),
-        sg.Listbox([], size=(40, 12), key="MATCHES_SUREBETS", enable_events=True),
-        sg.Col([[sg.Text("", size=(30, 1), key="MATCH_SUREBETS", visible=False)],
-                [sg.Text("", size=(30, 1), key="INFOS_TRJ_SUREBETS")],
-                [sg.Text("", size=(50, 1), key="INFOS_ODDS_SUREBETS")],
-                [sg.Text("", size=(30, 1), key="DATE_SUREBETS", visible=False)],
-                [sg.Table([["parionssport", "00000", "00000", "00000"]],
-                            headings=["Cotes", "1", "N", "2"], key="ODDS_SUREBETS", visible=False,
-                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
-     ]
-]
-
 values_layout = [
     [
         sg.Column([[sg.Listbox(sb.SPORTS, size=(20, 6), key="SPORT_VALUES", enable_events=True)],
@@ -662,7 +643,6 @@ layout = [[sg.TabGroup([[sg.Tab('Récupération des cotes', parsing_layout),
                          sg.Tab('Freebet unique', freebet_layout),
                          sg.Tab('Freebets à placer', freebets_layout),
                          sg.Tab('Combiné optimisé', combi_opt_layout),
-                         sg.Tab('Surebets', surebets_layout),
                          sg.Tab('Values', values_layout, visible=sb.BETA),
                          sg.Tab('Perf players', perf_players_layout, visible=sb.BETA),
                          sg.Tab('Miles', miles_layout, visible=sb.BETA),
