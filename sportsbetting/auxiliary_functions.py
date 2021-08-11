@@ -84,61 +84,61 @@ def add_matches_to_db(odds, sport, site, id_competition):
     if sport == "tennis":
         get_close_name_functions.append(get_close_name3)
         get_close_name_functions.append(get_double_team_tennis)
-    for only_null in [True, False]:
-        for get_close_name_function in get_close_name_functions:
-            i += 1
-            teams_sets.append(set())
-            for team in teams_sets[i - 1]:
-                if sb.ABORT:
-                    return
-                success = False
-                lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
-                for line in lines:
-                    if line[0] not in not_matching_teams[team]:
-                        check = not is_matching_next_match(id_competition, line[0], team, odds)
-                        date_next_match = datetime.datetime.today()
-                        try:
-                            date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")],
-                                                     key=lambda x: x["date"])[0]["date"]
-                        except IndexError:
-                            pass
-                        date_next_match_db = get_time_next_match(id_competition, line[0])
-                        success = add_name_to_db(line[0], team, site, check, date_next_match, date_next_match_db)
-                        if success:
-                            break
-                        not_matching_teams[team].append(line[0])
-                if not success:
-                    teams_sets[i].add(team)
-            if len(teams_sets[i]) != len(teams_sets[i-1]):
-                print(i, list(teams_sets[i]), site)
-            if not teams_sets[i]:
+    only_null = False
+    for get_close_name_function in get_close_name_functions:
+        i += 1
+        teams_sets.append(set())
+        for team in teams_sets[i - 1]:
+            if sb.ABORT:
                 return
-            i += 1
-            teams_sets.append(set())
-            for team in teams_sets[i - 1]:
-                future_opponents, future_matches = get_future_opponents(team, matches)
-                success = False
-                for future_opponent, future_match in zip(future_opponents, future_matches):
-                    id_opponent = get_id_by_site(future_opponent, sport, site)
-                    if id_opponent < 0:
-                        id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
-                    else:
-                        id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
-                    if id_to_find and id_to_find not in not_matching_teams[team]:
-                        check = not is_matching_next_match(id_competition, id_to_find, team, odds)
+            success = False
+            lines = get_close_name_function(team, sport, site, only_null)[:3] #Pour éviter d'avoir trop de résultats
+            for line in lines:
+                if line[0] not in not_matching_teams[team]:
+                    check = not is_matching_next_match(id_competition, line[0], team, odds)
+                    date_next_match = datetime.datetime.today()
+                    try:
                         date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")],
-                                                 key=lambda x: x["date"])[0]["date"]
-                        date_next_match_db = get_time_next_match(id_competition, id_to_find)
-                        success = add_name_to_db(id_to_find, team, site, check, date_next_match, date_next_match_db)
-                        if success:
-                            break
-                        not_matching_teams[team].append(id_to_find)
-                if not success:
-                    teams_sets[i].add(team)
-            if len(teams_sets[i]) != len(teams_sets[i-1]):
-                print(i, list(teams_sets[i]), site)
-            if not teams_sets[i]:
-                return
+                                                    key=lambda x: x["date"])[0]["date"]
+                    except IndexError:
+                        pass
+                    date_next_match_db = get_time_next_match(id_competition, line[0])
+                    success = add_name_to_db(line[0], team, site, check, date_next_match, date_next_match_db)
+                    if success:
+                        break
+                    not_matching_teams[team].append(line[0])
+            if not success:
+                teams_sets[i].add(team)
+        if len(teams_sets[i]) != len(teams_sets[i-1]):
+            print(i, list(teams_sets[i]), site)
+        if not teams_sets[i]:
+            return
+        i += 1
+        teams_sets.append(set())
+        for team in teams_sets[i - 1]:
+            future_opponents, future_matches = get_future_opponents(team, matches)
+            success = False
+            for future_opponent, future_match in zip(future_opponents, future_matches):
+                id_opponent = get_id_by_site(future_opponent, sport, site)
+                if id_opponent < 0:
+                    id_to_find = get_id_by_opponent_thesportsdb(id_opponent, future_match, odds)
+                else:
+                    id_to_find = get_id_by_opponent(id_opponent, future_match, odds)
+                if id_to_find and id_to_find not in not_matching_teams[team]:
+                    check = not is_matching_next_match(id_competition, id_to_find, team, odds)
+                    date_next_match = sorted([odds[x] for x in odds.keys() if team in x.split(" - ")],
+                                                key=lambda x: x["date"])[0]["date"]
+                    date_next_match_db = get_time_next_match(id_competition, id_to_find)
+                    success = add_name_to_db(id_to_find, team, site, check, date_next_match, date_next_match_db)
+                    if success:
+                        break
+                    not_matching_teams[team].append(id_to_find)
+            if not success:
+                teams_sets[i].add(team)
+        if len(teams_sets[i]) != len(teams_sets[i-1]):
+            print(i, list(teams_sets[i]), site)
+        if not teams_sets[i]:
+            return
 
 
 def adapt_names(odds, site, sport, competition):
