@@ -8,6 +8,7 @@ import dateutil
 import demjson
 import requests
 
+import sportsbetting as sb
 from sportsbetting.auxiliary_functions import truncate_datetime
 
 def parse_betway(url):
@@ -18,7 +19,7 @@ def parse_betway(url):
         return parse_sport_betway(url)
     parsed = str(requests.get(url).content)
     if "prematch_event_list:" not in parsed or "params:{}}," not in parsed:
-        return {}
+        raise sb.UnavailableCompetitionException
     parsed = parsed.split("prematch_event_list:")[-1]
     parsed = parsed.split("params:{}},")[0] + "params:{}}"
     parsed = re.sub("[A-Za-z_$]{1,2}[0-9]?,", '1.01,', parsed)
@@ -43,6 +44,8 @@ def parse_sport_betway(url):
     Get Betway odds from a sport URL
     """
     parsed = str(requests.get(url).content)
+    if "top_bets:" not in parsed or "params:{}}," not in parsed:
+        raise sb.UnavailableCompetitionException
     parsed = parsed.split("top_bets:")[-1]
     parsed = parsed.split("params:{}},")[0] + "params:{}}"
     parsed = re.sub("[A-Za-z_$]{1,2}[0-9]?,", '1.01,', parsed)
@@ -51,6 +54,8 @@ def parse_sport_betway(url):
     parsed = demjson.decode(parsed)
     data = parsed["data"]
     odds_match = {}
+    if "eventsGroup" not in data:
+        raise sb.UnavailableCompetitionException
     for group in data["eventsGroup"]:
         for match in group["events"]:
             id_match = str(match["id"])
