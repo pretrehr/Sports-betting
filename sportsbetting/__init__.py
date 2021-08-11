@@ -10,7 +10,9 @@ import sys
 import urllib.error
 
 import chromedriver_autoinstaller
+import colorama
 from fake_useragent import UserAgent
+import termcolor
 
 ALL_ODDS_COMBINE = {}
 ODDS = {}
@@ -82,12 +84,28 @@ def find_files(filename, search_path):
 
 ua = UserAgent(verify_ssl=False)
 USER_AGENT = sorted(ua.data_browsers["chrome"], key=lambda a: grp(r'Chrome/[^ ]+', a))[-1]
+chrome_version = ""
+colorama.init()
 try:
     PATH_DRIVER = chromedriver_autoinstaller.install(True)
-    print("Chrome version :", chromedriver_autoinstaller.get_chrome_version())
+    chrome_version = chromedriver_autoinstaller.get_chrome_version()
+    print("Chrome version :", chrome_version)
 except IndexError:
     PATH_DRIVER = find_files("chromedriver.exe", ".")
-print(PATH_DRIVER)
+    print("Chrome version not found")
+    print(termcolor.colored('Chrome version not found{}'
+                            .format(colorama.Style.RESET_ALL),
+                            'yellow'))
+if chrome_version.split(".")[0] == PATH_DRIVER.split("\\")[-2]:
+    print(termcolor.colored('Matching Chrome and chromedriver versions{}'
+                            .format(colorama.Style.RESET_ALL),
+                            'green'))
+else:
+    print(termcolor.colored('Unmatching Chrome and chromedriver versions\nPlease update Chrome{}'
+                            .format(colorama.Style.RESET_ALL),
+                            'yellow'))
+    print(PATH_DRIVER)
+colorama.deinit()
 
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
 
