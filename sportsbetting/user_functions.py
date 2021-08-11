@@ -554,10 +554,12 @@ def best_matches_freebet(main_sites, freebets, sport, *matches):
     all_odds_combine = {}
     combis = list(combinations(all_odds.items(), nb_matches))
     best_combine = None
+    real_odds = {}
     for combine in combis:
         match_combine = " / ".join([match[0] for match in combine])
         all_odds_combine[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine],
                                                                   freebet=True)
+        real_odds[match_combine] = cotes_combine_all_sites(*[match[1] for match in combine])
         main_sites_distribution = [main_sites[0] for _ in range(n)]
         main_site_odds = copy.deepcopy(all_odds_combine[match_combine]["odds"][main_sites[0]])
         for main in main_sites[1:]:
@@ -592,8 +594,8 @@ def best_matches_freebet(main_sites, freebets, sport, *matches):
         print("Gain référence =", best_bets[0])
         print("Somme des mises =", np.sum(best_bets[1]))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                               all_odds_combine[best_match_combine]["odds"], "football",
                                uniquement_freebet=True)
+                               real_odds[best_match_combine]["odds"], "football",
 
 
 def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
