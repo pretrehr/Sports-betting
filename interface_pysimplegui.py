@@ -440,7 +440,8 @@ odds_layout = [
      sg.Col([[sg.InputText(key='SEARCH_ODDS', size=(40, 1), enable_events=True)],
              [sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True)],
              [sg.Button("Trier par TRJ", key="TRJ_SORT_ODDS"), 
-              sg.Button("Trier par nom", key="NAME_SORT_ODDS")]]),
+              sg.Button("Trier par nom", key="NAME_SORT_ODDS"),
+              sg.Button("Ajouter match", key="ADD_MATCH_ODDS")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_ODDS", visible=False)],
              [sg.Text("", size=(30, 1), key="TRJ_ODDS")],
              [sg.Text("", size=(30, 3), key="INFOS_ODDS")],
@@ -951,22 +952,16 @@ while True:
         sb.ODDS = load_odds(PATH_DATA)
     elif event == "NAME_SORT_ODDS":
         try:
-            matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]))
-            window['MATCHES_ODDS'].update(values=matches)
-        except KeyError:
-            window['MATCHES_ODDS'].update(values=[])
-    elif event == "SEARCH_ODDS":
-        try:
             matches = sorted(list([x for x in sb.ODDS[values["SPORT_ODDS"][0]] if values["SEARCH_ODDS"].lower() in x.lower()]))
             window['MATCHES_ODDS'].update(values=matches)
         except KeyError:
             window['MATCHES_ODDS'].update(values=[])
     elif event == "MATCHES_ODDS":
         odds_match_interface(window, values)
-    elif event == "SPORT_ODDS" or event == "TRJ_SORT_ODDS":
+    elif event == "SPORT_ODDS" or event == "TRJ_SORT_ODDS" or event == "SEARCH_ODDS":
         try:
             window["OUTCOME_ODDS_N"].update(visible=get_nb_outcomes(values["SPORT_ODDS"][0])==3)
-            matches = sorted(list(sb.ODDS[values["SPORT_ODDS"][0]]), key=lambda x:trj_match(sb.ODDS[values["SPORT_ODDS"][0]][x])[0], reverse=True)
+            matches = sorted(list([x for x in sb.ODDS[values["SPORT_ODDS"][0]] if values["SEARCH_ODDS"].lower() in x.lower()]), key=lambda x:trj_match(sb.ODDS[values["SPORT_ODDS"][0]][x])[0], reverse=True)
             window['MATCHES_ODDS'].update(values=matches)
         except KeyError:
             window['MATCHES_ODDS'].update(values=[])    
@@ -1009,7 +1004,7 @@ while True:
                 window["N_RES_COMBI_OPT_"+str(i)].update(visible=True)
         for i in range(9):
             if sport in sb.ODDS:
-                matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport]]))
+                matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport]]), key=lambda x : x.split(" / ")[-1])
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=matches)
             else:
                 window['MATCH_COMBI_OPT_'+str(i)].update(values=[])
@@ -1021,7 +1016,7 @@ while True:
         sport = values["SPORT_COMBI_OPT"][0]
         i = event.split("_")[-1]
         if sport in sb.ODDS:
-            matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport] if values["SEARCH_MATCH_COMBI_OPT_"+i].lower() in x.lower()]))
+            matches = sorted(list([x + " / " + str(sb.ODDS[sport][x]["date"]) for x in sb.ODDS[sport] if values["SEARCH_MATCH_COMBI_OPT_"+i].lower() in x.lower()]), key=lambda x : x.split(" / ")[-1])
             window['MATCH_COMBI_OPT_' + i].update(values=matches)
     elif event in (None, 'Quitter'):  # if user closes window or clicks cancel
         break

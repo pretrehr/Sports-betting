@@ -606,7 +606,7 @@ def delete_odds_interface(window, values):
         match = values["MATCHES_ODDS"][0]
         sport = values["SPORT_ODDS"][0]
         del sb.ODDS[sport][match]
-        matches = sorted(list(sb.ODDS[sport]))
+        matches = sorted(list([x for x in sb.ODDS[values["SPORT_ODDS"][0]] if values["SEARCH_ODDS"].lower() in x.lower()]), key=lambda x:trj_match(sb.ODDS[values["SPORT_ODDS"][0]][x])[0], reverse=True)
         window['MATCHES_ODDS'].update(values=matches)
         window["MATCHES"].update(values=matches)
         window["ODDS_ODDS"].update(visible=False)
