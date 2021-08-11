@@ -189,7 +189,7 @@ def best_stakes_match(match, site, bet, minimum_odd, sport="football"):
                 best_i = i
     if best_overall_odds:
         mises2(best_overall_odds, bet, best_i, True)
-        afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport)
+        afficher_mises_combine(best_match.split(" / "), [sites], [bets], all_odds["odds"], sport, profit=best_profit)
     else:
         print("No match found")
 
@@ -258,7 +258,7 @@ def best_match_under_conditions2(site, minimum_odd, stake, sport="football", dat
         pprint(all_odds[best_match])
         mises3(best_odds_site, best_best_odds, stake, minimum_odd, True, miles, rate_eur_miles, multiplicator)
         afficher_mises_combine([best_match], [sites], [stakes],
-                               all_odds[best_match]["odds"], sport)
+                               all_odds[best_match]["odds"], sport, profit=best_profit)
     else:
         print("No match found")
 
@@ -518,7 +518,7 @@ def best_match_stakes_to_bet(stakes, nb_matches=1, sport="football", date_max=No
         print("Gain référence =", round(best_bets[0], 2))
         print("Somme des mises =", round(np.sum(best_bets[1]), 2))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                               all_odds_combine[best_match_combine]["odds"], sport)
+                               all_odds_combine[best_match_combine]["odds"], sport, profit=best_profit)
     else:
         print("No match found")
 
@@ -594,8 +594,8 @@ def best_matches_freebet(main_sites, freebets, sport, *matches):
         print("Gain référence =", best_bets[0])
         print("Somme des mises =", np.sum(best_bets[1]))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
-                               uniquement_freebet=True)
                                real_odds[best_match_combine]["odds"], "football",
+                               uniquement_freebet=True, profit=best_rate)
 
 
 def best_matches_freebet_one_site(site, freebet, sport="football", nb_matches=2,
@@ -915,7 +915,7 @@ def best_match_stakes_to_bet2(stakes, nb_matches=2, sport="football", date_max=N
         print("Somme des mises =", round(np.sum(best_bets[1]), 2))
         afficher_mises_combine([x[0] for x in best_combine], best_bets[2], best_bets[1],
                                all_odds_combine[best_combination][best_match_combine]["odds"], sport,
-                               combinaisons=convert_indices_to_opponents(list_combinations[best_combination], [x[0] for x in best_combine], sport))
+                               combinaisons=convert_indices_to_opponents(list_combinations[best_combination], [x[0] for x in best_combine], sport), profit=best_profit)
     else:
         print("No match found")
 

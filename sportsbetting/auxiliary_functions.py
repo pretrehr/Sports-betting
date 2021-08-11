@@ -245,7 +245,7 @@ def merge_dicts(dict_args):
 
 def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
                            rang_freebet=None, uniquement_freebet=False,
-                           cotes_boostees=None, rang_2e_freebet=-1, combinaisons=None):
+                           cotes_boostees=None, rang_2e_freebet=-1, combinaisons=None, profit=0):
     """
     Affichage de la répartition des mises
     """
@@ -330,9 +330,17 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
         table_odds.append("\n".join(map(str, combinaison_odds)))
         table_stakes.append("\n".join(map(str, combinaison_stakes)))
         table_bookmakers.append("\n".join(combinaison_bookmakers))
-            
+    is_pari_gagnant = "\n" in "".join(table_stakes)
+    cash_stakes = [sum([float(sub_stake) for sub_stake in stake.split("\n")]) for stake in table_stakes if "freebet" not in stake]
+    freebet_stakes = [float(stake.split(" (")[0]) for stake in table_stakes if "freebet" in stake]
     table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
-    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    trj = min(table_totals)/sum(cash_stakes) if is_pari_gagnant else gain(map(lambda x : float(x), table_odds))
+    infos = {"TRJ" : [str(round(trj*100, 3))+"%"], "Plus-value": [round(profit, 2)]}
+    if profit and rang_freebet or uniquement_freebet:
+        del infos["Plus-value"]
+        infos["Taux de conversion"] = [str(round(profit*100, 2)) + "%"]
+    text = "\n".join([tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid'),
+                      tabulate.tabulate(infos, headers='keys', tablefmt='fancy_grid')])
     print(text)
     if sys.platform.startswith("win"):
         copy_to_clipboard(text)
@@ -589,7 +597,11 @@ def best_combine_reduit(matches, combinaison_boostee, site_combinaison, mise, sp
         table_totals.append(round(round(stake, 2)*cote, 2))
         table_bookmakers.append(site)
     table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
-    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    infos = {"TRJ" : [str(round(gain(best_cotes)*100, 3))+"%"], "Plus-value": [round(best_gain + freebet*mise, 2)]}
+    if freebet:
+        infos["Taux de conversion"] = [str(round((best_gain+mise)/mise*100, 3)) + "%"]
+    text = "\n".join([tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid'),
+                      tabulate.tabulate(infos, headers='keys', tablefmt='fancy_grid')])
     print(text)
     if sys.platform.startswith("win"):
         copy_to_clipboard(text)
@@ -690,7 +702,7 @@ def best_match_base(odds_function, profit_function, criteria, display_function,
             afficher_mises_combine(best_match.split(" / "), [sites],
                                    [result_function(best_overall_odds, best_rank)],
                                    all_odds[best_match]["odds"], sport, best_rank if freebet else None,
-                                   one_site and freebet, best_overall_odds, second_rank)
+                                   one_site and freebet, best_overall_odds, second_rank, profit=best_profit)
     else:
         print("No match found")
 
