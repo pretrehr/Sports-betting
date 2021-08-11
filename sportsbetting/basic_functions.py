@@ -264,8 +264,9 @@ def mises_freebet(cotes, freebet, issue=-1, output=False):
     gains = mises_reelles[issue] * (cotes[issue] - 1)
     if output:
         mis = list(map(lambda x: round(x, 2), mises_reelles))
+        conversion_rate = round(gains + freebet - sum(mis), 2) / freebet if gain(cotes) < 1 else (cotes[issue] - 1)/cotes[issue]
         print("gain sur freebet =", round(gains + freebet - sum(mis), 2))
-        print("taux de conversion =", round(round(gains + freebet - sum(mis), 2) / freebet * 100, 3), "%")
+        print("taux de conversion =", round(conversion_rate * 100, 3), "%")
         print("gain =", round(gains, 2))
         print("mise totale (hors freebet) =", round(sum(mis) - freebet, 2))
         print("mises arrondies =", mis)
