@@ -58,7 +58,8 @@ def parse_competition(competition, sport, *sites):
     for site in sites:
         if len(sites) > 1:
             print(site)
-        url = get_competition_by_id(_id, site)
+        database_site = site if site not in ["barrierebet", "vbet"] else "pasinobet"
+        url = get_competition_by_id(_id, database_site)
         try:
             if url:
                 res_parsing[site] = parse(site, url)
@@ -102,7 +103,7 @@ def parse_competitions_site(competitions, sport, site):
 
 
 def parse_competitions(competitions, sport, *sites):
-    sites_order = ['betfair', 'joa', 'betway', 'pmu', 'barrierebet', 'pasinobet', 'france_pari', 'netbet', 'zebet',
+    sites_order = ['betfair', 'joa', 'betway', 'pmu', 'barrierebet', 'pasinobet', 'vbet', 'france_pari', 'netbet', 'zebet',
                    'winamax', 'pinnacle', 'betclic', 'pokerstars', 'unibet', 'unibet_boost', 'bwin', 'parionssport']
     if not sites:
         sites = sites_order

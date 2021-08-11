@@ -851,7 +851,7 @@ def get_url_by_id(bookmaker, id_match, sport):
         return "https://www.betway.fr/evenement/{}".format(id_match)
     if bookmaker == "netbet":
         return "https://www.netbet.fr" + id_match
-    if bookmaker in ["barrierebet", "pasinobet"]:
+    if bookmaker in ["barrierebet", "pasinobet", "vbet"]:
         sports = {"football":"Soccer", "tennis":"Tennis", "rugby":"RugbyUnion",
                   "handball":"Handball", "hockey-sur-glace":"IceHockey",
                   "basketball":"Basketball"}

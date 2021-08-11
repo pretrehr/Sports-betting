@@ -507,6 +507,8 @@ def get_close_name4(name, sport, site, only_null=True):
     conn = sqlite3.connect(sb.PATH_DB)
     c = conn.cursor()
     for bookmaker in sb.BOOKMAKERS:
+        if bookmaker in ["barrierebet", "vbet"]:
+            continue
         if only_null:
             c.execute("""
             SELECT id, name FROM names WHERE sport='{}' AND name_{}="{}" AND name_{} IS NULL
@@ -685,14 +687,14 @@ def get_double_team_tennis(team, sport, site, only_null=False):
         separator_team = " / "
         if " / " not in team: # pour zebet (varie entre / et -)
             separator_team = "-"
-    elif site in ["barrierebet", "bwin", "joa", "parionssport", "pasinobet", "unibet"]:
+    elif site in ["bwin", "joa", "parionssport", "pasinobet", "unibet"]:
         separator_team = "/"
     else:  # if site in ["pokerstars"]:
         separator_team = " & "
     results = []
     if separator_team in team:
         complete_names = unidecode.unidecode(team).lower().strip().split(separator_team)
-        if site in ["barrierebet", "pokerstars", "pasinobet", "pmu"]:
+        if site in ["pokerstars", "pasinobet", "pmu"]:
             players = list(map(lambda x: x.split(" ")[-1], complete_names))
         elif site in ["netbet", "france_pari", "winamax", "betway"]:
             players = list(map(lambda x: x.split(".")[-1], complete_names))

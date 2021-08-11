@@ -22,7 +22,7 @@ def parse(site, url=""):
     """
     parse_functions = {
         "betclic" : betclic.parse_betclic,
-        "barrierebet": lambda x: pasinobet.parse_pasinobet(x, True),
+        "barrierebet": lambda x: pasinobet.parse_pasinobet(x, barrierebet=True),
         "betfair" : betfair.parse_betfair,
         "betway" : betway.parse_betway,
         "pokerstars" : pokerstars.parse_pokerstars,
@@ -36,6 +36,7 @@ def parse(site, url=""):
         "pmu" : pmu.parse_pmu,
         "unibet" : unibet.parse_unibet,
         "unibet_boost" :lambda x: unibet.parse_unibet(x, True),
+        "vbet": lambda x: pasinobet.parse_pasinobet(x, vbet=True),
         "winamax" : winamax.parse_winamax,
         "zebet" : zebet.parse_zebet
     }

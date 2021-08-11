@@ -177,7 +177,8 @@ def format_team_names(dict_odds, sport, competition):
     """
     list_odds = []
     for site in dict_odds:
-        list_odds.append(adapt_names(dict_odds[site], site.split("_boost")[0], sport, competition))
+        database_site = site.split("_boost")[0] if site not in ["barrierebet", "vbet"] else "pasinobet"
+        list_odds.append(adapt_names(dict_odds[site], database_site, sport, competition))
     return list_odds
 
 
