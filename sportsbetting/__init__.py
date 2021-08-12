@@ -96,21 +96,25 @@ except IndexError:
     print(termcolor.colored('Chrome version not found{}'
                             .format(colorama.Style.RESET_ALL),
                             'yellow'))
-chromedriver_version = ""
-if sys.platform.startswith("win"):
-    chromedriver_version = PATH_DRIVER.split("\\")[-2]
-else:
-    chromedriver_version = PATH_DRIVER.split("/")[-2]
-if chrome_version.split(".")[0] == chromedriver_version:
-    print(termcolor.colored('Matching Chrome and chromedriver versions{}'
-                            .format(colorama.Style.RESET_ALL),
-                            'green'))
-else:
-    print(termcolor.colored('Unmatching Chrome and chromedriver versions\nPlease update Chrome{}'
-                            .format(colorama.Style.RESET_ALL),
-                            'yellow'))
-    print(PATH_DRIVER)
-colorama.deinit()
+
+try:
+    chromedriver_version = ""
+    if sys.platform.startswith("win"):
+        chromedriver_version = PATH_DRIVER.split("\\")[-2]
+    else:
+        chromedriver_version = PATH_DRIVER.split("/")[-2]
+    if chrome_version.split(".")[0] == chromedriver_version:
+        print(termcolor.colored('Matching Chrome and chromedriver versions{}'
+                                .format(colorama.Style.RESET_ALL),
+                                'green'))
+    else:
+        print(termcolor.colored('Unmatching Chrome and chromedriver versions\nPlease update Chrome{}'
+                                .format(colorama.Style.RESET_ALL),
+                                'yellow'))
+        print(PATH_DRIVER)
+    colorama.deinit()
+except IndexError:
+    pass
 
 PATH_DB = os.path.dirname(__file__) + "/resources/teams.db"
 
