@@ -110,6 +110,8 @@ def odds_table_combine(result):
     table = []
     combinaisons = []
     for line in result.split("freebets):\n")[1].split("\n")[3::2]:
+        if "│" not in line:
+            break
         if line:
             combinaisons.append(line.split("│")[1].strip())
     combinaisons = ["Combinaison"] + combinaisons
