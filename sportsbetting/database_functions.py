@@ -889,7 +889,7 @@ def is_id_consistent(_id):
     """.format(_id))
     results = c.fetchall()
     n = len(results)
-    list_sites = sb.BOOKMAKERS
+    list_sites = sb.DB_BOOKMAKERS
     out = True
     for i in range(n):
         if "None" in results[i]:

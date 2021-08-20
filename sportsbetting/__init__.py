@@ -30,8 +30,9 @@ ABORT = False
 SPORTS = ["basketball", "football", "handball", "hockey-sur-glace", "rugby", "tennis"]
 PATH_DRIVER = ""
 SELENIUM_SITES = {"joa"}
-BOOKMAKERS = ["barrierebet", "betclic", "betfair", "betway", "bwin", "france_pari", "joa", "netbet", "parionssport",
-              "pasinobet", "pinnacle", "pmu", "pokerstars", "unibet", "vbet", "winamax", "zebet"]
+DB_BOOKMAKERS = ["betclic", "betfair", "betway", "bwin", "france_pari", "joa", "netbet", "parionssport",
+              "pasinobet", "pinnacle", "pmu", "pokerstars", "unibet", "winamax", "zebet"]
+BOOKMAKERS = sorted(DB_BOOKMAKERS + ["barrierebet", "vbet"])
 BOOKMAKERS_BOOST = sorted(BOOKMAKERS + ["unibet_boost"])
 TEST = False
 DB_MANAGEMENT = False
