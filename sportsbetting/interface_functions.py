@@ -26,7 +26,7 @@ from sportsbetting.user_functions import (best_match_under_conditions, best_matc
                                           best_combine_booste, trj_match, best_matches_freebet_one_site, get_values,
                                           best_matches_freebet2, best_match_defi_rembourse_ou_gagnant, best_combine_booste_progressif)
 from sportsbetting.performances import get_surebets_players_nba
-from sportsbetting.basic_functions import gain, mises, mises2
+from sportsbetting.basic_functions import gain, mises, mises2, equivalent_middle_odd
 
 WHAT_WAS_PRINTED_COMBINE = ""
 
@@ -887,6 +887,12 @@ def open_bookmaker_odds(window, values):
         webbrowser.open(url, new=2)
 
 
+def trj_with_min_odd(match):
+    trj, _, best_odds = trj_match(match)
+    if min(best_odds) < 1.05:
+        return 0
+    return trj
+
 def find_perf_players(window, values):
     if not values["SITES_PERF"]:
         return
@@ -900,7 +906,7 @@ def find_perf_players(window, values):
 
 def search_perf(window, values):
     try:
-        perfs = sorted([x for x in sb.SUREBETS.keys() if values["SEARCH_PERF"].lower() in x.lower()], key=lambda x:trj_match(sb.SUREBETS[x])[0], reverse=True)
+        perfs = sorted([x for x in sb.SUREBETS.keys() if values["SEARCH_PERF"].lower() in x.lower()], key=lambda x:trj_with_min_odd(sb.SUREBETS[x]), reverse=True)
         window['SUREBETS_PERF'].update(values=perfs)
     except KeyError:
         window['SUREBETS_PERF'].update(values=[])
@@ -950,6 +956,10 @@ def display_middle_info(window, values):
     for i in range(int(float(down)+1), int(float(up)+1)):
         proba += scipy.stats.poisson.pmf(i, mean)
     proba = round(proba*100, 3)
+    equivalent_odd = equivalent_middle_odd(best_odds)
+    if min(best_odds) < 1.05:
+        proba = 1
+        equivalent_odd = 100
     trj = round(trj*100, 3)
     odds = sb.MIDDLES[player_down_up_market]["odds"]
     table = []
@@ -963,8 +973,8 @@ def display_middle_info(window, values):
     window["OUTCOME0_PERF"].update("Over {} @ {} : {}".format(down, best_odds[0], bookmakers[0]))
     window["OUTCOME1_PERF"].update("Under {} @ {} : {}".format(up, best_odds[1], bookmakers[1]))
     window["TRJ_PERF"].update("TRJ : {}%".format(trj))
-    window["PROBA_MIDDLE_PERF"].update("Probabilité de middle : {} %".format(proba))
-    window["SUM_MIDDLE_PERF"].update("TRJ + proba : {} %".format(trj + proba), text_color="red" if trj+proba>100 else "black")
+    window["PROBA_MIDDLE_PERF"].update("Probabilité de middle : {} % / {} %".format(proba, 100/equivalent_odd))
+    window["SUM_MIDDLE_PERF"].update("Proba théorique - Proba bookmaker : {} %".format(proba - 100/equivalent_odd), text_color="red" if proba - 100/equivalent_odd>0 else "black")
 
 def sort_middle_gap(window, values):
     if not sb.MIDDLES:
@@ -991,7 +1001,9 @@ def sort_middle_proba(window, values):
         down, up_market = down_up_market.split(" - ")
         up, market = up_market.split(".5 ")
         up += ".5 "
-        trj, _, best_odds = trj_match(sb.MIDDLES[key])
+        _, _, best_odds = trj_match(sb.MIDDLES[key])
+        if min(best_odds) < 1.05:
+            return float("-inf")
         if market == "Points":
             mean = float(up)
         else:
@@ -999,7 +1011,7 @@ def sort_middle_proba(window, values):
         proba = 0
         for i in range(int(float(down)+1), int(float(up)+1)):
             proba += scipy.stats.poisson.pmf(i, mean)
-        return proba + trj
+        return proba - 1/equivalent_middle_odd(best_odds)
     middles = sorted(sb.MIDDLES.keys(), key=get_gap_proba, reverse=True)
     window["MIDDLES_PERF"].update(middles)
     

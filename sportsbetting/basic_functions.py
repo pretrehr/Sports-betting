@@ -186,6 +186,12 @@ def gain3(odds, best_odds, stake, minimum_odd, miles=False, rate_eur_miles=0, mu
                 profit = profit_combination
     return profit
 
+
+def equivalent_middle_odd(odds):
+    risque = 1-gain(odds)
+    gain_brut = gain(odds)
+    return gain_brut/risque
+
 def mises_defi_rembourse_ou_gagnant(odds, stake, winning_outcome, output=False):
     stakes = []
     for i, odd in enumerate(odds):
