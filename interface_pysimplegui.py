@@ -44,6 +44,7 @@ from sportsbetting.interface_functions import (odds_table_combine,
 
 PATH_DATA = os.path.dirname(sb.__file__) + "/resources/data.json"
 PATH_SITES = os.path.dirname(sb.__file__) + "/resources/sites.json"
+PATH_COMPETITIONS = os.path.dirname(sb.__file__) + "/resources/competitions.json"
 PATH_THEME = os.path.dirname(sb.__file__) + "/../theme.txt"
 
 print(r"""
