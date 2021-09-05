@@ -65,7 +65,6 @@ def parse_netbet(url):
                 valid_match = sport+"/" in line["href"]
             link = line["href"]
             competition = " - ".join(map(lambda x : x.replace("-", " ").title(), link.split("/")[2:4]))
-            print(competition)
         elif "class" in line.attrs and "nb-event_datestart" in line["class"]:
             date = list(line.stripped_strings)[0] + year
             if "Auj." in date:
