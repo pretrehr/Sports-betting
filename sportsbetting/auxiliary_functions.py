@@ -335,7 +335,7 @@ def afficher_mises_combine(matches, sites, list_mises, cotes, sport="football",
     freebet_stakes = [float(stake.split(" (")[0]) for stake in table_stakes if "freebet" in stake]
     table = {"Issue": table_teams, "Bookmaker": table_bookmakers, "Cote": table_odds, "Mise": table_stakes, "Total": table_totals}
     trj = min(table_totals)/sum(cash_stakes) if is_pari_gagnant else gain(map(lambda x : float(x), table_odds))
-    infos = {"TRJ" : [str(round(trj*100, 3))+"%"], "Plus-value": [round(profit, 2)]}
+    infos = {"TRJ" : [str(round(trj*100, 3))+"%"], "Plus-value": [round(profit, 2)], "Compétition":[sb.ODDS[sport].get(match, {}).get("competition", "Indéterminée")]}
     if profit and rang_freebet or uniquement_freebet:
         del infos["Plus-value"]
         infos["Taux de conversion"] = [str(round(profit*100, 2)) + "%"]
@@ -865,11 +865,13 @@ def calculator(odds, lay, commissions, stake, reference, outcomes, sites):
         profit = stake*real_odds[reference]-sum(stakes)
     except ZeroDivisionError:
         pass
-    table = {"Site":sites, "Issue": outcomes, "Lay":lay_odds, "Cote": real_odds, "Mise": stakes, "Stake" : backers_stakes, "Total": [round(odd_i*stake_i, 2) for odd_i, stake_i in zip(real_odds, stakes)], "Infos":["TRJ : {}%".format(round(100*trj, 3)), "Plus-value : {}".format(round(profit, 2))]}
+    table = {"Site":sites, "Issue": outcomes, "Lay":lay_odds, "Cote": real_odds, "Mise": stakes, "Stake" : backers_stakes, "Total": [round(odd_i*stake_i, 2) for odd_i, stake_i in zip(real_odds, stakes)]}
+    infos = {"TRJ" : [str(round(trj*100, 3))+"%"], "Plus-value": [round(profit, 2)]}
     if not any(lay):
         del table["Lay"]
         del table["Stake"]
-    text = tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid')
+    text = "\n".join([tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid'),
+                    tabulate.tabulate(infos, headers='keys', tablefmt='fancy_grid')])
     print(text)
     if sys.platform.startswith("win"):
         copy_to_clipboard(text)

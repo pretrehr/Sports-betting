@@ -659,7 +659,7 @@ def compute_odds(window, values):
         teams.insert(1, "Nul")
     totals = [round(stake_i * odd_i, 2) for stake_i, odd_i in zip(stakes, best_odds)]
     table = {"Issue": teams, "Bookmaker": bookmakers, "Cote": best_odds, "Mise": stakes, "Total": totals}
-    infos = {"TRJ" : [str(round(gain(best_odds)*100, 3))+"%"], "Plus-value": [profit]}
+    infos = {"TRJ" : [str(round(gain(best_odds)*100, 3))+"%"], "Plus-value": [profit], "Compétition":[sb.ODDS[sport].get(match, {}).get("competition", "Indéterminée")]}
     text = "\n".join([tabulate.tabulate(table, headers='keys', tablefmt='fancy_grid'),
                       tabulate.tabulate(infos, headers='keys', tablefmt='fancy_grid')])
     window["RESULT_ODDS"].update(text, visible=True)
