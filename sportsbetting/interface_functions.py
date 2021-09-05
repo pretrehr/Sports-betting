@@ -638,6 +638,14 @@ def compute_odds(window, values):
         what_was_printed = buffer.getvalue()
         profit = float(what_was_printed.split("\n")[4].split(' = ')[1])
         stakes = eval(what_was_printed.split("\n")[5].split(' = ')[1])
+    elif values["OUTCOME_ODDS_MAX"]:
+        old_stdout = sys.stdout  # Memorize the default stdout stream
+        sys.stdout = buffer = io.StringIO()
+        mises2(best_odds, round(stake/best_odds[0], 2), 0, True)
+        sys.stdout = old_stdout  # Put the old stream back in place
+        what_was_printed = buffer.getvalue()
+        profit = float(what_was_printed.split("\n")[5].split(' = ')[1])
+        stakes = eval(what_was_printed.split("\n")[6].split(' = ')[1])
     else:
         outcomes = ["1", "2"]
         if get_nb_outcomes(sport) == 3:

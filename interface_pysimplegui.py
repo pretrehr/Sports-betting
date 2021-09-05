@@ -459,9 +459,10 @@ odds_layout = [
              [sg.Button("Aller sur la page du match", key="GOTO_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le bookmaker", key="DELETE_SITE_ODDS", visible=False)],
              [sg.Button("Supprimer le match", key="DELETE_MATCH_ODDS", visible=False)]]),
-     sg.Col([[sg.Text("Mise"), sg.InputText("100", size=(6, 1), key='STAKE_ODDS', enable_events=True)],
+     sg.Col([[sg.Text("Mise / Gain max"), sg.InputText("100", size=(6, 1), key='STAKE_ODDS', enable_events=True)],
              [sg.Text("Issue : ")] + [sg.Radio("Mise répartie", "OUTCOME_ODDS", key="OUTCOME_ODDS_SPLIT_STAKE", enable_events=True)] 
-              + [sg.Col([[sg.Radio(x, "OUTCOME_ODDS", key='OUTCOME_ODDS_'+x, enable_events=True)]]) for x in ["1", "N", "2"]]])
+              + [sg.Col([[sg.Radio(x, "OUTCOME_ODDS", key='OUTCOME_ODDS_'+x, enable_events=True)]]) for x in ["1", "N", "2"]]
+              + [sg.Radio("Gain max", "OUTCOME_ODDS", key="OUTCOME_ODDS_MAX", enable_events=True)]])
      ],
      [sg.MLine(size=(LENGTH_FIELD, HEIGHT_FIELD_SIMPLE), key="RESULT_ODDS", font="Consolas 10",
                    visible=False)]
