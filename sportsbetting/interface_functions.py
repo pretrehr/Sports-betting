@@ -1042,39 +1042,41 @@ def best_match_miles_interface(window, values):
         pass
 
 def get_best_conversion_rates_freebet(window):
-    conversion_rates = {}
     high_conversion_rates = []
     with open(sb.PATH_FREEBETS, "r") as file:
         lines = file.readlines()
         for line in lines:
             bookmaker, rate = line.split()
             sb.FREEBETS_RATES[bookmaker] = float(rate)
-    for sport in sb.ODDS:
-        if sb.SEEN_SUREBET[sport]:
-            continue
-        if not sb.ODDS[sport]:
-            continue
-        for site in sb.FREEBETS_RATES:
-            old_stdout = sys.stdout  # Memorize the default stdout stream
-            sys.stdout = buffer = io.StringIO()
-            best_match_freebet(site, 100, sport)
-            sys.stdout = old_stdout  # Put the old stream back in place
-            what_was_printed = buffer.getvalue()
-            match, _ = infos(what_was_printed)
-            if match is None:
+    for function, field in [(best_match_freebet, "CONVERT_RATES_FREEBET"), (best_matches_freebet2, "CONVERT_RATES_FREEBET_2")]:
+        conversion_rates = {}
+        for sport in sb.ODDS:
+            if sb.SEEN_SUREBET[sport]:
                 continue
-            conversion_rate = float(list(indicators(what_was_printed))[1][1].strip(" %"))
-            if conversion_rates.get(site, [0])[0] < conversion_rate:
-                conversion_rates[site] = [conversion_rate, sport]
-    table = []
-    for site, details in conversion_rates.items():
-        if details[0] >= sb.FREEBETS_RATES[site]:
-            high_conversion_rates.append(site)
-        table.append([site]+details)
-    table.sort(key=lambda x: x[1], reverse=True)
-    window["CONVERT_RATES_FREEBET"].update(table)
+            if not sb.ODDS[sport]:
+                continue
+            for site in sb.FREEBETS_RATES:
+                old_stdout = sys.stdout  # Memorize the default stdout stream
+                sys.stdout = buffer = io.StringIO()
+    #             best_match_freebet(site, 100, sport)
+                function(site, 100, sport)
+                sys.stdout = old_stdout  # Put the old stream back in place
+                what_was_printed = buffer.getvalue()
+                match, _ = infos(what_was_printed)
+                if match is None:
+                    continue
+                conversion_rate = float(list(indicators(what_was_printed))[1][1].strip(" %"))
+                if conversion_rates.get(site, [0])[0] < conversion_rate:
+                    conversion_rates[site] = [conversion_rate, sport]
+        table = []
+        for site, details in conversion_rates.items():
+            if details[0] >= sb.FREEBETS_RATES[site]:
+                high_conversion_rates.append(site)
+            table.append([site]+details)
+        table.sort(key=lambda x: x[1], reverse=True)
+        window[field].update(table)
     visible = len(high_conversion_rates) > 0
-    window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet haut ({})".format(", ".join(high_conversion_rates)), visible=visible, text_color="orange")
+    window["HIGH_FREEBET_PARSING"].update("Taux de conversion freebet haut ({})".format(", ".join(sorted(set(high_conversion_rates)))), visible=visible, text_color="orange")
 
 def calculator_interface(window, values, visible_calc):
     odds = []

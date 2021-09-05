@@ -205,7 +205,13 @@ freebet_layout = [
                 [sg.Table([[" "*10, " "*5, " "*10]],
                             headings=["Site", "Taux", "sport"],
                             key="CONVERT_RATES_FREEBET",
-                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]])
+                            hide_vertical_scroll=True, size=(None, nb_bookmakers))]]),
+     sg.Column([[sg.Text("Meilleurs taux de conversion", visible=sb.BETA)],
+                [sg.Table([[" "*10, " "*5, " "*10]],
+                            headings=["Site", "Taux", "sport"],
+                            key="CONVERT_RATES_FREEBET_2",
+                            hide_vertical_scroll=True, size=(None, nb_bookmakers),
+                            visible=sb.BETA)]])
     ],
     [sg.Button("Calculer", key="BEST_MATCH_FREEBET")],
     [sg.Button("Ignorer ce match", key="DELETE_MATCH_FREEBET", visible=False)],
@@ -692,7 +698,6 @@ while True:
                     window['SUREBET_PARSING'].update("Surebet disponible ({})".format(", ".join(sports_with_surebet)), text_color="red", visible=sb.BETA)
                 else:
                     window['SUREBET_PARSING'].update("Aucun surebet", text_color="black", visible=sb.BETA)
-                get_best_conversion_rates_freebet(window)
                 sg.SystemTray.notify('Sports-betting', 'Fin du parsing', display_duration_in_ms=750,
                                     fade_in_duration=125)
                 thread = None
@@ -802,6 +807,7 @@ while True:
                 """
                 sb.PROGRESS = 0
                 parse_competitions(selected_competitions, sport, *selected_sites)
+                get_best_conversion_rates_freebet(window)
 
 
             thread = threading.Thread(target=parse_thread)
