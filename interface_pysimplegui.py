@@ -86,6 +86,8 @@ parsing_layout = [
         sg.Column([[sg.Listbox((), size=(27, 12), key='COMPETITIONS', select_mode='multiple')],
                    [sg.Button("Tout désélectionner", key="SELECT_NONE_COMPETITION")],
                    [sg.Button("Compétitions actuelles", key="CURRENT_COMPETITIONS", visible=sb.DB_MANAGEMENT)],
+                   [sg.Button("Sélectionner mes compétitions", key="MY_COMPETITIONS")],
+                   [sg.Button("Sauver mes compétitions", key="SAVE_MY_COMPETITIONS")],
                    [sg.Button("Big 5", key="MAIN_COMPETITIONS", visible=False)]]),
         sg.Column([[sg.Listbox(sb.BOOKMAKERS_BOOST, size=(20, nb_bookmakers+1), key="SITES", select_mode='multiple')],
                    [sg.Button("Tout sélectionner", key="SELECT_ALL"), sg.Button("Tout désélectionner", key="SELECT_NONE_SITE")],
@@ -778,6 +780,28 @@ while True:
         competitions = get_all_competitions(sport)
         big_five = ["France - Ligue 1", "Angleterre - Premier League", "Allemagne - Bundesliga", "Italie - Serie A", "Espagne - LaLiga"]
         window['COMPETITIONS'].update(set_to_index=[i for i, competition in enumerate(competitions) if competition in big_five])
+    elif event == "MY_COMPETITIONS":
+        try:
+            with open(PATH_COMPETITIONS) as file:
+                my_competitions = json.load(file)
+                sport = values["SPORT"][0]
+                competitions = get_all_competitions(sport)
+                window['COMPETITIONS'].update(set_to_index=[competitions.index(competition) for competition in my_competitions[sport]])
+        except FileNotFoundError:
+            pass
+    elif event == "SAVE_MY_COMPETITIONS":
+        my_competitions = {}
+        if not values["SPORT"]:
+            continue
+        sport = values["SPORT"][0]
+        try:
+            with open(PATH_COMPETITIONS) as file:
+                my_competitions = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError) as _:
+            pass
+        with open(PATH_COMPETITIONS, "w") as file:
+            my_competitions[sport] = values['COMPETITIONS']
+            json.dump(my_competitions, file, indent=2)
     elif event == "SELECT_ALL":
         window['SITES'].update(set_to_index=[i for i, _ in enumerate(sb.BOOKMAKERS_BOOST)])
     elif event == "SELECT_NONE_SITE":
