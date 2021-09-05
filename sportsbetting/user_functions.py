@@ -5,6 +5,7 @@ Fonctions principales d'assistant de paris
 
 import copy
 import datetime
+import requests
 import socket
 import sys
 import traceback
@@ -79,6 +80,8 @@ def parse_competition(competition, sport, *sites):
             print("StaleElement non trouvé par selenium ({} sur {})".format(competition, site))
         except selenium.common.exceptions.WebDriverException:
             print("Connection closed ({} sur {})".format(competition, site))
+        except requests.exceptions.SSLError:
+            print("Max retries ({} sur {})".format(competition, site))
     res = format_team_names(res_parsing, sport, competition)
     out = valid_odds(merge_dict_odds(res), sport)
     return out
@@ -921,12 +924,18 @@ def best_match_stakes_to_bet2(stakes, nb_matches=2, sport="football", date_max=N
 
 def best_matches_freebet2(site, freebet, sport, nb_matches=2):
 #     all_odds = sb.ODDS[sport]
-    all_odds = get_matches_with_best_trj(sport, 10)
+    all_odds = get_matches_with_best_trj(sport, 10, site)
     best_profit = float("-inf")
     combis = list(combinations(all_odds.items(), nb_matches))
+    if not combis:
+        print("No match found")
+        return
     nb_combis = len(combis)
     best_combine = None
     best_bets = None
+    best_matches = []
+    best_choice = [0 for _ in range(nb_matches)]
+    best_odd = 1.01
     choices = list(product(*[range(get_nb_outcomes(sport)) for _ in range(nb_matches)]))
     for combi in combis:
         if any([site not in x[1]["odds"] for x in combi]):
@@ -948,6 +957,8 @@ def best_matches_freebet2(site, freebet, sport, nb_matches=2):
 
 def get_matches_with_best_trj(sport, nb_matches):
     matches = sorted(sb.ODDS[sport].items(), key=lambda x:trj_match(x[1])[0], reverse=True)[:nb_matches]
+def get_matches_with_best_trj(sport, nb_matches, site=None):
+    matches = sorted(filter(lambda x: not site or site in x[1]["odds"], sb.ODDS[sport].items()), key=lambda x:trj_match(x[1])[0], reverse=True)[:nb_matches]
     return {match:odds for match, odds in matches}
     
 
