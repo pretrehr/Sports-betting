@@ -82,9 +82,15 @@ def parse_sport_zebet(url):
         if "class" in line.attrs and "pari-1" in line["class"]:
             odds = list(map(lambda x: float(x.replace(",", ".")),
                             list(line.stripped_strings)[1::2]))
-            match_odds_hash[match] = {}
+            if match not in match_odds_hash:
+                match_odds_hash[match] = {}
             match_odds_hash[match]['odds'] = {"zebet": odds}
             match_odds_hash[match]['date'] = date_time
+        if "href" in line.attrs and "/fr/event/" in line["href"]:
+            match_id = line["href"].split("-")[0].split("/")[-1]
+            if match not in match_odds_hash:
+                match_odds_hash[match] = {}
+            match_odds_hash[match]['id'] = {"zebet": match_id}
     return match_odds_hash
 
 
