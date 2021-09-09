@@ -28,8 +28,7 @@ def parse_winamax(url):
         tournament_id = -1
     sport_id = int(ids.split("/")[0])
     try:
-        req = urllib.request.Request(
-            url, headers={'User-Agent': sb.USER_AGENT})
+        req = urllib.request.Request(url)
         webpage = urllib.request.urlopen(req, timeout=10).read()
         soup = BeautifulSoup(webpage, features="lxml")
     except urllib.error.HTTPError:
@@ -84,7 +83,7 @@ def get_sub_markets_players_basketball_winamax(id_match):
         return {}
     url = 'https://www.winamax.fr/paris-sportifs/match/' + id_match
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': sb.USER_AGENT})
+        req = urllib.request.Request(url)
         webpage = urllib.request.urlopen(req, timeout=10).read()
         soup = BeautifulSoup(webpage, features='lxml')
     except urllib.error.HTTPError:
