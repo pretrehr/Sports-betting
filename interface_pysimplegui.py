@@ -209,7 +209,7 @@ freebet_layout = [
                             headings=["Site", "Taux", "sport"],
                             key="CONVERT_RATES_FREEBET",
                             hide_vertical_scroll=True, size=(None, nb_bookmakers))]]),
-     sg.Column([[sg.Text("Meilleurs taux de conversion", visible=sb.BETA)],
+     sg.Column([[sg.Text("Meilleurs taux de conversion (combiné)", visible=sb.BETA)],
                 [sg.Table([[" "*10, " "*5, " "*10]],
                             headings=["Site", "Taux", "sport"],
                             key="CONVERT_RATES_FREEBET_2",
@@ -449,8 +449,7 @@ odds_layout = [
      sg.Col([[sg.InputText(key='SEARCH_ODDS', size=(40, 1), enable_events=True)],
              [sg.Listbox([], size=(40, 12), key="MATCHES_ODDS", enable_events=True)],
              [sg.Button("Trier par TRJ", key="TRJ_SORT_ODDS"), 
-              sg.Button("Trier par nom", key="NAME_SORT_ODDS"),
-              sg.Button("Ajouter match", key="ADD_MATCH_ODDS")]]),
+              sg.Button("Trier par nom", key="NAME_SORT_ODDS")]]),
      sg.Col([[sg.Text("", size=(30, 1), key="MATCH_ODDS", visible=False)],
              [sg.Text("", size=(30, 1), key="TRJ_ODDS")],
              [sg.Text("", size=(30, 3), key="INFOS_ODDS")],
@@ -867,6 +866,7 @@ while True:
                 sb.PROGRESS = 0
                 for sport in sports_parsing:
                     parse_competitions(["Tout le {}".format(sport)], sport, *selected_sites)
+                get_best_conversion_rates_freebet(window)
 
 
             thread = threading.Thread(target=parse_all_thread)
