@@ -79,6 +79,7 @@ def parse_pmu_html(soup):
                 match = string.replace(" - ", "-")
                 match = match.replace(" // ", " - ")
                 match = match.replace("//", " - ")
+                match = match.replace('"', '')
         elif "class" in line.attrs and "event-list-odds-list" in line["class"]:
             if any([live, is_rugby_13, series]):
                 live = False
