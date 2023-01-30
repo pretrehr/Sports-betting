@@ -2,7 +2,7 @@
 """
 Fonctions principales d'assistant de paris
 """
-
+import sportsbetting
 import copy
 import datetime
 import requests
