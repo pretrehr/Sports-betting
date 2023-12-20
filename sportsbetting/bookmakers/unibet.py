@@ -45,7 +45,7 @@ def parse_unibet_api(id_league, sport, boost):
         parameter = "Vainqueur%2520du%2520match%2520%2528prolong.%2520incluses%2529"
     else:
         parameter = "R%25C3%25A9sultat%2520du%2520match"
-    url = ("https://www.unibet.fr/zones/sportnode/markets.json?nodeId={}&filter=R%25C3%25A9sultat&marketname={}"
+    url = ("https://www.unibet.fr/zones/v3/sportnode/markets.json?nodeId={}&filter=R%25C3%25A9sultat&marketname={}"
            .format(id_league, parameter))
     content = requests.get(url).content
     parsed = json.loads(content)
