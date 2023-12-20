@@ -45,7 +45,7 @@ def parse_betclic_api(id_league):
             continue
         if markets[0]["name"].strip() not in ["Vainqueur du match", "Résultat du match",
                                               "Vainqueur Match", "Résultat", "Résultat du match (90 min.)",
-                                              'Résultat du match (hors prolong.)']:
+                                              "Résultat du match (hors prolong.)", "Résultat du match (temps réglementaire)"]:
             continue
         odds = [selection["odds"] for selection in markets[0]["selections"]]
         odds_match[name] = {}
