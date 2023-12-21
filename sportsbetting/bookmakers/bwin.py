@@ -37,7 +37,7 @@ def get_bwin_token():
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     options.add_argument("--headless")
     options.add_argument("--disable-extensions")
-    driver = seleniumwire.webdriver.Chrome(sb.PATH_DRIVER, options=options)
+    driver = seleniumwire.webdriver.Chrome(options=options)
     driver.get("https://sports.bwin.fr/fr/sports")
     for request in driver.requests:
         if request.response and "x-bwin-accessid=" in request.url:
@@ -65,18 +65,18 @@ def parse_bwin_api(parameter):
     for fixture in fixtures:
         if fixture["stage"] == "Live":
             continue
-        reversed_odds = " chez " in fixture["name"]["value"]
+        reversed_odds = " chez " in fixture["name"]["value"] # not ok
         odds = []
-        participants = fixture["participants"]
-        name = " - ".join(map(lambda x: x["name"]["value"], participants))
-        games = fixture["games"]
+        participants = fixture["participants"] #ok
+        name = " - ".join(map(lambda x: x["name"]["value"], participants)) #ok
+        optionMarkets = fixture["optionMarkets"]
         id_match = str(fixture["id"])
-        for game in games:
-            odds_type = game["name"]["value"]
-            if odds_type not in ["1 X 2", "Pari sur le vainqueur (US)", "1X2 (temps réglementaire)", "Vainqueur 1 2"]:
+        for optionMarket in optionMarkets:
+            odds_type = optionMarket["name"]["value"]
+            if odds_type not in ["1 X 2", "Pari sur le vainqueur (US)", "1X2 (temps réglementaire)", "Vainqueur 1 2", "Résultat du match"]:
                 continue
-            for result in game["results"]:
-                odds.append(result["odds"])
+            for result in optionMarket["options"]:
+                odds.append(result["price"]["odds"])
             break
         date = truncate_datetime(dateutil.parser.isoparse(fixture["startDate"]))+datetime.timedelta(hours=2)
         if reversed_odds:
